@@ -10,7 +10,6 @@ import logging
 from gpt_researcher.utils.workers import WorkerPool
 
 from . import (
-    ArxivScraper,
     BeautifulSoupScraper,
     PyMuPDFScraper,
     WebBaseLoaderScraper,
@@ -169,7 +168,6 @@ class Scraper:
 
         SCRAPER_CLASSES = {
             "pdf": PyMuPDFScraper,
-            "arxiv": ArxivScraper,
             "bs": BeautifulSoupScraper,
             "web_base_loader": WebBaseLoaderScraper,
             "browser": BrowserScraper,
@@ -182,8 +180,6 @@ class Scraper:
 
         if link.endswith(".pdf"):
             scraper_key = "pdf"
-        elif "arxiv.org" in link:
-            scraper_key = "arxiv"
         else:
             scraper_key = self.scraper
 
