@@ -7,7 +7,7 @@ import requests
 import json
 
 
-class TavilySearch:
+class TavilyRetriever:
     """
     Tavily API Retriever
     """
@@ -23,13 +23,16 @@ class TavilySearch:
             query_domains (list, optional): List of domains to include in the search. Defaults to None.
         """
         self.query = query
-        self.headers = headers or {}
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.environ['TAVILY_API_KEY']}",
+        }
         self.topic = topic
         self.base_url = "https://api.tavily.com/search"
         self.api_key = self.get_api_key()
-        self.headers = {
-            "Content-Type": "application/json",
-        }
+        # self.headers = {
+        #     "Content-Type": "application/json",
+        # }
         self.query_domains = query_domains or None
 
     def get_api_key(self):
@@ -55,7 +58,7 @@ class TavilySearch:
         query: str,
         search_depth: Literal["basic", "advanced"] = "basic",
         topic: str = "general",
-        days: int = 2,
+        days: int = 30,
         max_results: int = 10,
         include_domains: Sequence[str] = None,
         exclude_domains: Sequence[str] = None,
@@ -69,23 +72,26 @@ class TavilySearch:
         """
 
         data = {
-            "query": query,
-            "search_depth": search_depth,
-            "topic": topic,
-            "days": days,
-            "include_answer": include_answer,
-            "include_raw_content": include_raw_content,
-            "max_results": max_results,
-            "include_domains": include_domains,
-            "exclude_domains": exclude_domains,
-            "include_images": include_images,
-            "api_key": self.api_key,
-            "use_cache": use_cache,
-        }
+        "query": query,
+        "search_depth": search_depth,
+        "topic": topic,
+        "days": days,
+        "max_results": max_results,
+        "include_answer": include_answer,
+    }
+        # if include_domains:
+        #     data["include_domains"] = include_domains
+        # if exclude_domains:
+        #     data["exclude_domains"] = exclude_domains
+        print(data)
+
 
         response = requests.post(
-            self.base_url, data=json.dumps(data), headers=self.headers, timeout=100
-        )
+        self.base_url,
+        headers=self.headers,
+        json=data,   # ✅ better than data=json.dumps(...)
+        timeout=100
+    )
 
         if response.status_code == 200:
             return response.json()

@@ -6,7 +6,7 @@ import requests
 import json
 
 
-class GoogleSearch:
+class GoogleRetriever:
     """
     Google API Retriever
     """

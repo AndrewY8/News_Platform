@@ -34,6 +34,7 @@ node_modules
 build
 docs/build
 
+.vscode/*
 .vscode/launch.json
 .langgraph-data/
 .next/

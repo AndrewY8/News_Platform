@@ -6,7 +6,7 @@ import requests
 import urllib.parse
 
 
-class SerpApiSearch():
+class SerpAPIRetriever():
     """
     SerpApi Retriever
     """
