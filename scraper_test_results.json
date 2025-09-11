@@ -1,0 +1,66 @@
+{
+  "bs_https://www.bbc.com/news": {
+    "success": true,
+    "content_length": 10812,
+    "images_count": 10,
+    "time": 0.3822472095489502,
+    "title": "BBC News - Breaking news, video and the latest top stories from the U.S. and around the world",
+    "scraper_type": "BeautifulSoup"
+  },
+  "bs_https://techcrunch.com": {
+    "success": true,
+    "content_length": 11200,
+    "images_count": 10,
+    "time": 0.3822472095489502,
+    "title": "TechCrunch | Startup and Technology News",
+    "scraper_type": "BeautifulSoup"
+  },
+  "bs_https://www.reuters.com": {
+    "success": true,
+    "content_length": 55,
+    "images_count": 0,
+    "time": 0.07061147689819336,
+    "title": "reuters.com",
+    "has_content": false
+  },
+  "bs_https://blog.python.org": {
+    "success": true,
+    "content_length": 32985,
+    "images_count": 1,
+    "time": 0.20916295051574707,
+    "title": "Python Insider",
+    "has_content": true
+  },
+  "bs_https://medium.com/@example": {
+    "success": true,
+    "content_length": 590,
+    "images_count": 0,
+    "time": 0.6604523658752441,
+    "title": "gabe \u2013 Medium",
+    "has_content": true
+  },
+  "bs_https://dev.to": {
+    "success": true,
+    "content_length": 9001,
+    "images_count": 10,
+    "time": 0.11580824851989746,
+    "title": "DEV Community",
+    "has_content": true
+  },
+  "web_base_loader_https://www.bbc.com/news": {
+    "success": true,
+    "content_length": 11368,
+    "images_count": 10,
+    "time": 0.8434815406799316,
+    "title": "BBC News - Breaking news, video and the latest top stories from the U.S. and around the world",
+    "scraper_type": "WebBaseLoader"
+  },
+  "web_base_loader_https://techcrunch.com": {
+    "success": true,
+    "content_length": 14728,
+    "images_count": 10,
+    "time": 0.8434815406799316,
+    "title": "TechCrunch | Startup and Technology News",
+    "scraper_type": "WebBaseLoader"
+  }
+}

@@ -15,8 +15,8 @@ import logging
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from news_agent.retrievers.tavily.tavily_search import TavilySearch
-from news_agent.retrievers.duckduckgo.duckduckgo import Duckduckgo
+from news_agent.retrievers.tavily.tavily_search import TavilyRetriever
+from news_agent.retrievers.duckduckgo.duckduckgo import DuckDuckGoRetriever
 from news_agent.scraper.scraper import Scraper
 from gpt_researcher.utils.workers import WorkerPool
 
@@ -65,7 +65,7 @@ class IntegrationTester:
             try:
                 # Step 1: Get URLs from Tavily
                 print("\n1. Retrieving URLs from Tavily...")
-                retriever = TavilySearch(query=scenario['query'])
+                retriever = TavilyRetriever(query=scenario['query'])
                 start_time = time.time()
                 search_results = retriever.search(max_results=scenario['max_results'])
                 retrieval_time = time.time() - start_time
@@ -140,7 +140,7 @@ class IntegrationTester:
             try:
                 # Step 1: Get URLs from DuckDuckGo
                 print("\n1. Retrieving URLs from DuckDuckGo...")
-                retriever = Duckduckgo(query=scenario['query'])
+                retriever = DuckDuckGoRetriever(query=scenario['query'])
                 start_time = time.time()
                 search_results = retriever.search(max_results=scenario['max_results'])
                 retrieval_time = time.time() - start_time
@@ -421,5 +421,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    exit_code = await asyncio.run(main())
+    exit_code = asyncio.run(main())
     sys.exit(exit_code)
