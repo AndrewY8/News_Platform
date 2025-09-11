@@ -11,6 +11,47 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+def extract_clean_query(augmented_query: str) -> str:
+    """
+    Extract the original query from the augmented prompt.
+    
+    Args:
+        augmented_query (str): The full augmented query with instructions
+        
+    Returns:
+        str: Clean, simple query suitable for API calls
+    """
+    # Look for the original query in quotes
+    import re
+    
+    # Try to find query in quotes after "RESEARCH QUERY:" or similar patterns
+    patterns = [
+        r'RESEARCH QUERY:\s*"([^"]+)"',
+        r'SEC FILING SEARCH:\s*"([^"]+)"', 
+        r'BREAKING NEWS SEARCH:\s*"([^"]+)"',
+        r'MULTI-SOURCE VERIFICATION:\s*"([^"]+)"',
+        r'"([^"]+)"'  # Fallback: first quoted string
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, augmented_query)
+        if match:
+            return match.group(1).strip()
+    
+    # If no quotes found, try to extract first meaningful line
+    lines = augmented_query.strip().split('\n')
+    for line in lines:
+        line = line.strip()
+        if line and not line.startswith(('RESEARCH', 'PRIORITY', 'TARGET', 'SEARCH', 'REQUIRED', 'OUTPUT', 'TIME', '-')):
+            # Remove common prefixes
+            line = re.sub(r'^(QUERY:|Query:)', '', line, flags=re.IGNORECASE).strip()
+            if line:
+                return line
+    
+    # Last resort: return first 100 chars, cleaned up
+    clean = re.sub(r'[^\w\s]', ' ', augmented_query[:100]).strip()
+    return ' '.join(clean.split())  # Normalize whitespace
+
 class PlannerAgent:
     def __init__(self, max_concurrent_retrievers: int = 5):
         """
@@ -37,20 +78,21 @@ class PlannerAgent:
             logger.info(f"Running {retriever_name} with task")
             
             # Check if retriever has the retrieve method
-            if not hasattr(retriever, "retrieve"):
-                logger.warning(f"{retriever_name} does not have a retrieve method")
-                return {
-                    "retriever": retriever_name,
-                    "status": "error",
-                    "error": "No retrieve method available",
-                    "results": []
-                }
+            # if not hasattr(retriever, "retrieve"):
+            #     logger.warning(f"{retriever_name} does not have a retrieve method")
+            #     return {
+            #         "retriever": retriever_name,
+            #         "status": "error",
+            #         "error": "No retrieve method available",
+            #         "results": []
+            #     }
             
             # Run the retriever
-            if asyncio.iscoroutinefunction(retriever.retrieve):
-                result = await retriever.retrieve(task)
+            ret_obj = retriever(task);
+            if asyncio.iscoroutinefunction(ret_obj.search):
+                result = await ret_obj.search()
             else:
-                result = retriever.retrieve(task)
+                result = ret_obj.search()
             
             # Ensure result is in expected format
             if result is None:
@@ -158,7 +200,7 @@ class PlannerAgent:
                     url = item.get("url", "").lower()
                     
                     # SEC filings detection
-                    if any(keyword in url for keyword in ["sec.gov", "edgar", "10-k", "10-q", "8-k", "proxy"]):
+                    if any(keyword in url for keyword in ["sec.gov", "sec", "edgar", "10-k", "10-q", "8-k", "proxy"]):
                         organized_results["sec_filings"].append(item)
                     # Breaking news detection  
                     elif any(keyword in title or keyword in description for keyword in 
@@ -200,7 +242,8 @@ class PlannerAgent:
             logger.info(f"Starting planner agent with query: {query}")
             
             # Step 1: Augment the query
-            augmented_query = augment_query(query)
+            # augmented_query = augment_query(query)
+            augmented_query = query;
             logger.info("Query augmented successfully")
             
             # Step 2: Get retriever tasks
@@ -218,6 +261,9 @@ class PlannerAgent:
                     logger.info("Results enhanced with scraping")
             except Exception as e:
                 logger.warning(f"Scraping failed, continuing with original results: {str(e)}")
+            
+            # print("HERE#################", len(all_results))
+            # print(all_results)
             
             # Step 5: Organize and filter results
             organized_results = self._filter_and_organize_results(all_results)

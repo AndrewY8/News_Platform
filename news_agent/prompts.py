@@ -57,124 +57,133 @@ SEARCH STRATEGY:
 Focus on factual reporting from established news sources, official SEC filings, and verified press releases. Avoid speculation, opinion pieces, or unverified social media content unless clearly marked.
 """
 
-def create_sec_focused_query(query: str) -> str:
-    """
-    Create a query specifically optimized for SEC filing retrieval.
+# def create_sec_focused_query(query: str) -> str:
+#     """
+#     Create a query specifically optimized for SEC filing retrieval.
     
-    Args:
-        query (str): The original query
+#     Args:
+#         query (str): The original query
         
-    Returns:
-        str: SEC-focused query string
-    """
-    return f"""
-SEC FILING SEARCH: "{query}"
+#     Returns:
+#         str: SEC-focused query string
+#     """
+#     return f"""
+# SEC FILING SEARCH: "{query}"
 
-TARGET DOCUMENTS:
-- 10-K (Annual Reports)
-- 10-Q (Quarterly Reports) 
-- 8-K (Current Reports)
-- DEF 14A (Proxy Statements)
-- S-1/S-3 (Registration Statements)
-- 13F (Institutional Holdings)
-- 4 (Insider Trading)
+# TARGET DOCUMENTS:
+# - 10-K (Annual Reports)
+# - 10-Q (Quarterly Reports) 
+# - 8-K (Current Reports)
+# - DEF 14A (Proxy Statements)
+# - S-1/S-3 (Registration Statements)
+# - 13F (Institutional Holdings)
+# - 4 (Insider Trading)
 
-SEARCH LOCATIONS:
-- SEC.gov EDGAR database
-- Company investor relations pages
-- Financial news with SEC document links
-- Regulatory news sources
+# SEARCH LOCATIONS:
+# - SEC.gov EDGAR database
+# - Company investor relations pages
+# - Financial news with SEC document links
+# - Regulatory news sources
 
-REQUIRED FIELDS:
-- Filing type
-- Filing date
-- Company name/ticker
-- Document title
-- Direct EDGAR URL
-- Key sections/highlights
-- Filing summary
+# REQUIRED FIELDS:
+# - Filing type
+# - Filing date
+# - Company name/ticker
+# - Document title
+# - Direct EDGAR URL
+# - Key sections/highlights
+# - Filing summary
 
-Return only official SEC documents and verified regulatory filings.
-"""
+# Return only official SEC documents and verified regulatory filings.
+# """
+
+# def create_breaking_news_query(query: str) -> str:
+#     """
+#     Create a query optimized for breaking news retrieval.
+    
+#     Args:
+#         query (str): The original query
+        
+#     Returns:
+#         str: Breaking news focused query string
+#     """
+#     return f"""
+# BREAKING NEWS SEARCH: "{query}"
+
+# PRIORITY SOURCES:
+# - Reuters, AP, Bloomberg, WSJ, NYT
+# - Financial Times, CNBC, CNN Business
+# - Industry-specific publications
+# - Official company/government press releases
+# - Wire services and news agencies
+
+# TIME FILTERS:
+# - Last 24 hours (highest priority)
+# - Last 48 hours (medium priority) 
+# - Last week (background context)
+
+# REQUIRED ELEMENTS:
+# - Timestamp of publication
+# - Multiple source verification
+# - Direct article URLs
+# - Key quotes and facts
+# - Related story links
+
+# SEARCH TERMS:
+# - "breaking" + "{query}"
+# - "developing" + "{query}"
+# - "just in" + "{query}"
+# - "urgent" + "{query}"
+# - "live updates" + "{query}"
+
+# Focus on verified, time-sensitive information from credible news sources.
+# """
+
+# def create_multi_source_query(query: str) -> str:
+#     """
+#     Create a query designed to find multiple sources covering the same story.
+    
+#     Args:
+#         query (str): The original query
+        
+#     Returns:
+#         str: Multi-source verification query
+#     """
+#     return f"""
+# MULTI-SOURCE VERIFICATION: "{query}"
+
+# OBJECTIVE: Find the same story covered by multiple reputable sources
+
+# TARGET SOURCE TYPES:
+# - Major newspapers (WSJ, NYT, WaPo, FT)
+# - Wire services (Reuters, AP, Bloomberg)
+# - Business publications (Forbes, Fortune, Business Insider)
+# - Industry publications (sector-specific)
+# - International sources (BBC, Guardian, etc.)
+# - Local/regional sources (when relevant)
+
+# VERIFICATION POINTS:
+# - Cross-reference key facts across sources
+# - Compare quotes and statements
+# - Note timing differences in reporting
+# - Identify unique angles or insights
+# - Flag any discrepancies
+
+# SEARCH APPROACH:
+# 1. Search for main story across all source types
+# 2. Look for follow-up reporting and analysis
+# 3. Find original source materials (press releases, filings)
+# 4. Include expert commentary and analysis
+# 5. Check for corrections or updates
+
+# Return articles that cover the same core story from different perspectives and sources.
+# """
+
+def create_sec_focused_query(query: str) -> str:
+    return f'SEC SEARCH: "{query}". Target 10-K, 10-Q, 8-K, DEF14A, S-1/S-3, 13F, Form 4. Sources: SEC EDGAR, investor pages, verified filings. Return filing type, date, company, title, URL, highlights, summary.'
 
 def create_breaking_news_query(query: str) -> str:
-    """
-    Create a query optimized for breaking news retrieval.
-    
-    Args:
-        query (str): The original query
-        
-    Returns:
-        str: Breaking news focused query string
-    """
-    return f"""
-BREAKING NEWS SEARCH: "{query}"
-
-PRIORITY SOURCES:
-- Reuters, AP, Bloomberg, WSJ, NYT
-- Financial Times, CNBC, CNN Business
-- Industry-specific publications
-- Official company/government press releases
-- Wire services and news agencies
-
-TIME FILTERS:
-- Last 24 hours (highest priority)
-- Last 48 hours (medium priority) 
-- Last week (background context)
-
-REQUIRED ELEMENTS:
-- Timestamp of publication
-- Multiple source verification
-- Direct article URLs
-- Key quotes and facts
-- Related story links
-
-SEARCH TERMS:
-- "breaking" + "{query}"
-- "developing" + "{query}"
-- "just in" + "{query}"
-- "urgent" + "{query}"
-- "live updates" + "{query}"
-
-Focus on verified, time-sensitive information from credible news sources.
-"""
+    return f'BREAKING NEWS: "{query}". Sources: Reuters, AP, Bloomberg, WSJ, NYT, FT, CNBC, press releases. Last 48h priority. Include timestamp, URLs, summaries, key quotes. Terms: breaking, developing, just in, urgent, live updates.'
 
 def create_multi_source_query(query: str) -> str:
-    """
-    Create a query designed to find multiple sources covering the same story.
-    
-    Args:
-        query (str): The original query
-        
-    Returns:
-        str: Multi-source verification query
-    """
-    return f"""
-MULTI-SOURCE VERIFICATION: "{query}"
-
-OBJECTIVE: Find the same story covered by multiple reputable sources
-
-TARGET SOURCE TYPES:
-- Major newspapers (WSJ, NYT, WaPo, FT)
-- Wire services (Reuters, AP, Bloomberg)
-- Business publications (Forbes, Fortune, Business Insider)
-- Industry publications (sector-specific)
-- International sources (BBC, Guardian, etc.)
-- Local/regional sources (when relevant)
-
-VERIFICATION POINTS:
-- Cross-reference key facts across sources
-- Compare quotes and statements
-- Note timing differences in reporting
-- Identify unique angles or insights
-- Flag any discrepancies
-
-SEARCH APPROACH:
-1. Search for main story across all source types
-2. Look for follow-up reporting and analysis
-3. Find original source materials (press releases, filings)
-4. Include expert commentary and analysis
-5. Check for corrections or updates
-
-Return articles that cover the same core story from different perspectives and sources.
-"""
+    return f'MULTI-SOURCE: "{query}". Find same story from WSJ, NYT, Reuters, AP, Bloomberg, Forbes, industry/intl/local sources. Cross-check facts, quotes, timing. Include press releases, filings, analysis, and note discrepancies.'

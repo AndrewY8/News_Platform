@@ -114,19 +114,23 @@ def get_retriever_tasks(query: str) -> List[Tuple[Any, str]]:
     
     for cls in retriever_classes:
         try:
-            retriever = cls()
+            retriever = cls
             retriever_name = cls.__name__
             
             # Assign specialized tasks based on retriever capabilities
-            if retriever_name in ['TavilyRetriever', 'SerperRetriever']:
+            if retriever_name in ['TavilyRetriever', 'SerperSearch']:
                 # These are good for real-time breaking news
-                tasks.append((retriever, breaking_news_query))
-            elif retriever_name in ['GoogleRetriever', 'SerpAPIRetriever']:
-                # These are good for SEC filings and structured data
+                # print("HERE#################")
+                # print(breaking_news_query)
                 tasks.append((retriever, sec_query))
-            elif retriever_name in ['ExaRetriever', 'SearchAPIRetriever']:
-                # These are good for multi-source verification
+                tasks.append((retriever, breaking_news_query))
                 tasks.append((retriever, multi_source_query))
+            elif retriever_name in ['GoogleSearch', 'SerpApiSearch']:
+                # These are good for SEC filings and structured data
+                tasks.append((retriever, query))
+            elif retriever_name in ['ExaSearch', 'SearchApiSearch']:
+                # These are good for multi-source verification
+                tasks.append((retriever, query))
             else:
                 # Default to the main augmented query
                 tasks.append((retriever, query))
