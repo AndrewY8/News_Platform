@@ -2,7 +2,7 @@ import os
 from ..utils import check_pkg
 
 
-class ExaSearch:
+class ExaRetriever:
     """
     Exa API Retriever
     """

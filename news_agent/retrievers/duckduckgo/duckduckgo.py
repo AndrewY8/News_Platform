@@ -2,7 +2,7 @@ from itertools import islice
 from ..utils import check_pkg
 
 
-class Duckduckgo:
+class DuckDuckGoRetriever:
     """
     Duckduckgo API Retriever
     """

@@ -7,7 +7,7 @@ import requests
 import json
 
 
-class TavilySearch:
+class TavilyRetriever:
     """
     Tavily API Retriever
     """

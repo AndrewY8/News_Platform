@@ -5,7 +5,7 @@ from typing import List, Dict
 from urllib.parse import urljoin
 
 
-class SearxSearch():
+class SearxRetriever():
     """
     SearxNG API Retriever
     """
