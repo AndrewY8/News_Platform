@@ -1,0 +1,26 @@
+# Development requirements - lighter version for faster setup
+fastapi
+uvicorn
+requests
+pydantic
+python-dotenv
+SQLAlchemy
+newsapi-python
+textblob
+# spacy  # Commented out for faster dev setup
+python-jose[cryptography]
+passlib[bcrypt]
+# redis  # Commented out for dev
+slowapi
+yfinance
+authlib
+httpx
+python-multipart
+cryptography
+google-generativeai
+
+# Development tools
+pytest
+pytest-asyncio
+black
+flake8
