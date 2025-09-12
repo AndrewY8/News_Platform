@@ -1,17 +1,17 @@
 {
   "bs_https://www.bbc.com/news": {
     "success": true,
-    "content_length": 10812,
+    "content_length": 10774,
     "images_count": 10,
-    "time": 0.3822472095489502,
+    "time": 0.30218052864074707,
     "title": "BBC News - Breaking news, video and the latest top stories from the U.S. and around the world",
     "scraper_type": "BeautifulSoup"
   },
   "bs_https://techcrunch.com": {
     "success": true,
-    "content_length": 11200,
+    "content_length": 11161,
     "images_count": 10,
-    "time": 0.3822472095489502,
+    "time": 0.30218052864074707,
     "title": "TechCrunch | Startup and Technology News",
     "scraper_type": "BeautifulSoup"
   },
@@ -19,7 +19,7 @@
     "success": true,
     "content_length": 55,
     "images_count": 0,
-    "time": 0.07061147689819336,
+    "time": 0.047151803970336914,
     "title": "reuters.com",
     "has_content": false
   },
@@ -27,7 +27,7 @@
     "success": true,
     "content_length": 32985,
     "images_count": 1,
-    "time": 0.20916295051574707,
+    "time": 0.36222243309020996,
     "title": "Python Insider",
     "has_content": true
   },
@@ -35,31 +35,31 @@
     "success": true,
     "content_length": 590,
     "images_count": 0,
-    "time": 0.6604523658752441,
+    "time": 1.3228132724761963,
     "title": "gabe \u2013 Medium",
     "has_content": true
   },
   "bs_https://dev.to": {
     "success": true,
-    "content_length": 9001,
+    "content_length": 9036,
     "images_count": 10,
-    "time": 0.11580824851989746,
+    "time": 0.1598365306854248,
     "title": "DEV Community",
     "has_content": true
   },
   "web_base_loader_https://www.bbc.com/news": {
     "success": true,
-    "content_length": 11368,
+    "content_length": 11204,
     "images_count": 10,
-    "time": 0.8434815406799316,
+    "time": 0.8707363605499268,
     "title": "BBC News - Breaking news, video and the latest top stories from the U.S. and around the world",
     "scraper_type": "WebBaseLoader"
   },
   "web_base_loader_https://techcrunch.com": {
     "success": true,
-    "content_length": 14728,
+    "content_length": 14689,
     "images_count": 10,
-    "time": 0.8434815406799316,
+    "time": 0.8707363605499268,
     "title": "TechCrunch | Startup and Technology News",
     "scraper_type": "WebBaseLoader"
   }

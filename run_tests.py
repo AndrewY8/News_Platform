@@ -17,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import test_retrievers
 import test_scrapers
 import test_integration
+import test_aggregator_e2e
 
 
 class MasterTestRunner:
@@ -83,6 +84,22 @@ class MasterTestRunner:
                 'success': False,
                 'error': str(e)
             }
+        
+        # Test 4: Aggregator End-to-End
+        print("\n🧠 PHASE 4: TESTING AGGREGATOR END-TO-END")
+        print("-" * 50)
+        try:
+            aggregator_result = await test_aggregator_e2e.main()
+            self.results['aggregator_e2e'] = {
+                'success': aggregator_result == 0,
+                'exit_code': aggregator_result
+            }
+        except Exception as e:
+            print(f"✗ Aggregator E2E tests failed with exception: {e}")
+            self.results['aggregator_e2e'] = {
+                'success': False,
+                'error': str(e)
+            }
     
     def generate_master_report(self):
         """Generate the master test report"""
@@ -111,7 +128,8 @@ class MasterTestRunner:
         phase_icons = {
             'retrievers': '🔍',
             'scrapers': '🕷️',
-            'integration': '🔄'
+            'integration': '🔄',
+            'aggregator_e2e': '🧠'
         }
         
         for phase, result in self.results.items():
@@ -129,8 +147,9 @@ class MasterTestRunner:
         print(f"\nGENERATED FILES:")
         output_files = [
             'retriever_test_results.json',
-            'scraper_test_results.json', 
-            'integration_test_results.json'
+            'scraper_test_results.json',
+            'integration_test_results.json',
+            'aggregator_e2e_test_results.json'
         ]
         
         for file in output_files:
@@ -142,10 +161,11 @@ class MasterTestRunner:
         # Recommendations
         print(f"\nRECOMMENDATIONS:")
         if successful_phases == total_phases:
-            print("🎉 All tests passed! Your retriever and scraper system is working correctly.")
+            print("🎉 All tests passed! Your news aggregation system is working correctly.")
             print("   ✓ Retrievers are finding relevant URLs")
-            print("   ✓ Scrapers are extracting content successfully") 
+            print("   ✓ Scrapers are extracting content successfully")
             print("   ✓ Integration between components is working")
+            print("   ✓ Aggregator is clustering and summarizing content")
             print("   ✓ Output formats are consistent")
         else:
             print("⚠️  Some tests failed. Please review the detailed reports above.")
@@ -161,6 +181,11 @@ class MasterTestRunner:
             if not self.results.get('integration', {}).get('success'):
                 print("   • Check compatibility between retrievers and scrapers")
                 print("   • Verify data flow and format consistency")
+            
+            if not self.results.get('aggregator_e2e', {}).get('success'):
+                print("   • Check Gemini API key configuration")
+                print("   • Verify aggregator component dependencies")
+                print("   • Review clustering and summarization performance")
         
         # Next steps
         print(f"\nNEXT STEPS:")

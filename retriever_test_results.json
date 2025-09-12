@@ -2,7 +2,7 @@
   "tavily_CRCL news": {
     "success": true,
     "count": 5,
-    "time": 1.4548637866973877,
+    "time": 1.7073891162872314,
     "results": [
       {
         "href": "https://robinhood.com/us/en/stocks/CRCL/",
@@ -17,22 +17,22 @@
   "tavily_CRCL latest updates": {
     "success": true,
     "count": 5,
-    "time": 1.4107859134674072,
+    "time": 1.5473580360412598,
     "results": [
-      {
-        "href": "https://www.stocktitan.net/news/CRCL/",
-        "body": "What is the current stock price of Circle Internet Group (CRCL)?. The current stock price of Circle Internet Group (CRCL) is $112.46 as of September 8, 2025."
-      },
       {
         "href": "https://finance.yahoo.com/quote/CRCL/news/",
         "body": "Circle Internet Group stock soars amid stablecoin growth momentum ... Circle Drops 30% in a Month: Should You Still Hold the CRCL Shares? Circle Drops 30% in"
+      },
+      {
+        "href": "https://www.gurufocus.com/news/3105278/why-circle-crcl-stock-is-surging-today",
+        "body": "Shares of Circle Internet (CRCL) surged 17.6% today, closing at $133.70. This rise contrasts with moderate gains in the broader market as"
       }
     ]
   },
   "tavily_CRCL civil rights violations": {
     "success": true,
     "count": 5,
-    "time": 1.3976821899414062,
+    "time": 1.5504207611083984,
     "results": [
       {
         "href": "https://www.dhs.gov/file-civil-rights-complaint",
@@ -47,7 +47,7 @@
   "tavily_CRCL complaints investigation": {
     "success": true,
     "count": 5,
-    "time": 1.8044679164886475,
+    "time": 1.3823730945587158,
     "results": [
       {
         "href": "https://www.dhs.gov/archive/compliance-branch",
@@ -60,88 +60,36 @@
     ]
   },
   "duckduckgo_CRCL news": {
-    "success": true,
-    "count": 5,
-    "time": 0.6726744174957275,
-    "results": [
-      {
-        "title": "Circle Drops 30% in a Month: Should You Still Hold the CRCL ...",
-        "href": "https://www.zacks.com/stock/news/2750172/circle-drops-30-in-a-month-should-you-still-hold-the-crcl-shares",
-        "body": "22 hours ago \u00b7 Key Takeaways CRCL shares sank 30.3% in a month, underperforming the industry, sector and peers. USDC circulation grew 90% year over year, with Q2 onchain volume hitting nearly $6 trillion."
-      },
-      {
-        "title": "Circle Internet Group (CRCL) Stock Price, News, Quote & History",
-        "href": "https://finance.yahoo.com/quote/CRCL/",
-        "body": "2 hours ago \u2014 Find the latest Circle Internet Group (CRCL) stock quote, history, news and other vital information to help you with your stock trading and investing."
-      }
-    ]
+    "success": false,
+    "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
   },
   "duckduckgo_CRCL latest updates": {
-    "success": true,
-    "count": 5,
-    "time": 0.4319446086883545,
-    "results": [
-      {
-        "title": "Circle Internet Group (CRCL) Latest Stock News & Headlines",
-        "href": "https://finance.yahoo.com/quote/CRCL/news/",
-        "body": "Circle Internet Group stock soars amid stablecoin growth momentum ... Circle Drops 30% in a Month: Should You Still Hold the CRCL Shares? Circle Drops 30% in ..."
-      },
-      {
-        "title": "Circle Internet Group (CRCL) Stock Price, News, Quote & History",
-        "href": "https://finance.yahoo.com/quote/CRCL/",
-        "body": "Find the latest Circle Internet Group (CRCL) stock quote, history, news and other vital information to help you with your stock trading and investing."
-      }
-    ]
+    "success": false,
+    "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
   },
   "duckduckgo_CRCL civil rights violations": {
-    "success": true,
-    "count": 5,
-    "time": 0.9554166793823242,
-    "results": [
-      {
-        "title": "Trump\u2019s Shuttering of DHS Civil Rights Office Freezes... \u2014 ProPublica",
-        "href": "https://www.propublica.org/article/homeland-security-crcl-civil-rights-immigration-border-patrol-trump-kristi-noem",
-        "body": "\u201cThey Don\u2019t Care About Civil Rights \u201d: Trump\u2019s Shuttering of DHS Oversight Arm Freezes 600 Cases, Imperils Human Rights . The closure of the 150-person office, which protected the civil rights of both immigrants and U.S. citizens..."
-      },
-      {
-        "title": "Watchdog: ICE violated man's civil rights ... - Verite News New Orleans",
-        "href": "https://veritenews.org/2024/11/13/ice-violated-civil-rights-detention/",
-        "body": "CRCL \u2019s finding in Cortes De La Valle\u2019s case is just one of a series of proven or alleged civil rights violations against people with disabilities in immigration detention to come to light in Louisiana and nationwide."
-      }
-    ]
+    "success": false,
+    "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
   },
   "duckduckgo_CRCL complaints investigation": {
-    "success": true,
-    "count": 5,
-    "time": 0.5991718769073486,
-    "results": [
-      {
-        "title": "DHS Halted 500+ Civil Rights Investigations When It Shut Down ...",
-        "href": "https://whistleblower.org/press-release/dhs-halted-500-civil-rights-investigations-when-it-shut-down-oversight-office-whistleblowers-say/",
-        "body": "May 15, 2025 \u00b7 At the time of CRCL\u2019s elimination, more than 500 civil rights complaints were open and under investigation, and hundreds more complaints were pending CRCL\u2019s review."
-      },
-      {
-        "title": "CRCL Complaint Details How Family Detention Facility Endangers",
-        "href": "https://www.aila.org/library/crcl-complaint-family-detention",
-        "body": "To date, the CARA project has received no meaningful response to any of the complaints submitted to CRCL and OIG on the issue of inadequate medical ..."
-      }
-    ]
+    "success": false,
+    "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
   },
   "exa_CRCL news": {
     "success": false,
-    "error": "object of type 'NoneType' has no len()"
+    "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
   },
   "exa_CRCL latest updates": {
     "success": false,
-    "error": "object of type 'NoneType' has no len()"
+    "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
   },
   "exa_CRCL civil rights violations": {
     "success": false,
-    "error": "object of type 'NoneType' has no len()"
+    "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
   },
   "exa_CRCL complaints investigation": {
     "success": false,
-    "error": "object of type 'NoneType' has no len()"
+    "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
   },
   "google_CRCL news": {
     "success": false,
@@ -162,7 +110,7 @@
   "searchapi_CRCL news": {
     "success": true,
     "count": 5,
-    "time": 1.3467247486114502,
+    "time": 6.222177028656006,
     "results": [
       {
         "title": "Circle Internet Group (CRCL) Stock Price, News, Quote & History",
@@ -179,7 +127,7 @@
   "searchapi_CRCL latest updates": {
     "success": true,
     "count": 5,
-    "time": 1.5022211074829102,
+    "time": 2.9437179565429688,
     "results": [
       {
         "title": "Circle Internet Group (CRCL) Latest Stock News & Headlines",
@@ -196,7 +144,7 @@
   "searchapi_CRCL civil rights violations": {
     "success": true,
     "count": 5,
-    "time": 1.9284627437591553,
+    "time": 1.1546344757080078,
     "results": [
       {
         "title": "Office for Civil Rights and Civil Liberties",
@@ -213,7 +161,7 @@
   "searchapi_CRCL complaints investigation": {
     "success": true,
     "count": 5,
-    "time": 2.7077407836914062,
+    "time": 1.3820769786834717,
     "results": [
       {
         "title": "CRCL Compliance Branch",
@@ -228,25 +176,33 @@
     ]
   },
   "serpapi_CRCL news": {
-    "success": false,
-    "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    "success": true,
+    "count": 0,
+    "time": 0.154771089553833,
+    "results": []
   },
   "serpapi_CRCL latest updates": {
-    "success": false,
-    "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    "success": true,
+    "count": 0,
+    "time": 0.13138628005981445,
+    "results": []
   },
   "serpapi_CRCL civil rights violations": {
-    "success": false,
-    "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    "success": true,
+    "count": 0,
+    "time": 0.13085651397705078,
+    "results": []
   },
   "serpapi_CRCL complaints investigation": {
-    "success": false,
-    "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    "success": true,
+    "count": 0,
+    "time": 0.12721824645996094,
+    "results": []
   },
   "serper_CRCL news": {
     "success": true,
     "count": 5,
-    "time": 0.9821851253509521,
+    "time": 3.7114083766937256,
     "results": [
       {
         "title": "Circle Internet Group (CRCL) Stock Price, News, Quote & History",
@@ -263,24 +219,24 @@
   "serper_CRCL latest updates": {
     "success": true,
     "count": 5,
-    "time": 1.2197191715240479,
+    "time": 1.0435521602630615,
     "results": [
       {
-        "title": "Why Did Circle Internet Stock (CRCL) Skyrocket Today?",
-        "href": "https://finance.yahoo.com/news/why-did-circle-internet-stock-211527327.html",
-        "body": "The latest Consumer Price Index (CPI) data was released this morning, showing inflation rose more than expected in August. The report was ..."
+        "title": "Circle Internet Group (CRCL) Latest Stock News & Headlines",
+        "href": "https://finance.yahoo.com/quote/CRCL/news/",
+        "body": "Circle Internet Group stock soars amid stablecoin growth momentum ... Circle Drops 30% in a Month: Should You Still Hold the CRCL Shares? Circle Drops 30% in ..."
       },
       {
-        "title": "CRCL's Unexpected Surge Sparks New Interests",
-        "href": "https://www.timothysykes.com/news/circle-internet-group-inc.crcl-news-2025_09_11-2/",
-        "body": "Circle Internet Group Inc.'s stocks have been trading up by 16.58 percent, indicating strong investor confidence and market optimism."
+        "title": "Circle Internet Group (CRCL) Stock Price, News, Quote & History",
+        "href": "https://finance.yahoo.com/quote/CRCL/",
+        "body": "Find the latest Circle Internet Group (CRCL) stock quote, history, news and other vital information to help you with your stock trading and investing."
       }
     ]
   },
   "serper_CRCL civil rights violations": {
     "success": true,
     "count": 5,
-    "time": 0.8909690380096436,
+    "time": 1.130568265914917,
     "results": [
       {
         "title": "Office for Civil Rights and Civil Liberties",
@@ -297,7 +253,7 @@
   "serper_CRCL complaints investigation": {
     "success": true,
     "count": 5,
-    "time": 0.8417809009552002,
+    "time": 0.7518360614776611,
     "results": [
       {
         "title": "CRCL Compliance Branch",
@@ -314,7 +270,7 @@
   "edgar_AAPL": {
     "success": true,
     "count": 5,
-    "time": 0.7557096481323242,
+    "time": 0.33783626556396484,
     "results": [
       {
         "href": "https://www.sec.gov/Archives/edgar/data/0000320193/000032019325000073/aapl-20250628.htm",
@@ -339,7 +295,7 @@
   "edgar_MSFT": {
     "success": true,
     "count": 5,
-    "time": 0.6271028518676758,
+    "time": 0.36057186126708984,
     "results": [
       {
         "href": "https://www.sec.gov/Archives/edgar/data/0000789019/000095017025100235/msft-20250630.htm",
@@ -364,7 +320,7 @@
   "edgar_TSLA": {
     "success": true,
     "count": 5,
-    "time": 0.6946687698364258,
+    "time": 0.44095826148986816,
     "results": [
       {
         "href": "https://www.sec.gov/Archives/edgar/data/0001318605/000110465925087862/tm2525337d1_8k.htm",
@@ -389,7 +345,7 @@
   "edgar_Apple Inc": {
     "success": true,
     "count": 5,
-    "time": 0.7851195335388184,
+    "time": 0.3805363178253174,
     "results": [
       {
         "href": "https://www.sec.gov/Archives/edgar/data/0000320193/000032019325000073/aapl-20250628.htm",
@@ -414,7 +370,7 @@
   "newsapi_CRCL news": {
     "success": true,
     "count": 5,
-    "time": 0.3144838809967041,
+    "time": 0.1407604217529297,
     "results": [
       {
         "href": "https://decrypt.co/338897/gemini-valuation-could-top-3-billion-crypto-exchange-raises-ipo-share-price",
@@ -439,7 +395,7 @@
   "newsapi_CRCL latest updates": {
     "success": true,
     "count": 5,
-    "time": 0.26189589500427246,
+    "time": 0.15762686729431152,
     "results": [
       {
         "href": "https://www.coindesk.com/daybook-us/2025/09/03/bitcoin-treads-water-gold-extends-gain-as-u-s-jobs-report-looms-crypto-daybook-americas",
@@ -464,13 +420,13 @@
   "newsapi_CRCL civil rights violations": {
     "success": true,
     "count": 0,
-    "time": 0.23882555961608887,
+    "time": 0.1241140365600586,
     "results": []
   },
   "newsapi_CRCL complaints investigation": {
     "success": true,
     "count": 0,
-    "time": 0.26177191734313965,
+    "time": 0.1443619728088379,
     "results": []
   }
 }

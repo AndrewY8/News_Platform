@@ -25,14 +25,14 @@ class EmbeddingConfig:
 @dataclass
 class ClusteringConfig:
     """Configuration for HDBSCAN clustering."""
-    min_cluster_size: int = 3
-    min_samples: int = 2
+    min_cluster_size: int = 2
+    min_samples: int = 1
     metric: str = "euclidean"
-    cluster_selection_method: str = "eom"  # "eom" or "leaf"
+    cluster_selection_method: str = "leaf"  # "eom" or "leaf"
     cluster_selection_epsilon: float = 0.0
     alpha: float = 1.0
-    max_cluster_size: int = 50  # Prevent overly large clusters
-    similarity_threshold: float = 0.8  # For cluster merging decisions
+    max_cluster_size: int = 10  # Prevent overly large clusters
+    similarity_threshold: float = 0.9  # For cluster merging decisions
 
 
 @dataclass
@@ -89,16 +89,12 @@ class SummarizerConfig:
 
 
 @dataclass
-class DatabaseConfig:
-    """Configuration for database connections."""
-    connection_string: Optional[str] = None
-    pool_size: int = 10
-    max_overflow: int = 20
-    pool_timeout: int = 30
-    pool_recycle: int = 3600
+class SupabaseConfig:
+    """Configuration for Supabase API access."""
+    url: Optional[str] = None
+    key: Optional[str] = None
     vector_dimension: int = 384  # For all-MiniLM-L6-v2
-    index_type: str = "ivfflat"  # "ivfflat" or "hnsw"
-    index_lists: int = 100  # For IVFFlat index
+    enable_realtime: bool = True
 
 
 @dataclass
@@ -123,7 +119,7 @@ class AggregatorConfig:
     scoring: ScoringConfig = field(default_factory=ScoringConfig)
     preprocessing: PreprocessingConfig = field(default_factory=PreprocessingConfig)
     summarizer: SummarizerConfig = field(default_factory=SummarizerConfig)
-    database: DatabaseConfig = field(default_factory=DatabaseConfig)
+    supabase: SupabaseConfig = field(default_factory=SupabaseConfig)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     
     @classmethod
@@ -131,9 +127,9 @@ class AggregatorConfig:
         """Create configuration from environment variables."""
         config = cls()
         
-        # Database configuration from environment
-        if db_url := os.getenv("DATABASE_URL"):
-            config.database.connection_string = db_url
+        # Supabase configuration
+        config.supabase.url = os.getenv("SUPABASE_URL")
+        config.supabase.key = os.getenv("SUPABASE_KEY")
         
         # Gemini API configuration
         if api_key := os.getenv("GEMINI_API_KEY"):
@@ -169,6 +165,7 @@ class AggregatorConfig:
             config.scoring.relevance_weight = float(relevance_weight)
         
         return config
+    
     
     @classmethod
     def from_file(cls, config_path: str) -> 'AggregatorConfig':
@@ -255,6 +252,12 @@ class AggregatorConfig:
                 "max_output_tokens": self.summarizer.max_output_tokens,
                 "temperature": self.summarizer.temperature,
                 "batch_size": self.summarizer.batch_size
+            },
+            "supabase": {
+                "url": self.supabase.url,
+                "key": self.supabase.key,
+                "vector_dimension": self.supabase.vector_dimension,
+                "enable_realtime": self.supabase.enable_realtime
             },
             "processing": {
                 "batch_interval_seconds": self.processing.batch_interval_seconds,

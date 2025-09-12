@@ -10,6 +10,7 @@ import logging
 import asyncio
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
+from dotenv import load_dotenv
 import time
 
 from .models import ContentChunk, ContentCluster, AggregatorOutput
@@ -20,10 +21,10 @@ from .deduplication import DeduplicationEngine
 from .clustering import ClusteringEngine
 from .scoring import ClusterScorer
 from .summarizer import GeminiSummarizer
-from .database import DatabaseManager
+from .supabase_manager import SupabaseManager
 
 logger = logging.getLogger(__name__)
-
+load_dotenv()
 
 class AggregatorAgent:
     """
@@ -47,22 +48,26 @@ class AggregatorAgent:
     - Configurable processing parameters
     """
     
-    def __init__(self, config: Optional[AggregatorConfig] = None, 
+    def __init__(self, config: Optional[AggregatorConfig] = None,
                  gemini_api_key: Optional[str] = None,
-                 database_url: Optional[str] = None):
+                 supabase_url: Optional[str] = None,
+                 supabase_key: Optional[str] = None):
         """
         Initialize the aggregator agent.
         
         Args:
             config: Aggregator configuration (uses default if None)
             gemini_api_key: API key for Gemini (can also be in config)
-            database_url: Database connection string (can also be in config)
+            supabase_url: Supabase project URL (can also be in config)
+            supabase_key: Supabase API key (can also be in config)
         """
         self.config = config or AggregatorConfig()
         
         # Override config with provided parameters
-        if database_url:
-            self.config.database.connection_string = database_url
+        if supabase_url:
+            self.config.supabase.url = supabase_url
+        if supabase_key:
+            self.config.supabase.key = supabase_key
         if gemini_api_key:
             self.config.summarizer.api_key = gemini_api_key
         
@@ -118,13 +123,25 @@ class AggregatorAgent:
             )
             logger.debug("GeminiSummarizer initialized")
             
-            # Database (optional)
-            if self.config.database.connection_string:
-                self.database_manager = DatabaseManager(self.config.database)
-                logger.debug("DatabaseManager initialized")
+            # Supabase manager (optional)
+            if self.config.supabase.url and self.config.supabase.key:
+                try:
+                    self.supabase_manager = SupabaseManager(
+                        self.config.supabase.url,
+                        self.config.supabase.key,
+                        self.config.supabase.vector_dimension
+                    )
+                    logger.debug("SupabaseManager initialized")
+                    # Keep database_manager reference for backward compatibility
+                    self.database_manager = self.supabase_manager
+                except Exception as e:
+                    logger.warning(f"Failed to initialize Supabase manager: {e}")
+                    self.supabase_manager = None
+                    self.database_manager = None
             else:
+                self.supabase_manager = None
                 self.database_manager = None
-                logger.warning("No database connection configured")
+                logger.warning("No Supabase configuration found - database operations will be skipped")
             
         except Exception as e:
             logger.error(f"Failed to initialize components: {e}")
@@ -411,9 +428,12 @@ class AggregatorAgent:
             if not self.database_manager:
                 return []
             
-            # This would need to be implemented in database manager
-            # For now, return empty list
-            return []
+            # Use the new Supabase method
+            recent_data = self.database_manager.get_recent_chunks_from_db(hours)
+            
+            # Convert to ContentChunk objects if needed
+            # For now, return the raw data since deduplication engine can handle it
+            return recent_data
             
         except Exception as e:
             logger.warning(f"Failed to get recent chunks from database: {e}")
@@ -492,6 +512,9 @@ class AggregatorAgent:
     def cleanup(self):
         """Cleanup resources."""
         try:
+            if hasattr(self, 'supabase_manager') and self.supabase_manager:
+                self.supabase_manager.close()
+            
             if hasattr(self, 'database_manager') and self.database_manager:
                 self.database_manager.close()
             
@@ -504,21 +527,24 @@ class AggregatorAgent:
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
     
+    
     def __del__(self):
         """Cleanup on destruction."""
         self.cleanup()
 
 
 # Convenience function for quick usage
-def create_aggregator_agent(gemini_api_key: str, 
-                           database_url: Optional[str] = None,
+def create_aggregator_agent(gemini_api_key: str,
+                           supabase_url: Optional[str] = None,
+                           supabase_key: Optional[str] = None,
                            config_overrides: Optional[Dict[str, Any]] = None) -> AggregatorAgent:
     """
     Create a configured aggregator agent with common settings.
     
     Args:
         gemini_api_key: Gemini API key for summarization
-        database_url: Optional database connection string
+        supabase_url: Optional Supabase project URL
+        supabase_key: Optional Supabase API key
         config_overrides: Optional configuration overrides
         
     Returns:
@@ -538,7 +564,8 @@ def create_aggregator_agent(gemini_api_key: str,
     return AggregatorAgent(
         config=config,
         gemini_api_key=gemini_api_key,
-        database_url=database_url
+        supabase_url=supabase_url,
+        supabase_key=supabase_key
     )
 
 
@@ -570,9 +597,11 @@ async def example_usage():
     
     # Create aggregator (would need real API key)
     try:
+        import os
         aggregator = create_aggregator_agent(
-            gemini_api_key="your-api-key-here",
-            database_url="postgresql://user:pass@localhost/db"
+            gemini_api_key=os.getenv("GEMINI_API_KEY", "your-gemini-key"),
+            supabase_url=os.getenv("SUPABASE_URL"),
+            supabase_key=os.getenv("SUPABASE_KEY")
         )
         
         # Process results

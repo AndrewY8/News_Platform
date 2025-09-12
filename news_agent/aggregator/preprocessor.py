@@ -442,13 +442,13 @@ class TextPreprocessor:
             
             # Use scraped content if available, otherwise use description
             raw_content = item.get('raw_content') or description
-            if not raw_content or len(raw_content) < self.config.min_content_length:
+            if not raw_content or len(raw_content) < self.config.min_sentence_length:
                 logger.debug(f"Skipping item with insufficient content: {url}")
                 return None
             
             # Clean and process content
             processed_content = self.clean_content(raw_content)
-            if not processed_content or len(processed_content) < self.config.min_content_length:
+            if not processed_content or len(processed_content) < self.config.min_sentence_length:
                 logger.debug(f"Skipping item after cleaning: {url}")
                 return None
             

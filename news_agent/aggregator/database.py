@@ -33,7 +33,7 @@ except ImportError:
 
 import numpy as np
 from .models import ContentChunk, ContentCluster, ClusterSummary
-from .config import DatabaseConfig
+from .config import SupabaseConfig
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class DatabaseManager:
     - Vector similarity search
     """
     
-    def __init__(self, config: DatabaseConfig):
+    def __init__(self, config: SupabaseConfig):
         """
         Initialize database manager.
         
