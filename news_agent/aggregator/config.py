@@ -43,7 +43,7 @@ class DeduplicationConfig:
     content_similarity_weight: float = 0.6
     use_fuzzy_matching: bool = True
     fuzzy_ratio_threshold: int = 85
-    min_content_length: int = 50  # Minimum content length to consider
+    min_content_length: int = 10  # Minimum content length to consider
 
 
 @dataclass
@@ -67,7 +67,7 @@ class PreprocessingConfig:
     remove_phone: bool = True
     normalize_whitespace: bool = True
     remove_boilerplate: bool = True
-    min_sentence_length: int = 10
+    min_sentence_length: int = 5
     max_chunk_size: int = 1000
     chunk_overlap: int = 100
     language_detection: bool = True
@@ -86,6 +86,7 @@ class SummarizerConfig:
     retry_attempts: int = 3
     retry_delay: float = 1.0  # Initial retry delay in seconds
     timeout: int = 30  # Request timeout in seconds
+    api_key: Optional[str] = None  # API key for the summarization service
 
 
 @dataclass
@@ -251,7 +252,8 @@ class AggregatorConfig:
                 "max_input_tokens": self.summarizer.max_input_tokens,
                 "max_output_tokens": self.summarizer.max_output_tokens,
                 "temperature": self.summarizer.temperature,
-                "batch_size": self.summarizer.batch_size
+                "batch_size": self.summarizer.batch_size,
+                "api_key": self.summarizer.api_key
             },
             "supabase": {
                 "url": self.supabase.url,

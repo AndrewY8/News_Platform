@@ -139,53 +139,8 @@
       "source_retriever": "type"
     },
     {
-      "href": "https://finance.yahoo.com/quote/TSLA/news/",
-      "body": "Get the latest Tesla , Inc. (TSLA) stock news and headlines to help you in your trading and investing decisions.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.bloomberg.com/news/videos/2023-10-18/breaking-down-tesla-s-third-quarter-earnings-video",
-      "body": "October 18, 2023 - Morningstar Senior Equity Strategist Seth Goldstein discusses Tesla 's third-quarter earnings with Romaine Bostick and Scarlet Fu on \" Bloomberg Markets: The Close.\" Tesla reported worse-than-expected earnings in the third quarter, after price cuts and softer sales weighed on the electric-vehicle",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.cnbc.com/2025/09/04/broadcom-avgo-q3-2025-earnings-report.html",
-      "body": "1 week ago - Broadcom has been one of the biggest winners in the artificial intelligence boom and investor expectations are growing.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.bloomberg.com/news/videos/2024-10-23/breaking-down-tesla-s-better-than-expected-results-video",
-      "body": "October 23, 2024 - Connecting decision makers to a dynamic network of information, people and ideas, Bloomberg quickly and accurately delivers business and financial information, news and insight around the world \u00b7 Americas+1 212 318 2000",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.cnbc.com/2025/08/11/stock-market-today-live-updates-.html",
-      "body": "August 12, 2025 - Stocks closed higher Tuesday as investors breathed a sigh of relief over a tamer-than-expected inflation report.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.nytimes.com/2025/09/05/business/dealbook/elon-musk-trillionaire.html",
-      "body": "1 week ago - Tesla \u2019s C.E.O. could become the world\u2019s first trillionaire \u2014 if he can get the carmaker to hit some lofty performance hurdles.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.cnbc.com/2025/04/22/stock-market-today-live-updates.html",
-      "body": "April 23, 2025 - Stocks surged after President Donald Trump said he does not plan to remove Federal Reserve Chair Jerome Powell from his post as central bank leader.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.cnbc.com/2025/05/07/stock-market-today-live-updates.html",
-      "body": "May 8, 2025 - Stocks were higher Thursday after President Donald Trump announced that a trade deal between the U.S. and United Kingdom had been struck.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.cnbc.com/2025/06/05/stock-market-today-live-updates.html",
-      "body": "June 6, 2025 - Stocks jumped Friday after the latest nonfarm payrolls data came in better than expected, easing concern the economy faces an imminent slowdown.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://www.bloomberg.com/news/articles/2025-09-09/stock-market-today-dow-s-p-live-updates",
-      "body": "2 days ago - Wall Street traders drove stocks higher and bond yields lower as an unexpected inflation decline reinforced speculation the Federal Reserve will resume cutting interest rates in September.",
+      "href": "https://ir.tesla.com/press",
+      "body": "Tesla has released its financial results for the first quarter of 2025 by posting an update on its Investor Relations website.",
       "source_retriever": "type"
     },
     {
@@ -224,24 +179,242 @@
     "total_retrievers": 11,
     "successful_retrievers": 5,
     "failed_retrievers": 6,
-    "total_articles": 35
+    "total_articles": 26
   },
   "aggregation": {
-    "enabled": false,
-    "clusters": [],
+    "enabled": true,
+    "clusters": [
+      {
+        "id": "cluster_1_20250912_211556",
+        "chunk_count": 3,
+        "source_count": 3,
+        "metadata": {
+          "primary_ticker": "SEC",
+          "topics": [
+            "general_news"
+          ],
+          "time_range": [
+            "2025-09-12T21:15:56.341685",
+            "2025-09-12T21:15:56.361213"
+          ],
+          "source_types": [
+            "financial_news",
+            "sec_filing"
+          ],
+          "confidence_score": 0.5383663861875718,
+          "cluster_size": 3,
+          "dominant_language": "en"
+        },
+        "created_at": "2025-09-12T21:15:56.978803",
+        "updated_at": "2025-09-12T21:15:56.978805",
+        "sources": [
+          {
+            "url": "https://ir.tesla.com/sec-filings",
+            "title": "SEC Filings | Tesla Investor Relations",
+            "author": null,
+            "timestamp": "2025-09-12T21:15:56.341685",
+            "excerpt": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
+            "relevance_score": 1.0
+          },
+          {
+            "url": "https://ir.tesla.com/",
+            "title": "Tesla Investor Relations",
+            "author": null,
+            "timestamp": "2025-09-12T21:15:56.344104",
+            "excerpt": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
+            "relevance_score": 1.0
+          },
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024043486/tsla-20240930.htm",
+            "title": "",
+            "author": null,
+            "timestamp": "2025-09-12T21:15:56.361213",
+            "excerpt": "Based on this evaluation, our Chief Executive Officer and our Chief Financial Officer concluded that, as of September 30, 2024, our disclosure controls and procedures were designed at a reasonable ass...",
+            "relevance_score": 1.0
+          }
+        ],
+        "summary": {
+          "id": "9602d203-c3f5-4ec1-96ec-cec26c323af1",
+          "cluster_id": "cluster_1_20250912_211556",
+          "summary": "**1. Comprehensive Summary:** The provided text consists of three documents related to Tesla's compliance with Securities and Exchange Commission (SEC) regulations.  The first document, sourced directly from the SEC, is an excerpt from a filing indicating that Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024. This certification confirms that the company's systems are designed to ensure timely and accurate reporting of information required by the SEC. The second and third documents, from Tesla's Investor Relations website, provide links and information regarding Tesla's SEC filings. These documents outline the various types of reports and filings Tesla makes available to the public, including annual and quarterly reports, current reports, and proxy filings.  Together, these documents demonstrate Tesla's commitment to transparency and compliance with SEC regulations. The information presented focuses on the mechanisms and processes Tesla uses to meet SEC reporting requirements.  There is no substantive news or events reported; rather, the documents serve as confirmation of compliance and as a directory of available filings.  The lack of specific content within the SEC filing excerpt limits the depth of analysis possible.",
+          "key_points": [
+            "Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024, ensuring compliance with SEC reporting requirements.",
+            "Tesla's Investor Relations website provides a comprehensive list of its SEC filings.",
+            "The filings include annual and quarterly reports, current reports, Section 16 filings, proxy filings, registration statements, and other filings.",
+            "The provided SEC excerpt focuses on the processes for recording, processing, summarizing, and reporting information to the SEC.",
+            "The documents highlight Tesla's commitment to transparency and adherence to SEC regulations.",
+            "*3. Factual Information Only:**  The analysis above strictly adheres to the factual information provided in the source documents. No speculation or interpretation beyond the explicit content of the documents has been included."
+          ],
+          "generated_at": "2025-09-12T21:15:59.968143",
+          "model_used": "gemini-1.5-flash",
+          "confidence": 1.0,
+          "word_count": 188
+        }
+      },
+      {
+        "id": "cluster_0_20250912_211556",
+        "chunk_count": 2,
+        "source_count": 2,
+        "metadata": {
+          "primary_ticker": "TESLA",
+          "topics": [
+            "general_news"
+          ],
+          "time_range": [
+            "2025-09-12T21:15:56.344907",
+            "2025-09-12T21:15:56.346969"
+          ],
+          "source_types": [
+            "financial_news",
+            "sec_filing"
+          ],
+          "confidence_score": 0.6469002957794491,
+          "cluster_size": 2,
+          "dominant_language": "en"
+        },
+        "created_at": "2025-09-12T21:15:56.979136",
+        "updated_at": "2025-09-12T21:15:56.979138",
+        "sources": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
+            "title": "tsla-20231231",
+            "author": null,
+            "timestamp": "2025-09-12T21:15:56.344907",
+            "excerpt": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
+            "relevance_score": 1.0
+          },
+          {
+            "url": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
+            "title": "tsla-20250422-gen.pdf",
+            "author": null,
+            "timestamp": "2025-09-12T21:15:56.346969",
+            "excerpt": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
+            "relevance_score": 1.0
+          }
+        ],
+        "summary": {
+          "id": "a0ba1be3-8490-408b-ad03-6396d3416ca5",
+          "cluster_id": "cluster_0_20250912_211556",
+          "summary": "Tesla released its First Quarter 2025 Update on September 12th, 2025, reporting financial results for the quarter ended March 31st, 2025.  This release, found on Tesla's investor relations website (ir.tesla.com), provides details of the company's performance during that period.  A separate filing with the Securities and Exchange Commission (SEC), dated September 12th, 2025, indicates that Tesla will submit a proxy statement within 120 days of its fiscal year ending December 31st, 2023.  This proxy statement will likely contain information relevant to shareholder voting and corporate governance.  The specific financial details from the Q1 2025 update are not provided in the available text. The two documents highlight Tesla's ongoing reporting obligations to both investors and regulatory bodies.  The release of the Q1 2025 financial results fulfills a requirement for timely disclosure of financial performance. The SEC filing indicates compliance with regulations regarding shareholder information and upcoming corporate actions.  The lack of specific numerical data in the provided text limits the depth of analysis possible.",
+          "key_points": [
+            "Tesla released its First Quarter 2025 financial results on September 12th, 2025.",
+            "The Q1 2025 results cover the period ending March 31st, 2025.",
+            "The financial results were published on Tesla's investor relations website (ir.tesla.com).",
+            "Tesla filed a notice with the SEC indicating an upcoming proxy statement.",
+            "The proxy statement will be filed within 120 days of the fiscal year ending December 31st, 2023."
+          ],
+          "generated_at": "2025-09-12T21:15:59.636220",
+          "model_used": "gemini-1.5-flash",
+          "confidence": 0.8,
+          "word_count": 163
+        }
+      }
+    ],
     "stats": {
-      "error": "Aggregation failed or disabled"
+      "processing_time_seconds": 3.950218915939331,
+      "total_clusters": 2,
+      "total_sources": 5,
+      "total_chunks_processed": 5,
+      "timestamp": "2025-09-12T21:15:59.999021"
     },
-    "cluster_count": 0,
-    "total_sources": 0
+    "cluster_count": 2,
+    "total_sources": 5
   },
-  "summaries": [],
+  "summaries": [
+    {
+      "id": "cluster_1_20250912_211556",
+      "title": "SEC: General News",
+      "summary": "**1. Comprehensive Summary:** The provided text consists of three documents related to Tesla's compliance with Securities and Exchange Commission (SEC) regulations.  The first document, sourced directly from the SEC, is an excerpt from a filing indicating that Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024. This certification confirms that the company's systems are designed to ensure timely and accurate reporting of information required by the SEC. The second and third documents, from Tesla's Investor Relations website, provide links and information regarding Tesla's SEC filings. These documents outline the various types of reports and filings Tesla makes available to the public, including annual and quarterly reports, current reports, and proxy filings.  Together, these documents demonstrate Tesla's commitment to transparency and compliance with SEC regulations. The information presented focuses on the mechanisms and processes Tesla uses to meet SEC reporting requirements.  There is no substantive news or events reported; rather, the documents serve as confirmation of compliance and as a directory of available filings.  The lack of specific content within the SEC filing excerpt limits the depth of analysis possible.",
+      "key_points": [
+        "Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024, ensuring compliance with SEC reporting requirements.",
+        "Tesla's Investor Relations website provides a comprehensive list of its SEC filings.",
+        "The filings include annual and quarterly reports, current reports, Section 16 filings, proxy filings, registration statements, and other filings.",
+        "The provided SEC excerpt focuses on the processes for recording, processing, summarizing, and reporting information to the SEC.",
+        "The documents highlight Tesla's commitment to transparency and adherence to SEC regulations.",
+        "*3. Factual Information Only:**  The analysis above strictly adheres to the factual information provided in the source documents. No speculation or interpretation beyond the explicit content of the documents has been included."
+      ],
+      "sources": [
+        {
+          "url": "https://ir.tesla.com/sec-filings",
+          "title": "SEC Filings | Tesla Investor Relations",
+          "author": null,
+          "timestamp": "2025-09-12T21:15:56.341685",
+          "excerpt": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
+          "relevance_score": 1.0
+        },
+        {
+          "url": "https://ir.tesla.com/",
+          "title": "Tesla Investor Relations",
+          "author": null,
+          "timestamp": "2025-09-12T21:15:56.344104",
+          "excerpt": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
+          "relevance_score": 1.0
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024043486/tsla-20240930.htm",
+          "title": "",
+          "author": null,
+          "timestamp": "2025-09-12T21:15:56.361213",
+          "excerpt": "Based on this evaluation, our Chief Executive Officer and our Chief Financial Officer concluded that, as of September 30, 2024, our disclosure controls and procedures were designed at a reasonable ass...",
+          "relevance_score": 1.0
+        }
+      ],
+      "metadata": {
+        "ticker": "SEC",
+        "topics": [
+          "general_news"
+        ],
+        "source_count": 3,
+        "confidence": 1.0,
+        "cluster_score": 1.0
+      }
+    },
+    {
+      "id": "cluster_0_20250912_211556",
+      "title": "TESLA: General News",
+      "summary": "Tesla released its First Quarter 2025 Update on September 12th, 2025, reporting financial results for the quarter ended March 31st, 2025.  This release, found on Tesla's investor relations website (ir.tesla.com), provides details of the company's performance during that period.  A separate filing with the Securities and Exchange Commission (SEC), dated September 12th, 2025, indicates that Tesla will submit a proxy statement within 120 days of its fiscal year ending December 31st, 2023.  This proxy statement will likely contain information relevant to shareholder voting and corporate governance.  The specific financial details from the Q1 2025 update are not provided in the available text. The two documents highlight Tesla's ongoing reporting obligations to both investors and regulatory bodies.  The release of the Q1 2025 financial results fulfills a requirement for timely disclosure of financial performance. The SEC filing indicates compliance with regulations regarding shareholder information and upcoming corporate actions.  The lack of specific numerical data in the provided text limits the depth of analysis possible.",
+      "key_points": [
+        "Tesla released its First Quarter 2025 financial results on September 12th, 2025.",
+        "The Q1 2025 results cover the period ending March 31st, 2025.",
+        "The financial results were published on Tesla's investor relations website (ir.tesla.com).",
+        "Tesla filed a notice with the SEC indicating an upcoming proxy statement.",
+        "The proxy statement will be filed within 120 days of the fiscal year ending December 31st, 2023."
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
+          "title": "tsla-20231231",
+          "author": null,
+          "timestamp": "2025-09-12T21:15:56.344907",
+          "excerpt": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
+          "relevance_score": 1.0
+        },
+        {
+          "url": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
+          "title": "tsla-20250422-gen.pdf",
+          "author": null,
+          "timestamp": "2025-09-12T21:15:56.346969",
+          "excerpt": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
+          "relevance_score": 1.0
+        }
+      ],
+      "metadata": {
+        "ticker": "TESLA",
+        "topics": [
+          "general_news"
+        ],
+        "source_count": 2,
+        "confidence": 0.8,
+        "cluster_score": 1.0
+      }
+    }
+  ],
   "processing_stats": {
     "query": "Tesla Q3 earnings SEC filings",
-    "retrieval_time": 14.832323,
-    "aggregation_enabled": false,
+    "retrieval_time": 11.486157,
+    "aggregation_enabled": true,
     "user_preferences_used": false,
-    "timestamp": "2025-09-12T20:46:25.258760",
-    "total_time": 14.832364
+    "timestamp": "2025-09-12T21:15:59.999205",
+    "total_time": 15.43662
   }
 }

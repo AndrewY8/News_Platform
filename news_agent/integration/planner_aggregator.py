@@ -8,6 +8,7 @@ news aggregator system.
 
 import logging
 import asyncio
+import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
@@ -59,15 +60,25 @@ class EnhancedPlannerAgent:
         if enable_aggregation:
             try:
                 if aggregator_config:
+                    # Read Supabase credentials from environment if not in config
+                    supabase_url = aggregator_config.supabase.url or os.getenv("SUPABASE_URL")
+                    supabase_key = aggregator_config.supabase.key or os.getenv("SUPABASE_KEY")
+                    
                     self.aggregator = AggregatorAgent(
                         config=aggregator_config,
                         gemini_api_key=gemini_api_key,
-                        database_url=database_url
+                        supabase_url=supabase_url,
+                        supabase_key=supabase_key
                     )
                 else:
+                    # Read Supabase credentials from environment
+                    supabase_url = os.getenv("SUPABASE_URL")
+                    supabase_key = os.getenv("SUPABASE_KEY")
+                    
                     self.aggregator = create_aggregator_agent(
                         gemini_api_key=gemini_api_key or "dummy-key",  # Will need real key
-                        database_url=database_url
+                        supabase_url=supabase_url,
+                        supabase_key=supabase_key
                     )
                 
                 logger.info("Aggregation enabled for EnhancedPlannerAgent")
@@ -339,6 +350,8 @@ class EnhancedPlannerAgent:
 # Convenience functions for easy integration
 def create_enhanced_planner(gemini_api_key: str,
                            database_url: Optional[str] = None,
+                           supabase_url: Optional[str] = None,
+                           supabase_key: Optional[str] = None,
                            max_retrievers: int = 5,
                            config_overrides: Optional[Dict[str, Any]] = None) -> EnhancedPlannerAgent:
     """
@@ -346,13 +359,21 @@ def create_enhanced_planner(gemini_api_key: str,
     
     Args:
         gemini_api_key: Gemini API key for summarization
-        database_url: Optional database connection string
+        database_url: Optional database connection string (legacy parameter)
+        supabase_url: Optional Supabase URL (reads from SUPABASE_URL env if None)
+        supabase_key: Optional Supabase key (reads from SUPABASE_KEY env if None)
         max_retrievers: Maximum concurrent retrievers
         config_overrides: Optional configuration overrides
         
     Returns:
         Configured EnhancedPlannerAgent
     """
+    # Read Supabase credentials from environment if not provided
+    if supabase_url is None:
+        supabase_url = os.getenv("SUPABASE_URL")
+    if supabase_key is None:
+        supabase_key = os.getenv("SUPABASE_KEY")
+    
     aggregator_config = None
     
     if config_overrides:
@@ -363,6 +384,18 @@ def create_enhanced_planner(gemini_api_key: str,
                 for key, value in section_overrides.items():
                     if hasattr(section_obj, key):
                         setattr(section_obj, key, value)
+    
+    # If we still don't have a config but have Supabase credentials, create one
+    if aggregator_config is None and (supabase_url and supabase_key):
+        aggregator_config = AggregatorConfig()
+        aggregator_config.supabase.url = supabase_url
+        aggregator_config.supabase.key = supabase_key
+    elif aggregator_config is not None:
+        # Update existing config with Supabase credentials
+        if supabase_url:
+            aggregator_config.supabase.url = supabase_url
+        if supabase_key:
+            aggregator_config.supabase.key = supabase_key
     
     return EnhancedPlannerAgent(
         max_concurrent_retrievers=max_retrievers,

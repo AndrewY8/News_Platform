@@ -434,13 +434,13 @@ class TextPreprocessor:
             Processed ContentChunk or None if processing fails
         """
         try:
-            # Extract basic information
+            # Extract basic information (handle different field name formats)
             title = item.get('title', '')
-            url = item.get('url', '')
-            description = item.get('description', '')
+            url = item.get('url', '') or item.get('href', '')  # Handle both url and href
+            description = item.get('description', '') or item.get('body', '')  # Handle both description and body
             source_retriever = item.get('source_retriever', 'unknown')
             
-            # Use scraped content if available, otherwise use description
+            # Use scraped content if available, otherwise use description/body
             raw_content = item.get('raw_content') or description
             if not raw_content or len(raw_content) < self.config.min_sentence_length:
                 logger.debug(f"Skipping item with insufficient content: {url}")
