@@ -1,10 +1,21 @@
 from news_agent.agent import PlannerAgent
+from news_agent.integration.planner_aggregator import create_enhanced_planner
 from dotenv import load_dotenv
+import os
 import json
 
 load_dotenv();
 
-planner = PlannerAgent()
+planner = create_enhanced_planner(
+    gemini_api_key=os.getenv("GEMINI_API_KEY"),
+    max_retrievers=5,
+    config_overrides={
+        'clustering': {
+            'min_cluster_size': 2,
+            'similarity_threshold': 0.65
+        }
+    }
+)
 results = planner.run("Tesla Q3 earnings SEC filings")
 # print("RESULTS")
 # print(results)
