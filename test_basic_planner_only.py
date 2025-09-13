@@ -73,6 +73,7 @@ async def test_basic_planner_async():
         print(f"\nAsync search completed in {(end_time - start_time).total_seconds():.2f} seconds")
 
         # Display results
+        # print("HERE" , results)
         print_results(results)
 
         # Save results
@@ -110,7 +111,10 @@ def test_basic_planner_sync():
         print(f"\nSync search completed in {(end_time - start_time).total_seconds():.2f} seconds")
 
         # Display results
-        print_results(results)
+        print(results)
+        with open(f"basic_planner_agent_test_{datetime.now().isoformat()}.json", 'w') as json_file:
+            json.dump(results, json_file)
+        # print_results(results)
 
         return results
 
@@ -153,7 +157,7 @@ async def main():
     # Run tests
     try:
         # Test 1: Async mode
-        await test_basic_planner_async()
+        # await test_basic_planner_async()
 
         # Test 2: Sync mode
         test_basic_planner_sync()

@@ -60,12 +60,7 @@ class TavilyRetriever:
         topic: str = "general",
         days: int = 30,
         max_results: int = 10,
-        include_domains: Sequence[str] = None,
-        exclude_domains: Sequence[str] = None,
         include_answer: bool = False,
-        include_raw_content: bool = False,
-        include_images: bool = False,
-        use_cache: bool = True,
     ) -> dict:
         """
         Internal search method to send the request to the API.
@@ -74,7 +69,7 @@ class TavilyRetriever:
         data = {
         "query": query,
         "search_depth": search_depth,
-        "topic": topic,
+        # "topic": topic,
         "days": days,
         "max_results": max_results,
         "include_answer": include_answer,
@@ -98,7 +93,12 @@ class TavilyRetriever:
             # Raises a HTTPError if the HTTP request returned an unsuccessful status code
             response.raise_for_status()
 
-    def search(self, max_results=10):
+    def search(self, 
+        search_depth: Literal["basic", "advanced"] = "basic",
+        topic: str = "general",
+        days: int = 30,
+        max_results: int = 10,
+        include_answer: bool = False):
         """
         Searches the query
         Returns:
@@ -108,10 +108,11 @@ class TavilyRetriever:
             # Search the query
             results = self._search(
                 self.query,
-                search_depth="basic",
-                max_results=max_results,
-                topic=self.topic,
-                include_domains=self.query_domains,
+                search_depth,
+                topic,
+                days,
+                max_results,
+                include_answer
             )
             sources = results.get("results", [])
             if not sources:

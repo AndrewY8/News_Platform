@@ -1,6 +1,7 @@
 # --- Task planner for local retrievers ---
 import logging
 from typing import List, Tuple, Any
+from ..prompts import pick_retriever
 try:
     from ..prompts import create_sec_focused_query, create_breaking_news_query, create_multi_source_query
 except ImportError:
@@ -82,7 +83,7 @@ RETRIEVER_CONFIG = {
     }
 }
 
-def get_retriever_tasks(query: str) -> List[Tuple[Any, str]]:
+def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     """
     Create specialized tasks for different retrievers based on their strengths.
     
@@ -93,54 +94,30 @@ def get_retriever_tasks(query: str) -> List[Tuple[Any, str]]:
         List[Tuple[Any, str]]: List of (retriever_instance, specialized_task) tuples
     """
     retriever_classes = [
-        CustomRetriever,
-        DuckDuckGoRetriever, 
-        ExaRetriever,
-        GoogleRetriever,
-        # MCPRetriever,
-        SearchAPIRetriever,
-        SearxRetriever,
-        SerpAPIRetriever,
-        SerperRetriever,
         TavilyRetriever,
+        SerperRetriever,
+        GoogleRetriever,
+        SerpAPIRetriever,
+        ExaRetriever,
+        SearchAPIRetriever,
     ]
     
     tasks = []
+  
+    # ['TavilyRetriever', 'SerperSearch', 'GoogleSearch', 'SerpApiSearch', 'ExaSearch', 'SearchApiSearch']
     
-    # Create different query variations for different purposes
-    sec_query = create_sec_focused_query(query)
-    breaking_news_query = create_breaking_news_query(query)
-    multi_source_query = create_multi_source_query(query)
+    for query in queries:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", contents=pick_retriever(query, ['TavilyRetriever'])
+        ) 
+        print("PICK RETRIEVER TEXT")
+        print(response.text)
+        index = int(response.text)
+        tasks.append((retriever_classes[index], query))
+
     
-    for cls in retriever_classes:
-        try:
-            retriever = cls
-            retriever_name = cls.__name__
-            
-            # Assign specialized tasks based on retriever capabilities
-            if retriever_name in ['TavilyRetriever', 'SerperSearch']:
-                # These are good for real-time breaking news
-                # print("HERE#################")
-                # print(breaking_news_query)
-                tasks.append((retriever, sec_query))
-                tasks.append((retriever, breaking_news_query))
-                tasks.append((retriever, multi_source_query))
-            elif retriever_name in ['GoogleSearch', 'SerpApiSearch']:
-                # These are good for SEC filings and structured data
-                tasks.append((retriever, query))
-            elif retriever_name in ['ExaSearch', 'SearchApiSearch']:
-                # These are good for multi-source verification
-                tasks.append((retriever, query))
-            else:
-                # Default to the main augmented query
-                tasks.append((retriever, query))
-                
-        except Exception as e:
-            logger.error(f"Failed to initialize {cls.__name__}: {str(e)}")
-            continue
-    
-    logger.info(f"Created {len(tasks)} retriever tasks")
     return tasks
+    
 
 def get_priority_retrievers(query: str, max_retrievers: int = 5) -> List[Tuple[Any, str]]:
     """

@@ -1,8 +1,11 @@
 import logging
 import asyncio
 from typing import List, Dict, Any, Optional
-from .prompts import augment_query
+from .prompts import augment_query, pick_tavily_params
 from .actions.retriever import get_retriever_tasks
+from google import genai
+import json
+from datetime import datetime
 
 try:
     from .scraper.scraper import scrape_results
@@ -61,6 +64,7 @@ class PlannerAgent:
             max_concurrent_retrievers (int): Maximum number of retrievers to run concurrently
         """
         self.max_concurrent_retrievers = max_concurrent_retrievers
+        self.client = genai.Client() 
     
     async def _run_retriever_task(self, retriever, task: str) -> Optional[Dict[str, Any]]:
         """
@@ -87,12 +91,27 @@ class PlannerAgent:
             #         "results": []
             #     }
             
+            # get cusotm parameters for tavilly search
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash", contents=pick_tavily_params(task), config={"response_mime_type": "application/json"}
+            ) 
+            print("TAVILY PARAMS")
+            print(response.text)
+            tavily_params = response.text
+            tavily_params = json.loads(tavily_params)
+            tavily_params["days"] = int(tavily_params["days"])
+            tavily_params["max_results"] = int(tavily_params["max_results"])
+            tavily_params["include_answer"] = bool(tavily_params["include_answer"])
+    
+            print(tavily_params)
+            
             # Run the retriever
+            
             ret_obj = retriever(task);
             if asyncio.iscoroutinefunction(ret_obj.search):
-                result = await ret_obj.search()
+                result = await ret_obj.search(**tavily_params)
             else:
-                result = ret_obj.search()
+                result = ret_obj.search(**tavily_params)
             
             # Ensure result is in expected format
             if result is None:
@@ -241,36 +260,49 @@ class PlannerAgent:
         try:
             logger.info(f"Starting planner agent with query: {query}")
             
-            # Step 1: Augment the query
-            # augmented_query = augment_query(query)
-            augmented_query = query;
+            # Step 1: Augment the query 
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=augment_query(query)
+            ) 
+            # parse response to a list of queries
+            parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
+
+            augmented_queries = parse_queries(response.text)
+            
+            with open(f"queries{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt", "w") as f:
+                for augmented_query in augmented_queries:
+                    f.write(augmented_query + "\n")
+        
             logger.info("Query augmented successfully")
             
             # Step 2: Get retriever tasks
-            retriever_tasks = get_retriever_tasks(augmented_query)
+            retriever_tasks = get_retriever_tasks(augmented_queries, self.client)
+                
+            # retriever_tasks = get_retriever_tasks(augmented_query)
             logger.info(f"Created {len(retriever_tasks)} retriever tasks")
             
             # Step 3: Run retrievers in batches
             all_results = await self._run_retrievers_batch(retriever_tasks)
             
-            # Step 4: Scrape additional details if scraper is available
-            try:
-                scraped_results = scrape_results(all_results)
-                if scraped_results != all_results:  # If scraper modified results
-                    all_results = scraped_results
-                    logger.info("Results enhanced with scraping")
-            except Exception as e:
-                logger.warning(f"Scraping failed, continuing with original results: {str(e)}")
+            # # Step 4: Scrape additional details if scraper is available
+            # try:
+            #     scraped_results = scrape_results(all_results)
+            #     if scraped_results != all_results:  # If scraper modified results
+            #         all_results = scraped_results
+            #         logger.info("Results enhanced with scraping")
+            # except Exception as e:
+            #     logger.warning(f"Scraping failed, continuing with original results: {str(e)}")
             
             # print("HERE#################", len(all_results))
             # print(all_results)
             
             # Step 5: Organize and filter results
-            organized_results = self._filter_and_organize_results(all_results)
+            # organized_results = self._filter_and_organize_results(all_results)
             
-            logger.info(f"Planner agent completed. Found {organized_results['retriever_summary']['total_articles']} total articles")
+            # logger.info(f"Planner agent completed. Found {organized_results['retriever_summary']['total_articles']} total articles")
             
-            return organized_results
+            return all_results
             
         except Exception as e:
             logger.error(f"Planner agent failed: {str(e)}")
