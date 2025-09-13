@@ -189,7 +189,7 @@ export default function SecDocsPage() {
       console.error('Error loading document:', error)
       setDocumentContent("Error loading document content. Please try again.")
       setTotalPages(1)
-    }
+    }ApiService
   }
 
   const handleZoomIn = () => {

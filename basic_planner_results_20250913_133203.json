@@ -1,0 +1,258 @@
+{
+  "breaking_news": [],
+  "financial_news": [],
+  "sec_filings": [],
+  "general_news": [
+    {
+      "title": "Full Self-Driving (Supervised)",
+      "href": "https://www.tesla.com/fsd",
+      "body": "Full Self-Driving (Supervised) intelligently and accurately completes driving maneuvers for you, including route navigation, steering, lane changes, parking ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Tesla is facing a new federal investigation into its ...",
+      "href": "https://www.cnn.com/2025/08/21/business/tesla-nhtsa-self-driving-investigation",
+      "body": "Tesla is facing a new federal investigation into its autonomous driving features. A Tesla Model Y equipped with Tesla's \"Autopilot\" feature. ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Robotaxi",
+      "href": "https://www.tesla.com/robotaxi",
+      "body": "Robotaxi is Coming. We're bringing these autonomous rides to you today\u2014starting with Model Y. Cybercab, our fully autonomous vehicle, will begin offering ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Full Self-Driving News - TESLARATI",
+      "href": "https://www.teslarati.com/tag/full-self-driving/",
+      "body": "California proposal to allow self-driving tests for heavy-duty trucks \u00b7 Elon Musk continues to push optimistic goal for Tesla Full Self-Driving \u00b7 Watch Tesla's ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Tesla gears up to release major Full Self-Driving upgrade ...",
+      "href": "https://www.cbtnews.com/tesla-gears-up-to-release-major-full-self-driving-upgrade-next-month/",
+      "body": "Tesla CEO Elon Musk announces an upgraded Full Self-Driving model with better AI and video, aiming for release by next month.",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Elon Musk teases new Tesla 'Full Self-Driving Supervised', ...",
+      "href": "https://www.reddit.com/r/SelfDrivingCars/comments/1mlqqor/elon_musk_teases_new_tesla_full_selfdriving/",
+      "body": "Teslas now drive themselves from the factory to loading docks without human intervention\u2014one step closer to large-scale autonomous FSD! r/ ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Tesla changes meaning of 'Full Self-Driving', gives up on ...",
+      "href": "https://news.ycombinator.com/item?id=45144900",
+      "body": "There is none with Musk's \"vision only\" approach. Vision can fail for a multitude of reasons --- sunlight, rain, darkness, bad road markers, ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Full Self-Driving (Supervised) - Tesla",
+      "href": "https://www.tesla.com/fsd",
+      "body": "Full Self-Driving (Supervised) intelligently and accurately completes driving maneuvers for you, including route navigation, steering, lane changes, parking ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Tesla is facing a new federal investigation into its autonomous ...",
+      "href": "https://www.cnn.com/2025/08/21/business/tesla-nhtsa-self-driving-investigation",
+      "body": "Tesla is facing a new federal investigation into its autonomous driving features. A Tesla Model Y equipped with Tesla's \"Autopilot\" feature. ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "We Investigated Tesla's Autopilot. It's Scarier Than You Think",
+      "href": "https://www.youtube.com/watch?v=6ltU9q1pKKM",
+      "body": "After hundreds of crashes and major lawsuits, Tesla's misleading \"autonomous driving\" claims might be coming to an end. Elon Musk and Tesla ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Full Self-Driving News - TESLARATI",
+      "href": "https://www.teslarati.com/tag/full-self-driving/",
+      "body": "California proposal to allow self-driving tests for heavy-duty trucks \u00b7 Elon Musk continues to push optimistic goal for Tesla Full Self-Driving \u00b7 Watch Tesla's ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Robotaxi - Tesla",
+      "href": "https://www.tesla.com/robotaxi",
+      "body": "Robotaxi is Coming. We're bringing these autonomous rides to you today\u2014starting with Model Y. Cybercab, our fully autonomous vehicle, will begin offering ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Tesla gears up to release major Full Self-Driving upgrade next month",
+      "href": "https://www.cbtnews.com/tesla-gears-up-to-release-major-full-self-driving-upgrade-next-month/",
+      "body": "Tesla CEO Elon Musk announces an upgraded Full Self-Driving model with better AI and video, aiming for release by next month.",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Elon Musk teases new Tesla 'Full Self-Driving Supervised ... - Reddit",
+      "href": "https://www.reddit.com/r/SelfDrivingCars/comments/1mlqqor/elon_musk_teases_new_tesla_full_selfdriving/",
+      "body": "Teslas now drive themselves from the factory to loading docks without human intervention\u2014one step closer to large-scale autonomous FSD! r/ ...",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/sec-filings",
+      "body": "Annual & Quarterly Reports 10-K & 10-Q Current Reports 8-K Section 16 Filings Forms 3, 4, 5 Proxy Filings",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/_flysystem/s3/sec/000162828025003063/tsla-20241231-gen.pdf",
+      "body": "We file or furnish periodic reports and amendments thereto, including our Annual Reports on Form 10-K, our Quarterly Reports on Form 10-Q and Current Reports on Form 8-K, proxy statements and other information with the SEC.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/",
+      "body": "Tesla's mission is to accelerate the world's transition to sustainable energy. Today, Tesla builds not only all-electric vehicles but also infinitely scalable clean energy generation and storage products.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/webcast-2025-04-22",
+      "body": "Tesla's mission is to accelerate the world's transition to sustainable energy. Today, Tesla builds not only all-electric vehicles but also infinitely scalable clean energy generation and storage products.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/press-release/tesla-releases-first-quarter-2025-financial-results",
+      "body": "AUSTIN, Texas, April 22, 2025 \u2013 Tesla has released its financial results for the first quarter of 2025 by posting an update on its Investor Relations website. Please visit https://ir.tesla.com to view the update.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/_flysystem/s3/sec/000110465925042659/tm252787d2_10ka-gen.pdf",
+      "body": "During 2024, there were no stock options granted to any named executive officer within four business days preceding, or within one business day after, the filing of any report on Forms 10-K, 10-Q or 8-K that discloses material non-public information.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.tesla.com/press-release/tesla-first-quarter-2025-production-deliveries-and-deployments",
+      "body": "AUSTIN, Texas, April 2, 2025 \u2013 In the first quarter, we produced over 362,000 vehicles, delivered over 336,000 vehicles and deployed 10.4 GWh of energy storage products.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/autos-transportation/tesla-doubles-down-robotaxi-timeline-investors-enthused-skeptical-2025-04-24/",
+      "body": "April 24, 2025 - Tesla peppered its latest earnings call with pledges to launch commercial robotaxi operations soon, with CEO Elon Musk promising that autonomous vehicles will \"move the financial needle in a significant way\" by late next year.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.nytimes.com/2025/07/02/business/tesla-sales-elon-musk.html",
+      "body": "July 2, 2025 - The company has devoted resources to autonomous driving rather than developing new models to attract car buyers.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/autos-transportation/tesla-tiptoes-into-long-promised-robotaxi-service-2025-06-22/",
+      "body": "Jun 23, 2025 \u2014 Tesla (TSLA.O) deployed a small group of self - driving taxis picking up paying passengers on Sunday in Austin, Texas, with CEO Elon Musk announcing the robotaxi",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.tesla.com/fsd",
+      "body": "Over-the-air software updates ensure each Tesla vehicle has access to the latest safety improvements. Learn More. 3.8. Billion. Miles Driven. 54%. Safer. Than a",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.cnbc.com/2025/08/28/tesla-fsd-turns-away-more-us-consumers-than-attracts-survey-finds.html",
+      "body": "Aug 28, 2025 \u2014 A poll conducted this month shows more U.S. consumers say Tesla's Full Self - Driving (Supervised) technology, or FSD, would push them away",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/autos-transportation/why-teslas-robotaxi-launch-was-easy-part-2025-06-24/",
+      "body": "Jun 25, 2025 \u2014 Elon Musk has predicted millions of Tesla robotaxis will roam the streets by the end of 2026 \u00b7 Serious questions remain over whether Telsa can",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://electrek.co/2025/08/21/tesla-self-driving-videos-dont-do-anything-give-us-the-data/",
+      "body": "3 weeks ago - Tesla continues to post videos of its vehicles driving autonomously , with an employee in the driver\u2019s seat, as proof that",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.news8000.com/lifestyle/money/tesla-is-facing-a-new-federal-investigation-into-its-autonomous-driving-features/article_e56bc409-c029-5f49-ba77-e0f2905c497e.html",
+      "body": "Aug 25, 2025 \u2014 (CNN) \u2014 Tesla is facing an investigation from federal safety regulators into whether it delayed notifying the government about crashes",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/autos-transportation/tesla-delays-robotaxi-launch-october-august-bloomberg-news-reports-2024-07-11/",
+      "body": "July 12, 2024 - Tesla is delaying the launch of robotaxi by about two months to October as the design team was told to rework some elements of the car, Bloomberg News reported on Thursday, citing people familiar with the decision.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://apnews.com/article/tesla-crashes-self-driving-robotaxis-regulators-musk-nhtsa-9946e73dbeca2ff4619a3a7240591f6c",
+      "body": "Aug 21, 2025 \u2014 Federal auto safety regulators have opened an investigation into why Tesla has repeatedly broken rules requiring it to tell them quickly",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://economictimes.indiatimes.com/topic/tesla-autonomous-driving",
+      "body": "Tesla autonomous driving . Tesla\u2019s robotaxi gig pays big! Earn $33.66 per hour driving the cars of tomorrow in NYC. 13 Aug, 2025 , 09 :59 PM IST. Tesla Pulls the Plug: The End of Dojo and a Pivot in the Self-Driving Race.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/introducing-fsd-hunter-app-for-finding-tesla-cars-with-full-self-driving-included-package.338619/",
+      "body": "Discover FSD Hunter, an app designed to help Tesla shoppers find vehicles with the Full Self-Driving package included.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://podcast.teslamotorsclub.com/",
+      "body": "Mar 18, 2025 \u00b7 In this episode of the Tesla Motors Club podcast, hosts Seb, Doug, and Mike discuss changes in Tesla's perception as a brand and worldwide sales. Topics include Elon\u2019s \u2026",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/dash-mounted-magsafe-charger-for-2025-model-y-juniper-by-twraps.346855/",
+      "body": "Dashboard Phone Mount / Qi2 Charger | Tesla Model 3 Highland, Model Y Juniper The TWRAPS phone holder for latest Tesla refreshed Model Y 2026 and Model 3 2024-2026 vehicles offers \u2026",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/no-dash-cam-footage-recorded-when-accident-occurs.326434/",
+      "body": "I was involved in an accident two days ago while driving my Tesla. I had a USB drive plugged into the car and had cleared out old clips to ensure there was sufficient storage space before the \u2026",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/frightening-order-cancellation-experience.346268/",
+      "body": "Welcome to Tesla Motors Club Discuss Tesla's Model S, Model 3, Model X, Model Y, Cybertruck, Roadster and More.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/tesla-battery-preconditioning-when-how-and-why-you-should-do-it.300265/",
+      "body": "The Tesla Model Y's battery management system will automatically warm or cool the battery as required. You can control preconditioning for Supercharging (a special form of battery \u2026",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/north-carolina-state-inspection.289746/",
+      "body": "Discuss Tesla's Model S, Model 3, Model X, Model Y, Cybertruck, Roadster and More.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://teslamotorsclub.com/tmc/threads/solutions-for-double-gfci.7168/",
+      "body": "Jan 7, 2012 \u00b7 Discuss Tesla's Model S, Model 3, Model X, Model Y, Cybertruck, Roadster and More.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reddit.com/r/TeslaReferralsCode/",
+      "body": "Moderated Version of the Tesla Referral Sub! - No bots! This subreddit allows current Tesla Model 3, Tesla Model Y, Tesla Model S & Model X owners to post their Tesla referral codes, \u2026",
+      "source_retriever": "type"
+    }
+  ],
+  "errors": [
+    {
+      "retriever": "type",
+      "error": "RETRIEVER_ENDPOINT environment variable not set"
+    },
+    {
+      "retriever": "type",
+      "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
+    },
+    {
+      "retriever": "type",
+      "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
+    },
+    {
+      "retriever": "type",
+      "error": "Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. You can get a key at https://developers.google.com/custom-search/v1/overview"
+    },
+    {
+      "retriever": "type",
+      "error": "SearxNG URL not found. Please set the SEARX_URL environment variable. You can find public instances at https://searx.space/"
+    },
+    {
+      "retriever": "type",
+      "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    }
+  ],
+  "retriever_summary": {
+    "total_retrievers": 11,
+    "successful_retrievers": 5,
+    "failed_retrievers": 6,
+    "total_articles": 41
+  }
+}

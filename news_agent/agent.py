@@ -100,7 +100,7 @@ class PlannerAgent:
             
             return {
                 "retriever": retriever_name,
-                "status": "success", 
+                "status": "success",
                 "results": result
             }
             

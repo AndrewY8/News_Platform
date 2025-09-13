@@ -3,7 +3,7 @@ import time
 import json
 import hashlib
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from fastapi import FastAPI, HTTPException, Request, Depends, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -60,12 +60,29 @@ from news_intelligence import NewsIntelligenceService
 from simple_agent_integration import get_simple_agent_news_service
 import google.generativeai as genai
 
+# Import Enhanced Pipeline (before logger is defined)
+ENHANCED_PIPELINE_AVAILABLE = False
+enhanced_pipeline_import_error = None
+try:
+    import sys
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from enhanced_news_pipeline import create_enhanced_news_pipeline
+    ENHANCED_PIPELINE_AVAILABLE = True
+except Exception as e:
+    enhanced_pipeline_import_error = str(e)
+
 # Import SEC service
 from sec_service import sec_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Log enhanced pipeline import status
+if ENHANCED_PIPELINE_AVAILABLE:
+    logger.info("✅ Enhanced News Pipeline available")
+else:
+    logger.warning(f"⚠️ Enhanced News Pipeline not available: {enhanced_pipeline_import_error}")
 
 # Configuration from environment
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "1f96d48a73e24ad19d3e68449d982290")
@@ -87,6 +104,26 @@ Base = declarative_base()
 
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
+
+# Enhanced Pipeline initialization
+enhanced_pipeline = None
+if ENHANCED_PIPELINE_AVAILABLE:
+    try:
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        tavily_key = os.getenv("TAVILY_API_KEY")
+
+        if gemini_key and tavily_key:
+            enhanced_pipeline = create_enhanced_news_pipeline(
+                gemini_api_key=gemini_key,
+                tavily_api_key=tavily_key,
+                max_retrievers=5
+            )
+            logger.info("🚀 Enhanced News Discovery Pipeline initialized successfully")
+        else:
+            logger.warning("⚠️ Missing API keys for enhanced pipeline (GEMINI_API_KEY, TAVILY_API_KEY)")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize enhanced pipeline: {e}")
+        enhanced_pipeline = None
 
 
 # Enhanced Models for OAuth
@@ -1737,6 +1774,114 @@ def get_ticker_suggestions_endpoint(q: str = ""):
     return {"suggestions": suggestions}
 
 
+# Enhanced Pipeline Helper Functions
+def _should_use_enhanced_pipeline(message: str) -> bool:
+    """Always use enhanced pipeline when available (user preference)."""
+    return True  # Always use enhanced pipeline when available
+
+def _extract_topics_from_message(message: str) -> List[str]:
+    """Extract topics from user message."""
+    topics = []
+    message_lower = message.lower()
+
+    topic_mapping = {
+        'technology': ['tech', 'ai', 'artificial intelligence', 'software', 'hardware'],
+        'automotive': ['car', 'vehicle', 'auto', 'electric vehicle', 'ev'],
+        'healthcare': ['health', 'medical', 'pharma', 'drug', 'treatment'],
+        'finance': ['bank', 'finance', 'loan', 'credit', 'payment'],
+        'energy': ['oil', 'gas', 'renewable', 'solar', 'wind', 'battery'],
+        'retail': ['store', 'shopping', 'consumer', 'retail', 'e-commerce']
+    }
+
+    for topic, keywords in topic_mapping.items():
+        if any(keyword in message_lower for keyword in keywords):
+            topics.append(topic)
+
+    return topics
+
+def _extract_keywords_from_message(message: str) -> List[str]:
+    """Extract keywords from user message."""
+    financial_keywords = [
+        'earnings', 'revenue', 'profit', 'loss', 'growth', 'decline',
+        'merger', 'acquisition', 'ipo', 'sec filing', 'quarterly',
+        'annual', 'guidance', 'outlook', 'forecast'
+    ]
+
+    message_lower = message.lower()
+    keywords = [kw for kw in financial_keywords if kw in message_lower]
+    return keywords
+
+async def _generate_ai_response_from_pipeline(message: str, pipeline_results: Dict[str, Any], user_tickers: List[str]) -> str:
+    """Generate AI response based on pipeline results."""
+    try:
+        # Create context from pipeline results
+        key_points = pipeline_results.get('key_points', [])
+        final_articles = pipeline_results.get('final_articles', [])
+
+        # Build context string
+        context_parts = []
+
+        if key_points:
+            context_parts.append("Key insights discovered:")
+            for kp in key_points[:3]:
+                context_parts.append(f"- {kp.get('original_title', kp.get('query', 'Key insight'))}")
+
+        if final_articles:
+            context_parts.append(f"\nFound {len(final_articles)} relevant articles from reputable sources")
+
+        context = "\n".join(context_parts)
+
+        # Use existing news intelligence for response generation
+        response = await news_intelligence.generate_chat_response_with_context(
+            message, context, user_tickers
+        )
+
+        return response if isinstance(response, str) else response.get('response', '')
+
+    except Exception as e:
+        logger.error(f"AI response generation failed: {e}")
+        return f"Based on my analysis of recent news, I found several relevant insights about your query: {message}"
+
+def _format_enhanced_pipeline_response(ai_response: str, pipeline_results: Dict[str, Any], original_message: str) -> Dict[str, Any]:
+    """Format the pipeline response for frontend consumption."""
+    final_articles = pipeline_results.get('final_articles', [])
+    processing_stats = pipeline_results.get('processing_stats', {})
+    stages = pipeline_results.get('stages', {})
+
+    # Convert articles to frontend format
+    suggested_articles = []
+    for article in final_articles:
+        suggested_article = {
+            'id': article.get('id', ''),
+            'title': article.get('title', ''),
+            'source': article.get('source', ''),
+            'preview': article.get('preview', ''),
+            'url': article.get('url', ''),
+            'sentiment': article.get('sentiment', 'neutral'),
+            'tags': article.get('tags', []),
+            'relevance_score': article.get('relevance_score', 0.5),
+            'category': article.get('category', 'news'),
+            'date': article.get('timestamp', datetime.now().isoformat())
+        }
+        suggested_articles.append(suggested_article)
+
+    return {
+        "response": ai_response,
+        "suggested_articles": suggested_articles,
+        "success": True,
+        "search_method": "enhanced_pipeline",
+        "enhanced_pipeline_used": True,
+        "pipeline_metadata": {
+            "total_duration": processing_stats.get('total_duration', 0),
+            "stages_completed": len(stages),
+            "final_article_count": len(final_articles),
+            "key_points_extracted": len(pipeline_results.get('key_points', [])),
+            "original_query": original_message
+        },
+        "sources_used": list(set([article.get('source', 'Unknown') for article in final_articles])),
+        "processing_time": processing_stats.get('total_duration', 0)
+    }
+
 # NEW: Chat functionality with Gemini
 class ChatRequest(BaseModel):
     message: str
@@ -1753,7 +1898,7 @@ class ChatHistoryModel(BaseModel):
 
 @app.post("/api/chat")
 async def chat_about_news(request: ChatRequest, db: Session = Depends(get_db)):
-    """Enhanced chat with agent-powered news search and personalized recommendations"""
+    """Enhanced chat with multi-stage news discovery pipeline and fallback support"""
 
     try:
         # Get user context
@@ -1769,37 +1914,81 @@ async def chat_about_news(request: ChatRequest, db: Session = Depends(get_db)):
             f"💬 Enhanced Chat request: '{request.message}' from user with tickers: {user_tickers}"
         )
 
-        # Check if user wants agent-enhanced search (can be controlled via query parameter)
-        use_agent_search = True  # Default to True for enhanced experience
-        
-        # Get the simple agent news service
+        # Step 1: Try Enhanced Pipeline (if available)
+        if enhanced_pipeline and _should_use_enhanced_pipeline(request.message):
+            try:
+                logger.info("🚀 Using Enhanced Multi-Stage Pipeline")
+
+                # Prepare user preferences
+                user_preferences = {
+                    'watchlist': user_tickers,
+                    'topics': _extract_topics_from_message(request.message),
+                    'keywords': _extract_keywords_from_message(request.message)
+                }
+
+                # Run the enhanced pipeline
+                pipeline_results = await enhanced_pipeline.discover_news(
+                    request.message, user_preferences
+                )
+
+                if pipeline_results['processing_stats']['success']:
+                    # Generate AI response based on pipeline results
+                    ai_response = await _generate_ai_response_from_pipeline(
+                        request.message, pipeline_results, user_tickers
+                    )
+
+                    # Format for frontend
+                    enhanced_response = _format_enhanced_pipeline_response(
+                        ai_response, pipeline_results, request.message
+                    )
+
+                    logger.info(f"✅ Enhanced pipeline response completed")
+                    logger.info(f"📊 Pipeline stats: {pipeline_results['processing_stats']}")
+
+                    return enhanced_response
+                else:
+                    logger.warning("Enhanced pipeline execution failed, falling back")
+
+            except Exception as e:
+                logger.error(f"Enhanced pipeline failed: {e}")
+                # Continue to fallbacks
+
+        # Step 2: Fallback to Simple Agent
+        logger.info("📰 Using Simple Agent Service (fallback)")
         agent_service = get_simple_agent_news_service()
 
-        # Use agent-enhanced chat response generation
         chat_result = await agent_service.generate_enhanced_chat_response(
-            request.message, 
-            user_tickers, 
-            use_agent_search=use_agent_search
+            request.message,
+            user_tickers,
+            use_agent_search=True
         )
 
         if chat_result.get("success"):
-            logger.info(f"✅ Enhanced chat response generated successfully")
+            logger.info(f"✅ Simple agent response generated successfully")
             logger.info(f"🔍 Search method: {chat_result.get('search_method', 'unknown')}")
-            
+
+            # Add enhanced pipeline metadata
+            chat_result['enhanced_pipeline_available'] = enhanced_pipeline is not None
+            chat_result['used_enhanced_pipeline'] = False
+
             if chat_result.get('sources_used'):
                 logger.info(f"📊 Agent sources used: {chat_result['sources_used']}")
 
             return chat_result
         else:
-            # Fallback to traditional method if agent fails
-            logger.warning(f"Agent chat failed, falling back to traditional method: {chat_result.get('error')}")
-            
+            # Step 3: Ultimate fallback to traditional method
+            logger.warning(f"Simple agent failed, using traditional fallback: {chat_result.get('error')}")
+
             fallback_result = await news_intelligence.generate_chat_response(
                 request.message, user_tickers, request.conversation_history or []
             )
-            
-            # Mark as fallback
-            fallback_result['search_method'] = 'fallback_traditional'
+
+            # Mark as traditional fallback
+            if isinstance(fallback_result, dict):
+                fallback_result['search_method'] = 'traditional_fallback'
+                fallback_result['enhanced_pipeline_available'] = enhanced_pipeline is not None
+                fallback_result['used_enhanced_pipeline'] = False
+
             return fallback_result
 
     except Exception as e:

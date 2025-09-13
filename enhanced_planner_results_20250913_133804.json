@@ -1,0 +1,281 @@
+{
+  "breaking_news": [
+    {
+      "title": "Amazon's record-breaking cloud revenue fails to excite ...",
+      "href": "https://qz.com/amazon-q2-earnings-aws-cloud-ai",
+      "body": "Amazon Web Services (AWS) sales reached $30.9 billion, a year-over-year jump of 17.5%, marginally beating consensus expectations of around $30. ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon's record-breaking cloud revenue fails to excite investors",
+      "href": "https://qz.com/amazon-q2-earnings-aws-cloud-ai",
+      "body": "Amazon Web Services (AWS) sales reached $30.9 billion, a year-over-year jump of 17.5%, marginally beating consensus expectations of around $30. ...",
+      "source_retriever": "type"
+    }
+  ],
+  "financial_news": [
+    {
+      "title": "AWS Q2 2025 earnings report Amazon cloud",
+      "href": "https://www.cnbc.com/2025/07/31/aws-q2-2025-earnings-report-amazon-cloud.html",
+      "body": "AWS' revenue for the second quarter totaled $30.87 billion, Amazon said on Thursday. Analysts polled by StreetAccount had expected $30.8 billion ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "The Amazon.com Inc (AMZN) - AWS Revenue (Quarterly)",
+      "href": "https://ycharts.com/indicators/the_amazoncom_inc_amzn_aws_revenue_quarterly",
+      "body": "The Amazon.com Inc (AMZN) - AWS Revenue is at a current level of 29.27B, up from 28.79B last quarter and up from 25.04B one year ago.",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon Web Services quarterly revenue 2025",
+      "href": "https://www.statista.com/statistics/250520/forecast-of-amazon-web-services-revenue/",
+      "body": "In the first quarter of 2025, AWS generated cloud computing and hosting revenues of approximately 29 billion US dollars.",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon tops Q2 estimates with $167.7B in revenue, $18.2 ...",
+      "href": "https://www.geekwire.com/2025/amazon-tops-q2-estimates-with-167-7b-in-revenue-19-2b-in-profits-aws-up-17-to-30-9b/",
+      "body": "Amazon tops Q2 estimates with $167.7B in revenue, $18.2B in profits; AWS up 17% to $30.9B \u00b7 Advertising: The company's ad business brought in ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon Web Services quarterly revenue 2025 - Statista",
+      "href": "https://www.statista.com/statistics/250520/forecast-of-amazon-web-services-revenue/",
+      "body": "In the first quarter of 2025, AWS generated cloud computing and hosting revenues of approximately 29 billion US dollars.",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon stock slides 8% after AWS results raise questions about ...",
+      "href": "https://finance.yahoo.com/news/amazon-stock-slides-8-after-aws-results-raise-questions-about-companys-ai-plans-172501859.html",
+      "body": "AWS revenue hit $30.8 billion in the second quarter versus an expected $30.7 billion. It topped $26.2 billion in Q2 last year. Rival Microsoft, ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon earnings key takeaways: AI, cloud growth, tariffs - CNBC",
+      "href": "https://www.cnbc.com/2025/08/01/amazon-earnings-ai-aws-tariffs.html",
+      "body": "AWS grew its revenue by 18% year over year, which just beat Wall Street's estimates. That trailed the big gains reported by Microsoft and ...",
+      "source_retriever": "type"
+    }
+  ],
+  "sec_filings": [],
+  "general_news": [
+    {
+      "title": "Amazon.com Announces Second Quarter Results",
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Second-Quarter-Results/default.aspx",
+      "body": "AWS segment sales increased 17.5% year-over-year to $30.9 billion. Operating income increased to $19.2 billion in the second quarter, compared ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon cloud computing results fail to impress, shares dive",
+      "href": "https://www.reuters.com/business/retail-consumer/amazon-cloud-computing-results-fail-impress-shares-dive-2025-07-31/",
+      "body": "AWS reported a 17.5% increase in revenue to $30.9 billion, edging past expectations of $30.77 billion. By comparison, sales for Microsoft's ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon's cloud business records 18% growth in second quarter",
+      "href": "https://www.cnbc.com/2025/07/31/aws-q2-2025-earnings-report-amazon-cloud.html",
+      "body": "AWS' revenue for the second quarter totaled $30.87 billion, Amazon said on Thursday. Analysts polled by StreetAccount had expected $30.8 billion ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon.com Announces Second Quarter Results",
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Second-Quarter-Results/default.aspx",
+      "body": "AWS segment sales increased 17.5% year-over-year to $30.9 billion. Operating income increased to $19.2 billion in the second quarter, compared ...",
+      "source_retriever": "type"
+    },
+    {
+      "title": "Amazon cloud computing results fail to impress, shares dive | Reuters",
+      "href": "https://www.reuters.com/business/retail-consumer/amazon-cloud-computing-results-fail-impress-shares-dive-2025-07-31/",
+      "body": "AWS reported a 17.5% increase in revenue to $30.9 billion, edging past expectations of $30.77 billion. By comparison, sales for Microsoft's ...",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/quarterly-results/default.aspx",
+      "body": "*   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2025/q2/AMZN-Q2-2025-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2025/q1/AMZN-Q1-2025-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2024/q4/AMZN-Q4-2024-Earnings-Release.pdf) *   [Webcast](https://ir.aboutamazon.com/files/doc_financials/2024/q4/Amazon-Quarterly-Earnings-Report-Q4-2024-Full-Call-v1.wav) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2024/q3/AMZN-Q3-2024-Earnings-Release.pdf) *   [10-Q(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2024/q2/AMAZON-10Q-20240208.pdf) *   [Webcast](https://s2.q4cdn.com/299287126/files/doc_financials/2023/q3/Amazon-_-Quarterly-Earnings-Call-2023-Q3-2.mp3) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2023/q2/Q2-2023-Amazon-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2023/q1/Q1-2023-Amazon-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2022/q4/Q4-2022-Amazon-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2022/q3/Q3-2022-Amazon-Earnings-Release.pdf) *   [Webcast](https://s2.q4cdn.com/299287126/files/doc_financials/2022/q3/Amazon-Quarterly-Earnings-Call-Q3-2022-Full-Call-v2.wav) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2022/q2/Q2-2022-Amazon-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2022/q1/Q1-2022-Amazon-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2021/q4/business_and_financial_update.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2021/q3/Q3-2021-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2021/q1/Amazon-Q1-2021-Earnings-Release.pdf) *   [Webcast](https://ir.aboutamazon.com/files/doc_financials/2021/q1/Amazon-Quarterly-Earnings-Report-Q1-2021-Full-Call.wav) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2020/q4/Amazon-Q4-2020-Earnings-Release.pdf) *   [Earnings Release (PDF)(opens in new window)](https://s2.q4cdn.com/299287126/files/doc_financials/2020/q2/Q2-2020-Amazon-Earnings-Release.pdf)",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Second-Quarter-Results/",
+      "body": "Amazon.com, Inc. (NASDAQ: AMZN) today announced financial results for its second quarter ended June 30, 2025. Net sales increased 13% to $167.7 billion in the second quarter, compared with $148.0 billion in second quarter 2024. Excluding the $1.5 billion favorable impact from year-over-year changes in foreign exchange rates throughout the quarter, net sales increased 12% compared with second",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/sec-filings/sec-filings-details/default.aspx?FilingId=15530776",
+      "body": "SEC Filings Details Document Details Form: 10-K Filing Date: Feb 04, 2022 Form Description: Annual Report",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-First-Quarter-Results/default.aspx",
+      "body": "Amazon.com, Inc. (NASDAQ: AMZN) today announced financial results for its first quarter ended March 31, 2025. Net sales increased 9% to $155.7 billion in the first quarter, compared with $143.3 billion in first quarter 2024. Excluding the $1.4 billion unfavorable impact from year-over-year changes in foreign exchange rates throughout the quarter, net sales increased 10% compared with first",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/sec-filings/default.aspx",
+      "body": "Explore Amazon's SEC filings for comprehensive financial reports and disclosures, providing insights into the company's corporate governance and operations.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Fourth-Quarter-Results/",
+      "body": "Actual results and outcomes could differ materially for a variety of reasons, including, in addition to the factors discussed above, the amount that Amazon.com invests in new business opportunities and the timing of those investments, the mix of products and services sold to customers, the mix of net sales derived from products as compared with services, the extent to which we owe income or other taxes, competition, management of growth, potential fluctuations in operating results, international growth and expansion, the outcomes of claims, litigation, government investigations, and other proceedings, fulfillment, sortation, delivery, and data center optimization, risks of inventory management, variability in demand, the degree to which the Company enters into, maintains, and develops commercial agreements, proposed and completed acquisitions and strategic transactions, payments risks, and risks of fulfillment throughput and productivity.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.sec.gov/ixviewer-plus/ix.xhtml?doc=/Archives/edgar/data/0001018724/000101872425000084/amzn-20250731.htm",
+      "body": "The Inline XBRL viewer allows a user to quickly and easily review details of the tagged information in an Inline document by automatically placing a top and bottom highlight border around each tagged numeric fact and left and right border for each block tagged fact. Hovering over a tagged fact will highlight (shade) all content related to the tagged fact, and clicking on a tagged fact will",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.cnbc.com/2025/05/01/aws-q1-earnings-report-2025.html",
+      "body": "May 1, 2025 \u2014 Amazon's cloud business grew at a slower pace than expected in the first quarter , a third straight revenue miss.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/news-release/news-release-details/2025/Amazon-com-Announces-Second-Quarter-Results/default.aspx",
+      "body": "Jul 31, 2025 \u2014 AWS segment sales increased 17.5% year-over-year to $30.9 billion . Operating income increased to $19.2 billion in the second quarter, compared",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.cnbc.com/2025/07/31/aws-q2-2025-earnings-report-amazon-cloud.html",
+      "body": "Jul 31, 2025 \u2014 Revenue at Amazon Web Services climbed 18% in the second quarter to $30.9 billion . The cloud group announced new business from PepsiCo during",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.investopedia.com/amazon-earnings-q2-fy2025-11782701",
+      "body": "Jul 31, 2025 \u2014 Amazon posted second-quarter revenue of $167.7 billion , up 13% year-over-year and above the analyst consensus from Visible Alpha.1 The e-",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.businessinsider.com/amazon-q2-earnings-updates-aws-prime-day-amzn-stock-price-2025-7",
+      "body": "Jul 31, 2025 \u2014 AWS sales rose 17% to $30.87 billion , narrowly beating Bloomberg's analyst consensus. New AWS offerings during the quarter included AI agents",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.wsj.com/tech/amazon-earnings-q2-2025-amzn-stock-cb60512a?gaa_at=eafs&gaa_n=ASWzDAjErp8PDreAZF_15CpyS5PUEzY0TKZMYKZMkPE9UBgICU_V99fSJbr3&gaa_ts=68c5af7d&gaa_sig=Rz6LEvU2WsqXeAIzQ30s7dibxPlNLpdFi8jXxhVTs0PSy_wzwA1_68fECpLx1ImPKX7JQfv-7OEWlx72KH5tbg==",
+      "body": "Jul 31, 2025 \u2014 Amazon's second-quarter revenue increased 13% to $168 billion , with profit up 35%, surpassing Wall Street expectations.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.cnbc.com/2025/08/01/amazon-earnings-ai-aws-tariffs.html",
+      "body": "Aug 1, 2025 \u2014 Amazon also offered a rosy revenue forecast for the current quarter . Here are three key takeaways from Amazon's earnings : AI spending boost.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ir.aboutamazon.com/quarterly-results/default.aspx",
+      "body": "Quarterly results \u00b7 SEC filings \u00b7 Press releases \u00b7 FAQs \u00b7 Officers and directors \u00b7 Corporate governance \u00b7 Contact us and request documents \u00b7 Events. Quarterly",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/retail-consumer/amazon-tumbles-after-cloud-computing-growth-disappoints-investors-2025-08-01/",
+      "body": "Aug 1, 2025 \u2014 Aug 1 (Reuters) - Amazon.com shares fell 7% on Friday as the tech giant's results fanned investor fears its cloud unit was falling",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://ucv.blackboard.com/",
+      "body": "Aqu\u00ed nos gustar\u00eda mostrarte una descripci\u00f3n, pero el sitio web que est\u00e1s mirando no lo permite.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://tech.yahoo.com/business/articles/amazon-projects-quarterly-revenue-above-200421117.html",
+      "body": "Jul 31, 2025 \u2014 AWS reported a 17.5% increase in revenue to $30.9 billion, edging past expectations of $30.77 billion. By comparison, sales for Microsoft's",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.wsj.com/tech/amazon-earnings-q2-2025-amzn-stock-cb60512a?gaa_at=eafs&gaa_n=ASWzDAhguF5krgtMCNNpAkNWT3v9P4Uvj0ODlTd9WkeHOo2Jqbfjd_gGey9J&gaa_ts=68c5ad15&gaa_sig=WaESMBx_Qx4VJgEKYT0U05AL1nWa0dYgsPr1jAVkD4eIxsG6iJxj6z-oJ1AZAfytayRSzN8HEFJAYAyvqpxZbg==",
+      "body": "Jul 31, 2025 \u2014 Amazon's second-quarter revenue increased 13% to $168 billion , with profit up 35%, surpassing Wall Street expectations.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.morningstar.com/news/marketwatch/20250730143/amazons-earnings-are-due-it-needs-to-prove-last-quarters-beat-wasnt-a-one-hit-wonder",
+      "body": "[](https://www.morningstar.com/login?destination=https://www.morningstar.com/news/marketwatch/20250730143/amazons-earnings-are-due-it-needs-to-prove-last-quarters-beat-wasnt-a-one-hit-wonder) *   [Stocks](https://www.morningstar.com/stocks) *   [Stocks](https://www.morningstar.com/stocks) *   [Help](https://www.morningstar.com/help-center) *   [All Products and Services](https://www.morningstar.com/business) [View All](https://www.morningstar.com/markets) David Sekera, CFA and Susan Dziubinski Sep 9, 2025](https://www.morningstar.com/stocks/5-stocks-buy-before-fed-cuts-interest-rates-2)[![Image 4](https://morningstar-morningstar-prod.web.arc-cdn.net/resizer/1pED5X7Y_BvqXghanp22HYNE_j0=/2500x2500/cloudfront-us-east-1.images.arcpublishing.com/morningstar/AGAGH4NDF5FCRKXQANXPYS6TBQ.png) ### For Investors Who Can Get Beyond Headline Risk, Opportunity Beckons in Bonds The fixed-income market holds appeal if you understand its nuances. Dan Lefkovitz Sep 9, 2025](https://www.morningstar.com/bonds/investors-who-can-get-beyond-headline-risk-opportunity-beckons-bonds)[![Image 5](https://morningstar-morningstar-prod.web.arc-cdn.net/resizer/TKDEObIfjunEEpCedaOil-8pk1c=/2401x2401/cloudfront-us-east-1.images.arcpublishing.com/morningstar/ZW332T222JHQ3P4BEHNVDIPTZI.png) ### Markets Brief: Why the Market\u2019s Extreme Concentration Is an Opportunity Plus: Jobs data suggests rate cuts are in the cards, and why China looks attractive. [View All](https://www.morningstar.com/stocks) To learn more about how we handle and protect your data, visit our [privacy center](https://www.morningstar.com/company/privacy-center). *   [All Products & Services](https://www.morningstar.com/business) *   [About Us](https://www.morningstar.com/company/about-us) *   [Culture](https://www.morningstar.com/company/culture) *   [Advertising Opportunities](https://www.morningstar.com/company/media-kit) *   [Affiliate Program](https://www.morningstar.com/products/investor-affiliate-program) *   [Disclosures](https://www.morningstar.com/company/disclosures) *   [Do Not Sell or Share My Personal Information](https://www.morningstar.com/company/privacy-policy/do-not-sell-or-share) *   [Accessibility](https://www.morningstar.com/company/accessibility)",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.usnews.com/news/top-news/articles/2025-07-31/amazon-projects-quarterly-revenue-above-market-estimates",
+      "body": "(Reuters) -Amazon.com on Thursday forecast third-quarter sales above market estimates, but failed to live up to lofty expectations for its Amazon Web Services cloud computing unit after rivals handily beat Wall Street forecasts. Amazon expects total net sales to be between $174.0 billion and $179.5 billion in the third quarter, compared with analysts' average estimate of $173.08 billion, according to data compiled by LSEG. Amazon said it expected second-half spending roughly the same as its second quarter total of $31.4 billion, suggesting it would spend\u00a0around $118 billion for the full year. Analysts had said Amazon's focus on low prices, quick delivery and its many product categories\u00a0helped cement its position as the No. 1 e-commerce retailer for U.S. consumers, giving it an edge over rivals.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/retail-consumer/amazon-tumbles-after-cloud-computing-growth-disappoints-investors-2025-08-01/",
+      "body": "Amazon Web Services, long the cloud-computing market leader, edged past Wall Street estimates for June-quarter revenue on Thursday with a 17.5% increase, but it widely lagged the 39% growth seen at Microsoft Azure and Google Cloud's 32% gain. CEO Andy Jassy told analysts on a post-earnings call that it was still \"very early days\" in the AI race and that Amazon's massive cloud business, much larger than rivals, was primed to perform well once the AI capacity constraints start to ease. Some of that analyst confidence comes from the strong performance of Amazon's retail business, which has remained resilient in the face of Trump administration tariffs that have hobbled many retailers and their supply chains.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.cloudcomputing-news.net/news/amazon-cloud-revenue-misses-estimates-again-as-rivals-pull-ahead/",
+      "body": "*   AI & Cloud *   AI & Cloud *   AI & Cloud Image 3: Amazon Cloud revenue misses estimates again as rivals pull ahead cloud Amazon\u2019s first-quarter results showed a slower pace of growth in its AWS cloud computing business, compared to expectations and to recent gains reported by competitors. Meanwhile, Microsoft\u2019s cloud unit posted stronger growth and signalled continued investment in AI infrastructure. The Intelligent Cloud division, which includes Azure, generated $26.75 billion in revenue. While Amazon\u2019s retail and advertising businesses continue to grow, its cloud unit\u2019s performance and near-term guidance have left some investors cautious \u2013 especially as Microsoft and Alphabet report stronger growth in adjacent areas. **See also: Amazon stock drops as cloud revenue misses expectations** AI & Cloud AI & Cloud",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.fastcompany.com/91378461/amazon-profit-outlook-q2-cloud-computing",
+      "body": "Amazon.com forecast third-quarter sales above market estimates on Thursday, July 31, but failed to live up to lofty expectations for its Amazon Web Services cloud computing unit after rivals handily beat expectations. The company expects total net sales to be between $174.0 billion and $179.5 billion in the third quarter, compared with analysts\u2019 average estimate of $173.08 billion, according to data compiled by LSEG. While Amazon has poured billions into AI infrastructure, analysts have said the lack of a strong AI model from AWS is causing some concerns that the company could be trailing rivals in AI development, analysts said. Analysts had said Amazon\u2019s focus on low prices, quick delivery, and the sheer number of product categories helped cement its position as the No. 1 e-commerce retailer for U.S. consumers, giving it an edge over rivals.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.reuters.com/business/retail-consumer/amazon-cloud-computing-results-fail-impress-shares-dive-2025-07-31/",
+      "body": "July 31 (Reuters) - Amazon.com (AMZN.O), opens new tab on Thursday forecast third-quarter sales above market estimates, but failed to live up to lofty expectations for its Amazon Web Services cloud computing unit after rivals handily beat Wall Street forecasts. Amazon expects total net sales to be between $174.0 billion and $179.5 billion in the third quarter, compared with analysts' average estimate of $173.08 billion, according to data compiled by LSEG. While Amazon has poured billions of dollars into AI infrastructure, analysts have said the lack of a strong AI model from AWS is causing concerns that the company could be trailing rivals in AI development. Amazon said it expected second-half spending roughly the same as its second quarter total of $31.4 billion, suggesting it would spend around $118 billion for the full year.",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.amazon.com/",
+      "body": "Devices with Alexa. Image of Echo Show 15, Fire 7, Fire TV Stick (HD Stick with 2021 Alexa Voice Remote), and Echo Dot (3rd Gen). ## Prime Video Prime Video ## Customers' most-loved Women's fashion Men's fashion Beauty Home ## Best Sellers in Outlet Best Sellers in Outlet ## Amazon exclusive toys Amazon exclusive toys ## Small space solutions Small space furniture solutions ## Save on pre-owned Amazon devices Save on pre-owned Amazon devices ## Live plants & planters Live plants & planters ## Easy, elevated t-shirts Easy, elevated t-shirts Amazon",
+      "source_retriever": "type"
+    },
+    {
+      "href": "https://www.amazon.com/b?node=207319717011",
+      "body": "Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 27.5\" Inseam Full Length Yoga Workout Leggings Amazon Essentials Women's Active FormFlex Buttery Soft Long Sleeve Slim Fit Crop Layering Workout Top Amazon Essentials Women's Active FormFlex Buttery Soft Long Sleeve Slim Fit Crop Layering Workout Top Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 5\" Yoga Biker Shorts Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 7\" Yoga Biker Shorts Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 27.5\" Inseam Full Length Yoga Workout Leggings Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 5\" Yoga Biker Shorts Amazon Essentials Women's Active FormFlex Buttery Soft High Waist 5\" Yoga Biker Shorts",
+      "source_retriever": "type"
+    }
+  ],
+  "errors": [
+    {
+      "retriever": "type",
+      "error": "RETRIEVER_ENDPOINT environment variable not set"
+    },
+    {
+      "retriever": "type",
+      "error": "Unable to import ddgs. Please install with `pip install -U ddgs`"
+    },
+    {
+      "retriever": "type",
+      "error": "Unable to import exa-py. Please install with `pip install -U exa-py`"
+    },
+    {
+      "retriever": "type",
+      "error": "Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. You can get a key at https://developers.google.com/custom-search/v1/overview"
+    },
+    {
+      "retriever": "type",
+      "error": "SearxNG URL not found. Please set the SEARX_URL environment variable. You can find public instances at https://searx.space/"
+    },
+    {
+      "retriever": "type",
+      "error": "SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/"
+    }
+  ],
+  "retriever_summary": {
+    "total_retrievers": 11,
+    "successful_retrievers": 5,
+    "failed_retrievers": 6,
+    "total_articles": 41
+  },
+  "aggregation": {
+    "enabled": true,
+    "clusters": [],
+    "stats": {
+      "reason": "No clusters created from content",
+      "timestamp": "2025-09-13T17:38:04.275662",
+      "total_clusters": 0,
+      "total_sources": 0
+    },
+    "cluster_count": 0,
+    "total_sources": 0
+  },
+  "summaries": [],
+  "processing_stats": {
+    "query": "Amazon quarterly earnings AWS cloud revenue",
+    "retrieval_time": 10.720675,
+    "aggregation_enabled": true,
+    "user_preferences_used": true,
+    "timestamp": "2025-09-13T17:38:04.275766",
+    "total_time": 11.270367
+  }
+}

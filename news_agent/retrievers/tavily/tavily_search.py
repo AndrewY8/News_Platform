@@ -84,8 +84,7 @@ class TavilyRetriever:
         # if exclude_domains:
         #     data["exclude_domains"] = exclude_domains
         print(data)
-
-
+        
         response = requests.post(
         self.base_url,
         headers=self.headers,
