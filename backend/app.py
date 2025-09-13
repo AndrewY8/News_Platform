@@ -34,6 +34,7 @@ except Exception as e:
     print(f"Warning: yfinance not available: {e}")
     YFINANCE_AVAILABLE = False
     yf = None
+    
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -56,6 +57,7 @@ from ticker_validator import validate_ticker_list, get_ticker_suggestions
 
 # Import new Gemini-powered personalization system
 from news_intelligence import NewsIntelligenceService
+from simple_agent_integration import get_simple_agent_news_service
 import google.generativeai as genai
 
 # Import SEC service
@@ -947,13 +949,13 @@ app.add_middleware(
 )
 
 # Enhanced CORS with environment-based origins
-cors_origins = json.loads(os.getenv("CORS_ORIGINS", '["http://localhost:3000"]'))
+cors_origins = ["http://localhost:3000", "http://localhost:3001"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,  # Required for cookies/sessions
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Accept-Language", "Content-Language"],
 )
 
 
@@ -1751,7 +1753,7 @@ class ChatHistoryModel(BaseModel):
 
 @app.post("/api/chat")
 async def chat_about_news(request: ChatRequest, db: Session = Depends(get_db)):
-    """Chat with Gemini about news and get personalized recommendations"""
+    """Enhanced chat with agent-powered news search and personalized recommendations"""
 
     try:
         # Get user context
@@ -1764,45 +1766,125 @@ async def chat_about_news(request: ChatRequest, db: Session = Depends(get_db)):
         user_tickers = eval(user.trades) if user.trades else []
 
         logger.info(
-            f"💬 Chat request: '{request.message}' from user with tickers: {user_tickers}"
+            f"💬 Enhanced Chat request: '{request.message}' from user with tickers: {user_tickers}"
         )
 
-        # Use Gemini to generate intelligent response with actual news articles
-        chat_result = await news_intelligence.generate_chat_response(
-            request.message, user_tickers, request.conversation_history or []
+        # Check if user wants agent-enhanced search (can be controlled via query parameter)
+        use_agent_search = True  # Default to True for enhanced experience
+        
+        # Get the simple agent news service
+        agent_service = get_simple_agent_news_service()
+
+        # Use agent-enhanced chat response generation
+        chat_result = await agent_service.generate_enhanced_chat_response(
+            request.message, 
+            user_tickers, 
+            use_agent_search=use_agent_search
         )
 
         if chat_result.get("success"):
-            logger.info(f"✅ Chat response generated successfully")
-
-            # Optionally fetch relevant articles based on the conversation
-            if any(
-                keyword in request.message.lower()
-                for keyword in ["news", "articles", "show me", "find", "latest"]
-            ):
-                try:
-                    # Get relevant articles for the chat topic
-                    relevant_articles = await news_intelligence.search_news_by_topic(
-                        request.message, user_tickers, limit=5
-                    )
-                    chat_result["suggested_articles"] = relevant_articles[:3]  # Top 3
-                    logger.info(
-                        f"📰 Found {len(relevant_articles)} relevant articles for chat"
-                    )
-                except Exception as e:
-                    logger.warning(f"Could not fetch articles for chat: {e}")
-                    chat_result["suggested_articles"] = []
+            logger.info(f"✅ Enhanced chat response generated successfully")
+            logger.info(f"🔍 Search method: {chat_result.get('search_method', 'unknown')}")
+            
+            if chat_result.get('sources_used'):
+                logger.info(f"📊 Agent sources used: {chat_result['sources_used']}")
 
             return chat_result
         else:
-            return chat_result  # Contains error message
+            # Fallback to traditional method if agent fails
+            logger.warning(f"Agent chat failed, falling back to traditional method: {chat_result.get('error')}")
+            
+            fallback_result = await news_intelligence.generate_chat_response(
+                request.message, user_tickers, request.conversation_history or []
+            )
+            
+            # Mark as fallback
+            fallback_result['search_method'] = 'fallback_traditional'
+            return fallback_result
 
     except Exception as e:
-        logger.error(f"❌ Chat error: {e}")
+        logger.error(f"❌ Enhanced chat error: {e}")
+        
+        # Try fallback to traditional method
+        try:
+            logger.info("Attempting fallback to traditional chat method")
+            fallback_result = await news_intelligence.generate_chat_response(
+                request.message, user_tickers, request.conversation_history or []
+            )
+            fallback_result['search_method'] = 'error_fallback'
+            fallback_result['original_error'] = str(e)
+            return fallback_result
+        except Exception as fallback_error:
+            logger.error(f"❌ Fallback also failed: {fallback_error}")
+            return {
+                "response": "I'm sorry, I'm having trouble processing your question right now. Please try again.",
+                "error": str(e),
+                "fallback_error": str(fallback_error),
+                "success": False,
+            }
+
+
+@app.post("/api/search/enhanced")
+async def enhanced_search_endpoint(
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """Enhanced search endpoint using agent system for personalized news page"""
+    
+    try:
+        query = request.get('query', '')
+        user_id = request.get('user_id')
+        use_agent = request.get('use_agent', True)
+        limit = request.get('limit', 10)
+        
+        if not query:
+            return {"error": "Query is required", "success": False}
+        
+        # Get user context
+        user = db.query(User).filter(User.id == str(user_id)).first() if user_id else None
+        if not user:
+            user = db.query(User).first()  # Fall back to first user
+            
+        user_tickers = eval(user.trades) if user and user.trades else []
+        
+        logger.info(f"🔍 Enhanced search request: '{query}' with tickers: {user_tickers}")
+        
+        # Get simple agent news service
+        agent_service = get_simple_agent_news_service()
+        
+        # Perform enhanced search
+        search_results = await agent_service.enhanced_search(
+            query=query,
+            user_tickers=user_tickers,
+            use_enhanced=use_agent,
+            limit=limit
+        )
+        
+        if search_results['success']:
+            logger.info(f"✅ Enhanced search completed: {len(search_results['articles'])} articles found")
+            logger.info(f"🔍 Search method: {search_results['search_method']}")
+            
+            return {
+                "success": True,
+                "articles": search_results['articles'],
+                "total_found": search_results['total_found'],
+                "search_method": search_results['search_method'],
+                "sources_used": search_results.get('agent_sources', []),
+                "query": query
+            }
+        else:
+            return {
+                "success": False,
+                "error": search_results.get('error', 'Search failed'),
+                "query": query
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Enhanced search error: {e}")
         return {
-            "response": "I'm sorry, I'm having trouble processing your question right now. Please try again.",
-            "error": str(e),
             "success": False,
+            "error": str(e),
+            "query": request.get('query', '')
         }
 
 
@@ -2303,6 +2385,113 @@ async def get_company_filings(
     except Exception as e:
         logger.error(f"Error getting filings for ticker {ticker}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve company filings")
+
+# SEC RAG Endpoints - Document-specific RAG search
+try:
+    from sec_rag_service import sec_rag_service
+    SEC_RAG_SERVICE_AVAILABLE = True
+except ImportError:
+    logger.warning("SEC RAG service not available")
+    SEC_RAG_SERVICE_AVAILABLE = False
+
+class SECRAGQueryRequest(BaseModel):
+    document_id: str
+    query: str
+    top_k: Optional[int] = 5
+
+class SECRAGResponse(BaseModel):
+    answer: str
+    chunks: List[Dict]
+    document_info: Optional[Dict] = None
+    metadata: Optional[Dict] = None
+    query: str
+    error: Optional[str] = None
+
+@app.post("/api/sec/rag/query")
+@limiter.limit("10/minute")
+async def query_sec_document_rag(
+    rag_request: SECRAGQueryRequest,
+    request: Request,
+    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
+):
+    """Query a SEC document using RAG (Retrieval-Augmented Generation)"""
+    if not SEC_RAG_SERVICE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SEC RAG service not available")
+    
+    try:
+        logger.info(f"SEC RAG query for document {rag_request.document_id}: {rag_request.query}")
+        
+        # First, ensure document is processed
+        document_processed = await sec_rag_service.process_document(rag_request.document_id)
+        if not document_processed:
+            raise HTTPException(status_code=500, detail="Failed to process document for RAG")
+        
+        # Query the document
+        result = sec_rag_service.query_document(rag_request.document_id, rag_request.query, rag_request.top_k)
+        
+        return SECRAGResponse(**result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in SEC RAG query: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process RAG query")
+
+@app.post("/api/sec/rag/process/{doc_id}")
+@limiter.limit("5/minute")
+async def process_sec_document_for_rag(
+    doc_id: str,
+    request: Request,
+    force_refresh: Optional[bool] = False,
+    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
+):
+    """Process a SEC document for RAG queries"""
+    if not SEC_RAG_SERVICE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SEC RAG service not available")
+    
+    try:
+        logger.info(f"Processing SEC document for RAG: {doc_id}")
+        
+        success = await sec_rag_service.process_document(doc_id, force_refresh=force_refresh)
+        
+        if success:
+            status_info = sec_rag_service.get_document_status(doc_id)
+            return {
+                "status": "success",
+                "document_id": doc_id,
+                "message": f"Document processed successfully into {status_info['chunk_count']} chunks",
+                **status_info
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to process document")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing document {doc_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process document for RAG")
+
+@app.get("/api/sec/rag/status/{doc_id}")
+@limiter.limit("20/minute")
+async def get_sec_document_rag_status(
+    doc_id: str,
+    request: Request,
+    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
+):
+    """Get RAG processing status for a SEC document"""
+    if not SEC_RAG_SERVICE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SEC RAG service not available")
+    
+    try:
+        status_info = sec_rag_service.get_document_status(doc_id)
+        return {
+            "document_id": doc_id,
+            **status_info
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting RAG status for document {doc_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get document status")
 
 
 # Create database tables

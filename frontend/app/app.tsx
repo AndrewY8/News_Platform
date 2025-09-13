@@ -664,7 +664,7 @@ export default function HavenNewsApp() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-      <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-10">
+      <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50">
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
           <div className="flex items-center justify-between px-48">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
@@ -680,7 +680,7 @@ export default function HavenNewsApp() {
           
           {/* Horizontal Navigation */}
           <div className="bg-gray-100 border-t border-b border-gray py-1">
-            <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-x-auto px-48">
+            <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-48">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 
@@ -698,28 +698,86 @@ export default function HavenNewsApp() {
                         <ChevronDown className="h-3 w-3" />
                       </Button>
                       
-                      {/* Business Industries Dropdown */}
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                        <div className="py-2">
-                          {[
-                            'Technology',
-                            'Healthcare',
-                            'Financial Services',
-                            'Energy',
-                            'Manufacturing',
-                            'Real Estate',
-                            'Retail',
-                            'Automotive',
-                            'Aerospace',
-                            'Telecommunications'
-                          ].map((industry) => (
-                            <button
-                              key={industry}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
-                            >
-                              {industry}
-                            </button>
-                          ))}
+                      {/* Business Industries Dropdown - Multi-Column Layout */}
+                      <div className="absolute top-full left-0 mt-1 w-[600px] bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-0">
+                        <div className="p-4">
+                          <h3 className="text-sm font-semibold text-gray-900 mb-3 border-b border-gray-100 pb-2">Business Categories</h3>
+                          <div className="grid grid-cols-3 gap-6">
+                            {/* Column 1: Tech & Innovation */}
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Tech & Innovation</h4>
+                              {[
+                                'Technology',
+                                'Software',
+                                'Artificial Intelligence',
+                                'Cybersecurity',
+                                'Semiconductors',
+                                'Cloud Computing'
+                              ].map((industry) => (
+                                <button
+                                  key={industry}
+                                  className="block w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded transition-colors"
+                                >
+                                  {industry}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Column 2: Traditional Industries */}
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Traditional</h4>
+                              {[
+                                'Financial Services',
+                                'Healthcare',
+                                'Energy',
+                                'Manufacturing',
+                                'Automotive',
+                                'Aerospace'
+                              ].map((industry) => (
+                                <button
+                                  key={industry}
+                                  className="block w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded transition-colors"
+                                >
+                                  {industry}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Column 3: Consumer & Services */}
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Consumer & Services</h4>
+                              {[
+                                'Retail',
+                                'Real Estate',
+                                'Telecommunications',
+                                'Media & Entertainment',
+                                'Travel & Hospitality',
+                                'Consumer Goods'
+                              ].map((industry) => (
+                                <button
+                                  key={industry}
+                                  className="block w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded transition-colors"
+                                >
+                                  {industry}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Footer with popular topics */}
+                          <div className="mt-4 pt-3 border-t border-gray-100">
+                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Trending Topics</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {['Earnings', 'IPOs', 'Mergers & Acquisitions', 'Market Analysis', 'Startups'].map((topic) => (
+                                <button
+                                  key={topic}
+                                  className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+                                >
+                                  {topic}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

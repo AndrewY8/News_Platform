@@ -198,6 +198,52 @@ export class ApiService {
     }
   }
 
+  // Enhanced search using agent system
+  static async searchNewsEnhanced(query: string, useAgent: boolean = true, limit: number = 10): Promise<{
+    articles: NewsArticle[]
+    searchMethod: string
+    sourcesUsed: string[]
+    totalFound: number
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/search/enhanced`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query,
+          user_id: 1, // TODO: Get from auth context
+          use_agent: useAgent,
+          limit
+        })
+      })
+      
+      if (!response.ok) throw new Error(`Failed to perform enhanced search: ${response.status}`)
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        return {
+          articles: this.transformArticles(data.articles),
+          searchMethod: data.search_method || 'unknown',
+          sourcesUsed: data.sources_used || [],
+          totalFound: data.total_found || 0
+        }
+      } else {
+        throw new Error(data.error || 'Enhanced search failed')
+      }
+    } catch (error) {
+      console.error('Error in enhanced search:', error)
+      // Fallback to traditional search
+      const fallbackArticles = await this.searchNews(query)
+      return {
+        articles: fallbackArticles,
+        searchMethod: 'fallback_traditional',
+        sourcesUsed: ['NewsAPI'],
+        totalFound: fallbackArticles.length
+      }
+    }
+  }
+
   // Chat endpoints
   static async sendChatMessage(message: string): Promise<ChatMessage> {
     try {
@@ -505,6 +551,111 @@ export class ApiService {
     } catch (error) {
       console.error('Error getting company filings:', error)
       return []
+    }
+  }
+
+  // SEC RAG (Retrieval-Augmented Generation) methods for document-specific queries
+  static async querySecDocumentRAG(documentId: string, query: string): Promise<{
+    answer: string
+    chunks: Array<{
+      content: string
+      similarity: number
+      chunk_index: number
+      metadata: any
+    }>
+    document_info?: any
+    metadata?: any
+    query: string
+    error?: string
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sec/rag/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          document_id: documentId,
+          query: query,
+          top_k: 5
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error querying SEC document with RAG:', error)
+      return {
+        answer: 'I apologize, but I encountered an error while searching through this document. Please try again or rephrase your question.',
+        chunks: [],
+        query: query,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
+
+  static async processSecDocumentForRAG(documentId: string, forceRefresh: boolean = false): Promise<{
+    status: string
+    document_id: string
+    message?: string
+    chunk_count?: number
+    processed_at?: string
+    error?: string
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sec/rag/process/${documentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          force_refresh: forceRefresh
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error processing SEC document for RAG:', error)
+      return {
+        status: 'error',
+        document_id: documentId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
+
+  static async getSecDocumentRAGStatus(documentId: string): Promise<{
+    document_id: string
+    status: string
+    chunk_count: number
+    processed_at?: string
+    metadata?: any
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sec/rag/status/${documentId}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error getting SEC document RAG status:', error)
+      return {
+        document_id: documentId,
+        status: 'error',
+        chunk_count: 0
+      }
     }
   }
 }

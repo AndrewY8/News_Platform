@@ -16,7 +16,8 @@ planner = create_enhanced_planner(
         }
     }
 )
-results = planner.run("Tesla Q3 earnings SEC filings")
+
+results = planner.run("Tesla new products")
 # print("RESULTS")
 # print(results)
 print(f"SEC filings found: {len(results['sec_filings'])}")

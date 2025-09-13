@@ -1,151 +1,132 @@
 {
   "breaking_news": [],
-  "financial_news": [
-    {
-      "title": "Tesla, Inc. Common Stock (TSLA) SEC Filings",
-      "href": "https://www.nasdaq.com/market-activity/stocks/tsla/sec-filings",
-      "body": "Find the latest SEC Filings data for Tesla, Inc. Common Stock (TSLA) including 10-K and 10-Q forms at Nasdaq.com.",
-      "source_retriever": "type"
-    },
-    {
-      "title": "Tesla, Inc. Common Stock (TSLA) SEC Filings",
-      "href": "https://www.nasdaq.com/market-activity/stocks/tsla/sec-filings",
-      "body": "Find the latest SEC Filings data for Tesla, Inc. Common Stock (TSLA) including 10-K and 10-Q forms at Nasdaq.com.",
-      "source_retriever": "type"
-    }
-  ],
+  "financial_news": [],
   "sec_filings": [],
   "general_news": [
     {
-      "title": "SEC Filings | Tesla Investor Relations",
-      "href": "https://ir.tesla.com/sec-filings",
-      "body": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
+      "title": "Tesla Gallery",
+      "href": "https://www.tesla.com/tesla-gallery",
+      "body": "Vehicles \u00b7 Cybercab \u00b7 Robovan \u00b7 Cybertruck \u00b7 Roadster \u00b7 Semi \u00b7 Group \u00b7 Model Y \u00b7 Model S ...",
       "source_retriever": "type"
     },
     {
-      "title": "file: tsla-ex991_85.htm",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000156459021051307/tsla-ex991_85.htm",
-      "body": "The third quarter of 2021 was a record quarter in many respects. We achieved our best-ever net income, operating profit and gross profit. Additionally, we ...",
+      "title": "Model Y \u2013 Electric Midsize SUV",
+      "href": "https://www.tesla.com/modely",
+      "body": "Learn about Model Y, a midsize electric SUV with award-winning safety, convenient technology features and seating for up to five.",
       "source_retriever": "type"
     },
     {
-      "title": "Tesla Investor Relations",
-      "href": "https://ir.tesla.com/",
-      "body": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
+      "title": "Tesla Energy Announces New Mega Product As China EV ...",
+      "href": "https://www.investors.com/news/tesla-energy-megablock-china-ev-sales-tesla-stock/",
+      "body": "Tesla Energy unveiled a new Megablock storage product while China EV sales continue to lag. Tesla stock is near an early buy point.",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-20231231",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
-      "body": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
+      "title": "News",
+      "href": "https://www.tesla.com/blog",
+      "body": "We are launching the new Model 3 Performance: a highly differentiated performance trim that leverages Tesla's latest manufacturing and engineering capabilities.",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-ex991_6.htm",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000156459018024902/tsla-ex991_6.htm",
-      "body": "Automotive revenue in Q3 increased by 82% sequentially over Q2, mainly due to a sharp increase in Model 3 deliveries. In Q3, we recorded $52M in ZEV credit ...",
+      "title": "Tesla Gallery",
+      "href": "https://www.tesla.com/tesla-gallery",
+      "body": "Vehicles \u00b7 Cybercab \u00b7 Robovan \u00b7 Cybertruck \u00b7 Roadster \u00b7 Semi \u00b7 Group \u00b7 Model Y \u00b7 Model S ...",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-20250422-gen.pdf",
-      "href": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
-      "body": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
+      "title": "Tesla Just Released a Huge New Product - YouTube",
+      "href": "https://www.youtube.com/watch?v=K56Pg8JeEmY",
+      "body": "They Are Here: https://farzad.fm Substack: https://substack.com/@farzadmedia Wrap your Tesla using TESBROS: ...",
       "source_retriever": "type"
     },
     {
-      "title": "SEC Filings | Tesla Investor Relations",
-      "href": "https://ir.tesla.com/sec-filings",
-      "body": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
+      "title": "News | Tesla",
+      "href": "https://www.tesla.com/blog",
+      "body": "We are launching the new Model 3 Performance: a highly differentiated performance trim that leverages Tesla's latest manufacturing and engineering capabilities.",
       "source_retriever": "type"
     },
     {
-      "title": "file: tsla-ex991_85.htm",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000156459021051307/tsla-ex991_85.htm",
-      "body": "The third quarter of 2021 was a record quarter in many respects. We achieved our best-ever net income, operating profit and gross profit. Additionally, we ...",
+      "title": "NEW Tesla Model Surprises Everyone | We Weren't Expecting This",
+      "href": "https://www.youtube.com/watch?v=2FGdVDyZ1j4",
+      "body": "... Products: \u25bb Two Bucket Wash Setup: https://geni.us/O7grVc \u25bb Car Shampoo: https://geni.us/cTBV0 \u25bb Pressure Washer: https://geni.us/VL3jEb ...",
       "source_retriever": "type"
     },
     {
-      "title": "Tesla Investor Relations",
-      "href": "https://ir.tesla.com/",
-      "body": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
+      "title": "Tesla on track to introduce new affordable models by June 2025 ...",
+      "href": "https://www.reddit.com/r/teslamotors/comments/1idy7oz/tesla_on_track_to_introduce_new_affordable_models/",
+      "body": "Tesla Affordable EV Coming This Year As Smaller, Cheaper Model Y | The new EV, codenamed \u201cE41,\u201d will use existing parts and assembly lines but ...",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-20231231",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
-      "body": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
+      "title": "Model Y \u2013 Electric Midsize SUV - Tesla",
+      "href": "https://www.tesla.com/modely",
+      "body": "Learn about Model Y, a midsize electric SUV with award-winning safety, convenient technology features and seating for up to five.",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-ex991_6.htm",
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000156459018024902/tsla-ex991_6.htm",
-      "body": "Automotive revenue in Q3 increased by 82% sequentially over Q2, mainly due to a sharp increase in Model 3 deliveries. In Q3, we recorded $52M in ZEV credit ...",
+      "title": "Elon Musk teases new Tesla product with promise of \"most epic ...",
+      "href": "https://thedriven.io/2025/07/15/elon-musk-teases-new-tesla-product-with-promise-of-most-epic-demo-ever/",
+      "body": "In a post on X, Musk said Tesla will reveal a new product in 2025 that will have a \u201cmost epic demo ever\u201d.",
       "source_retriever": "type"
     },
     {
-      "title": "tsla-20250422-gen.pdf",
-      "href": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
-      "body": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
+      "href": "https://www.stocktitan.net/sec-filings/TSLA/",
+      "body": "Tesla executive stock transactions Form 4\u2014track option exercises and open-market sales with Tesla Form 4 insider transactions real-time alerts.",
       "source_retriever": "type"
     },
     {
-      "href": "https://ir.tesla.com/sec-filings",
-      "body": "[Skip to main content](https://ir.tesla.com/main-content) [Tesla](https://www.tesla.com/)[Skip to main content](https://ir.tesla.com/sec-filings#main-content) ![Image 2: SEC Filings](https://ir.tesla.com/sec-filings) Filters Annual & Quarterly Reports   Apply Filter Clear Selections [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924053355/tm2326076d21_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924053355/tm2326076d21_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924053355/tm2326076d21_defa14a-gen.pdf) [144](https://www.sec.gov/Archives/edgar/data/1318605/000197236224000520/xsl144X01/primary_doc.xml) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000197236224000520/xsl144X01/primary_doc.xml) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000197236224000520/000197236224000520-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924051405/tm2326076d20_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924051405/tm2326076d20_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924051405/tm2326076d20_defa14a-gen.pdf) [10-Q](https://www.sec.gov/Archives/edgar/data/1318605/000162828024017503/tsla-20240331.htm) Quarterly report which provides a continuing view of a company's financial position *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000162828024017503/tsla-20240331.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000162828024017503/tsla-20240331-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050586/tm2326076d19_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050586/tm2326076d19_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924050586/tm2326076d19_defa14a-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024046895/tsla-20240423.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024046895/tsla-20240423.htm) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050097/tm2326076d18_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050097/tm2326076d18_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924050097/tm2326076d18_defa14a-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048353/tm2326076d16_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048353/tm2326076d16_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924048353/tm2326076d16_defa14a-gen.pdf) [PRE 14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048040/tm2326076d13_pre14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048040/tm2326076d13_pre14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924048040/tm2326076d13_pre14a-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024044588/tsla-20240414.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024044588/tsla-20240414.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000095017024044588/tsla-20240414-gen.pdf) [4](https://www.sec.gov/Archives/edgar/data/1318605/000179056524000003/xslF345X05/edgardoc.xml) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000179056524000003/xslF345X05/edgardoc.xml) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000179056524000003/000179056524000003-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024040274/tsla-20240402.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024040274/tsla-20240402.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000095017024040274/tsla-20240402-gen.pdf) [Prev](https://ir.tesla.com/sec-filings?page=%2C11)Page:  [Next](https://ir.tesla.com/sec-filings?page=%2C13) *   [Tesla \u00a9 2025](https://www.tesla.com/about) *   [Subscription Preferences](https://www.tesla.com/teslaaccount/subscription-preferences) *   [Contact & FAQ](https://ir.tesla.com/contact-us) *   [Privacy & Legal](https://www.tesla.com/about/legal) ![Image 3](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=0df78556-c4eb-4460-bdf8-38974a6ad409&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=oft6j&type=javascript&version=2.3.33)![Image 4](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=0df78556-c4eb-4460-bdf8-38974a6ad409&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=oft6j&type=javascript&version=2.3.33)![Image 5](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=9e4a78b6-2c19-4bfa-acfa-43003a5888ed&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ogqcs&type=javascript&version=2.3.33)![Image 6](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=9e4a78b6-2c19-4bfa-acfa-43003a5888ed&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ogqcs&type=javascript&version=2.3.33)![Image 7](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=d34858b7-9967-4b23-9919-0de3054839ac&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondmw&type=javascript&version=2.3.33)![Image 8](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=d34858b7-9967-4b23-9919-0de3054839ac&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondmw&type=javascript&version=2.3.33)![Image 9](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=e68d201c-14c8-4891-bae7-5f664d86d384&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondn2&type=javascript&version=2.3.33)![Image 10](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=e68d201c-14c8-4891-bae7-5f664d86d384&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondn2&type=javascript&version=2.3.33)![Image 11](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=4&event=%7B%7D&event_id=a7706caf-a8c9-4ce9-b8ae-26cb519f2463&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=tw-oft6j-q65yu&type=javascript&version=2.3.33)![Image 12](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=4&event=%7B%7D&event_id=a7706caf-a8c9-4ce9-b8ae-26cb519f2463&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=tw-oft6j-q65yu&type=javascript&version=2.3.33)",
+      "href": "https://sg.finance.yahoo.com/quote/TSLA/press-releases/",
+      "body": "Get the latest Tesla, Inc. (TSLA) stock news and headlines to help you in your trading and investing decisions.",
       "source_retriever": "type"
     },
     {
-      "href": "https://fintel.io/sfs/us/tsla",
-      "body": "*   Description YouTube sets this cookie to store the user's cookie consent state for the current domain. *   Description Google Analytics sets this cookie to store and count page views. *   Description Google Analytics sets this cookie to calculate visitor, session and campaign data and track site usage for the site's analytics report. *   Description Google Analytics sets this cookie to store information on how visitors use a website while also creating an analytics report of the website's performance. *   Description Google Analytics sets this cookie to store a unique user ID. Fintel reports that on July 7, 2025, William Blair downgraded their outlook for Tesla (NasdaqGS:TSLA) from Outperform to Market Perform. About Fintel *   Fintel S.",
+      "href": "https://teslamotorsclub.com/tmc/threads/dash-mounted-magsafe-charger-for-2025-model-y-juniper-by-twraps.346855/",
+      "body": "Discuss Tesla's Model S, Model 3, Model X, Model Y, Cybertruck, Roadster and More. * Model Y # Vendor\u00a0Dash mounted MagSafe charger for 2025+ Model Y Juniper, by TWRAPS We've just redesigned & introduced our updated v2 MagSafe charger compatible with the 2025+ Model Y Juniper and 2024+ Model 3 Highland. ### Dashboard Phone Mount / Qi2 Charger | Tesla Model 3 Highland, Model Y Juniper The TWRAPS phone holder for latest Tesla refreshed Model Y 2026 and Model 3 2024-2026 vehicles offers secure magnetic attachment with charging option. Dash mounted MagSafe charger for 2024+ Model 3 Highland, by TWRPAS Dashboard mounted MagSafe charger for Model S & X * Model Y Model Y * Model Y Model Y * Model Y",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000095017021000046/tsla-20210331.htm",
-      "body": "Tesla, Inc. (\u201cTesla\u201d, the \u201cCompany\u201d, \u201cwe\u201d, \u201cus\u201d or \u201cour\u201d) was incorporated in the State of Delaware on July 1, 2003. We design, develop, manufacture and sell high-performance fully electric vehicles and design, manufacture, install and sell solar energy generation and energy",
+      "href": "https://podcast.teslamotorsclub.com/",
+      "body": "In this episode of the Tesla Motors Club podcast, hosts Louis, Doug, and Mike anticipate the Tesla Robotaxi rollout. In this episode of the Tesla Motors Club podcast, hosts Seb, Doug, and Mike look back on Tesla\u2019s October We Robot event and discuss Doug\u2019s road trip to go see a Starship launch. In this episode of the Tesla Motors Club podcast, hosts Louis, Doug, and Mike review highlights from the Tesla Q4 earnings call and chat about things already happening related to their 2025 predictions (04:38). In this episode of the Tesla Motors Club podcast, hosts Louis, Doug, and Mike dive into new details about the New Model Y (02:27), reflect on their 2024 predictions (13:42), and make new ones for 2025 (50:00).",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.nasdaq.com/market-activity/stocks/tsla/sec-filings",
-      "body": "| Company Name | Form Type | Filed | Period | View | Nasdaq provides company\u2019s\u00a0SEC filings, which are\u00a0financial statements and\u00a0reports filed electronically with the U.S. Securities and Exchange Commission (SEC) by\u00a0Quotemedia. The information collected might relate to you, your preferences or your device, and is mostly used to make the site work as you expect it to and to provide a more personalized web experience. These cookies do not store any personally identifiable information. As a California consumer, you have the right to opt-out from the sale or sharing of your personal information at any time across business platform, services, businesses and devices. You can opt-out of the sale and sharing of your personal information by using this toggle switch.",
+      "href": "https://www.reddit.com/r/TeslaReferralsCode/",
+      "body": "\u20222 days agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n8h8f2/latest_tesla_referral_code_for_all_models/) \u20221 day agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n9axfi/latest_tesla_referral_code_for_all_models/) \u20222 days agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n8bk1q/latest_tesla_referral_code_for_all_models/) \u20221 day agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n971v4/latest_tesla_referral_code_for_all_models/) \u20222 days agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n8mc02/latest_tesla_referral_code_for_all_models/) \u20222 days agoLatest Tesla Referral Code - For all models - available for first 10 - All 10 still available[https://www.tesla.com/referral/alex91309](https://www.reddit.com/r/TeslaReferralsCode/comments/1n8lhwd/latest_tesla_referral_code_for_all_models/)",
       "source_retriever": "type"
     },
     {
-      "href": "https://last10k.com/sec-filings/tsla",
-      "body": "(TSLA) 10K Annual Reports & 10Q SEC Filings YoY, operating income was primarily impacted by the following items: - reduced S3XY vehicle ASP - increase in operating expenses driven by AI and other R&D projects + growth in Energy Generation and Storage and Services and Other gross profit + lower cost per vehicle, including lower raw material costs partially offset by lower fixed cost absorption from production decrease YoY + higher regulatory credit revenue Cash Quarter-end cash, cash equivalents and investments in Q4 was $36.6B.",
+      "href": "https://teslamotorsclub.com/tmc/threads/north-carolina-state-inspection.289746/",
+      "body": "Discuss Tesla's Model S, Model 3, Model X, Model Y, Cybertruck, Roadster and More.",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024043486/tsla-20240930.htm",
-      "body": "Based on this evaluation, our Chief Executive Officer and our Chief Financial Officer concluded that, as of September 30, 2024, our disclosure controls and procedures were designed at a reasonable assurance level and were effective to provide reasonable assurance that the information we are required to disclose in reports that we file or submit under the Exchange Act is recorded, processed, summarized and reported within the time periods specified in the SEC rules and forms, and that such information is accumulated and communicated to our management, including our Chief Executive Officer and our Chief Financial Officer, as appropriate, to allow timely decisions regarding required disclosures.",
+      "href": "https://teslamotorsclub.com/tmc/threads/solutions-for-double-gfci.7168/",
+      "body": "If the wall outlet has its' own GFCI protection I could simply unplug the original male end of the charging cord and then plug the cord into the wall. If the wall outlet has its' own GFCI protection I could simply unplug the original male end of the charging cord and then plug the cord into the wall. I emailed Tesla about this a few days ago (re: the Model S, but the same thing applies): Tesla said to not install a GFCI on the circuit. The simplest and quickest fix (and no messing with live circuits) is to remove the GFCI from the cord and replace it with an industrial grade straight plug, as has been discussed in other threads in this forum.",
       "source_retriever": "type"
     },
     {
-      "href": "https://seekingalpha.com/symbol/TSLA/sec-filings",
-      "body": "*   NEW Virtual Analyst Report *   Cryptocurrency *   Cryptocurrency Prices Search field  Search for Symbols, analysts, keywords Markets change, but our community always has the latest in-depth analysis and powerful stock ratings. (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report (TSLA) - 10-Q - Quarterly Report | Symbol | Last Price | Change | | Symbol | Last Price | Change | | Symbol | Last Price | Change |",
+      "href": "https://teslamotorsclub.com/tmc/threads/introducing-fsd-hunter-app-for-finding-tesla-cars-with-full-self-driving-included-package.338619/",
+      "body": "I'm excited to share with you my latest project, FSD Hunter, an app designed specifically for Tesla shoppers looking to buy a vehicle with the Full Self-Driving (FSD) package. * Scraping Technology: The app is an index of scans of various used car listings to pinpoint Tesla's that include the FSD package. * User-Friendly Interface: You get direct links to the listings along with images from the car's software screen showing the FSD package. Is there a way to rent a Tesla by filtering for the Full Self-Driving (FSD) feature? > Is there a way to rent a Tesla by filtering for the Full Self-Driving (FSD) feature?",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.sec.gov/edgar/browse/?CIK=0001318605",
-      "body": "| 8-K | Current report Open documentClick to Open documentFiling Open filingClick to Open filing * **5.03** - Amendments to Articles of Incorporation or Bylaws Change in Fiscal Year * **9.01** - Financial Statements and Exhibits | 2025-05-16 | 2025-05-15 View all with same reporting date | | 8-K | Current report Open documentClick to Open documentFiling Open filingClick to Open filing * **5.03** - Amendments to Articles of Incorporation or Bylaws Change in Fiscal Year * **9.01** - Financial Statements and Exhibits | 2023-04-05 | 2023-03-30 View all with same reporting date |",
+      "href": "https://teslamotorsclub.com/tmc/threads/tesla-battery-preconditioning-when-how-and-why-you-should-do-it.300265/",
+      "body": "Hey Tesla community, I have a quick question about pre-conditioning the battery on my Model Y. You never need to precondition the battery (fall, winter, spring or summer.) The Tesla Model Y's battery management system will automatically warm or cool the battery as required. The Tesla Model Y may start to precondition the battery for optimal Supercharging when your Model Y is still a good 30 minutes/30 miles away from the Supercharger location (when on a road trip.) (5 minutes is not enough time.) I have observed that the Tesla Model may perform some battery warming while Supercharging to improve the efficiency and speed of the Supercharging session. This affords plenty of time for the Tesla Model Y to fully precondition the battery for next Supercharger charging session.",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000162828025003063/tsla-20241231.htm",
-      "body": "10.41[Tenth Amendment to Amended and Restated Agreement For Research & Development Alliance on Triex Module Technology, effective as of March 31, 2017, by and between The Research Foundation For The State University of New York, on behalf of the Colleges of Nanoscale Science and Engineering of the State University of New York, and Silevo, LLC.](https://www.sec.gov/Archives/edgar/data/0001318605/000156459017009968/tsla-ex108_955.htm)10-Q 001-34756 10.8 May 10, 2017 10.43[Twelfth Amendment to Amended and Restated Agreement for Research & Development Alliance on Triex Module Technology, effective as of May 1, 2021, among the Research Foundation for the State University of New York, Silevo, LLC and Tesla Energy Operations, Inc](https://www.sec.gov/Archives/edgar/data/1318605/000095017021002253/tsla-ex10_1.htm).10-Q 001-34756 10.1 October 25, 2021",
+      "href": "https://teslamotorsclub.com/tmc/threads/frightening-order-cancellation-experience.346268/",
+      "body": "The left portion jutted out considerably compared to other identical Models on the lot; consequently, I declined the car and did not link the app to it. Given that I really care about the self-driving, I decided to cancel my order completely and wait for the new hardware upgrade. Prior to the cancellation, I had wired the total payment of the car to Tesla. I'm just really concerned because I got a confirmation email for returning the floor mats but I'm not getting a confirmation email for the car that I have paid a lot of money for. That said, given there is zero concrete evidence of HW5, it could be years before you can buy a car with it.",
       "source_retriever": "type"
     },
     {
-      "href": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
-      "body": "10.55[Tenth Amendment to Amended and Restated Agreement For Research & Development Alliance on Triex Module Technology, effective as of March 31, 2017, by and between The Research Foundation For The State University of New York, on behalf of the Colleges of Nanoscale Science and Engineering of the State University of New York, and Silevo, LLC.](https://www.sec.gov/Archives/edgar/data/0001318605/000156459017009968/tsla-ex108_955.htm)10-Q 001-34756 10.8 May 10, 2017 10.57[Twelfth Amendment to Amended and Restated Agreement for Research & Development Alliance on Triex Module Technology, effective as of May 1, 2021, among the Research Foundation for the State University of New York, Silevo, LLC and Tesla Energy Operations, Inc](https://www.sec.gov/Archives/edgar/data/1318605/000095017021002253/tsla-ex10_1.htm).10-Q 001-34756 10.1 October 25, 2021",
+      "href": "https://www.reddit.com/r/TeslaLounge/comments/15iyum7/is_there_any_money_in_building_a_super_charger/",
+      "body": "Is there any money in building a super charger station? Skip to main contentIs there any money in building a super charger station? Image 1: r/TeslaLounge icon Go to TeslaLounge Image 3: r/TeslaLounge iconr/TeslaLoungeImage 4: VerifiedImage 5: Verified Share your Tesla story! Is there any money in building a super charger station? Archived post. New comments cannot be posted and votes cannot be cast. Income potential from EV charging stations Best Tesla accessories for new owners New to Reddit? Anyone can view, post, and comment to this community Top Posts *   Reddit reReddit: Top posts of August 5, 2023 * * * *   Reddit reReddit: Top posts of August 2023 * * * *   Reddit reReddit: Top posts of 2023 * * *",
       "source_retriever": "type"
     },
     {
-      "href": "https://ir.tesla.com/press",
-      "body": "Tesla has released its financial results for the first quarter of 2025 by posting an update on its Investor Relations website.",
-      "source_retriever": "type"
-    },
-    {
-      "href": "https://ir.tesla.com/sec-filings",
-      "body": "[Skip to main content](https://ir.tesla.com/main-content) [Tesla](https://www.tesla.com/)[Skip to main content](https://ir.tesla.com/sec-filings#main-content) ![Image 2: SEC Filings](https://ir.tesla.com/sec-filings) Filters Annual & Quarterly Reports   Apply Filter Clear Selections [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924053355/tm2326076d21_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924053355/tm2326076d21_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924053355/tm2326076d21_defa14a-gen.pdf) [144](https://www.sec.gov/Archives/edgar/data/1318605/000197236224000520/xsl144X01/primary_doc.xml) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000197236224000520/xsl144X01/primary_doc.xml) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000197236224000520/000197236224000520-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924051405/tm2326076d20_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924051405/tm2326076d20_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924051405/tm2326076d20_defa14a-gen.pdf) [10-Q](https://www.sec.gov/Archives/edgar/data/1318605/000162828024017503/tsla-20240331.htm) Quarterly report which provides a continuing view of a company's financial position *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000162828024017503/tsla-20240331.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000162828024017503/tsla-20240331-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050586/tm2326076d19_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050586/tm2326076d19_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924050586/tm2326076d19_defa14a-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024046895/tsla-20240423.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024046895/tsla-20240423.htm) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050097/tm2326076d18_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924050097/tm2326076d18_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924050097/tm2326076d18_defa14a-gen.pdf) [DEFA14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048353/tm2326076d16_defa14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048353/tm2326076d16_defa14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924048353/tm2326076d16_defa14a-gen.pdf) [PRE 14A](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048040/tm2326076d13_pre14a.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000110465924048040/tm2326076d13_pre14a.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000110465924048040/tm2326076d13_pre14a-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024044588/tsla-20240414.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024044588/tsla-20240414.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000095017024044588/tsla-20240414-gen.pdf) [4](https://www.sec.gov/Archives/edgar/data/1318605/000179056524000003/xslF345X05/edgardoc.xml) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000179056524000003/xslF345X05/edgardoc.xml) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000179056524000003/000179056524000003-gen.pdf) [8-K](https://www.sec.gov/Archives/edgar/data/1318605/000095017024040274/tsla-20240402.htm) *   [HTML](https://www.sec.gov/Archives/edgar/data/1318605/000095017024040274/tsla-20240402.htm) *   [PDF](https://ir.tesla.com/_flysystem/s3/sec/000095017024040274/tsla-20240402-gen.pdf) [Prev](https://ir.tesla.com/sec-filings?page=%2C11)Page:  [Next](https://ir.tesla.com/sec-filings?page=%2C13) *   [Tesla \u00a9 2025](https://www.tesla.com/about) *   [Subscription Preferences](https://www.tesla.com/teslaaccount/subscription-preferences) *   [Contact & FAQ](https://ir.tesla.com/contact-us) *   [Privacy & Legal](https://www.tesla.com/about/legal) ![Image 3](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=0df78556-c4eb-4460-bdf8-38974a6ad409&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=oft6j&type=javascript&version=2.3.33)![Image 4](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=0df78556-c4eb-4460-bdf8-38974a6ad409&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=oft6j&type=javascript&version=2.3.33)![Image 5](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=9e4a78b6-2c19-4bfa-acfa-43003a5888ed&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ogqcs&type=javascript&version=2.3.33)![Image 6](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=9e4a78b6-2c19-4bfa-acfa-43003a5888ed&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ogqcs&type=javascript&version=2.3.33)![Image 7](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=d34858b7-9967-4b23-9919-0de3054839ac&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondmw&type=javascript&version=2.3.33)![Image 8](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=d34858b7-9967-4b23-9919-0de3054839ac&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondmw&type=javascript&version=2.3.33)![Image 9](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=e68d201c-14c8-4891-bae7-5f664d86d384&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondn2&type=javascript&version=2.3.33)![Image 10](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=3&event=%7B%7D&event_id=e68d201c-14c8-4891-bae7-5f664d86d384&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=ondn2&type=javascript&version=2.3.33)![Image 11](https://t.co/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=4&event=%7B%7D&event_id=a7706caf-a8c9-4ce9-b8ae-26cb519f2463&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=tw-oft6j-q65yu&type=javascript&version=2.3.33)![Image 12](https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-US%26Google%20Inc.%26Linux%20x86_64%26255%26800%26600%264%2624%26800%26600%260%26na&eci=4&event=%7B%7D&event_id=a7706caf-a8c9-4ce9-b8ae-26cb519f2463&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=13b0bf65-0365-4fbd-9cac-1fd3c7ca802c&tw_document_href=https%3A%2F%2Fir.tesla.com%2Fsec-filings&tw_iframe_status=0&txn_id=tw-oft6j-q65yu&type=javascript&version=2.3.33)",
+      "href": "https://teslamotorsclub.com/tmc/threads/no-dash-cam-footage-recorded-when-accident-occurs.326434/",
+      "body": "**Note:** This feature may not be available in some browsers. ##### Member ##### Member ### Obtain a Copy of the Data Associated With Your Tesla Account | Tesla Support ##### Member ##### Member ### Obtain a Copy of the Data Associated With Your Tesla Account | Tesla Support | Dashcam camera recordings | \u2713 | N/A | N/A | ##### Member ##### Member | Dashcam camera recordings | \u2713 | N/A | N/A | ##### Member ##### Member ##### Member ##### Member ##### Member ### Supporting Members Consider becoming a Supporting Member of Tesla Motors Club. Additional perks are available depending on the level of contribution. Please visit the Account Upgrades page for more details: SUPPORT TMC",
       "source_retriever": "type"
     }
   ],
@@ -179,242 +160,24 @@
     "total_retrievers": 11,
     "successful_retrievers": 5,
     "failed_retrievers": 6,
-    "total_articles": 26
+    "total_articles": 23
   },
   "aggregation": {
-    "enabled": true,
-    "clusters": [
-      {
-        "id": "cluster_1_20250912_211556",
-        "chunk_count": 3,
-        "source_count": 3,
-        "metadata": {
-          "primary_ticker": "SEC",
-          "topics": [
-            "general_news"
-          ],
-          "time_range": [
-            "2025-09-12T21:15:56.341685",
-            "2025-09-12T21:15:56.361213"
-          ],
-          "source_types": [
-            "financial_news",
-            "sec_filing"
-          ],
-          "confidence_score": 0.5383663861875718,
-          "cluster_size": 3,
-          "dominant_language": "en"
-        },
-        "created_at": "2025-09-12T21:15:56.978803",
-        "updated_at": "2025-09-12T21:15:56.978805",
-        "sources": [
-          {
-            "url": "https://ir.tesla.com/sec-filings",
-            "title": "SEC Filings | Tesla Investor Relations",
-            "author": null,
-            "timestamp": "2025-09-12T21:15:56.341685",
-            "excerpt": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
-            "relevance_score": 1.0
-          },
-          {
-            "url": "https://ir.tesla.com/",
-            "title": "Tesla Investor Relations",
-            "author": null,
-            "timestamp": "2025-09-12T21:15:56.344104",
-            "excerpt": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
-            "relevance_score": 1.0
-          },
-          {
-            "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024043486/tsla-20240930.htm",
-            "title": "",
-            "author": null,
-            "timestamp": "2025-09-12T21:15:56.361213",
-            "excerpt": "Based on this evaluation, our Chief Executive Officer and our Chief Financial Officer concluded that, as of September 30, 2024, our disclosure controls and procedures were designed at a reasonable ass...",
-            "relevance_score": 1.0
-          }
-        ],
-        "summary": {
-          "id": "9602d203-c3f5-4ec1-96ec-cec26c323af1",
-          "cluster_id": "cluster_1_20250912_211556",
-          "summary": "**1. Comprehensive Summary:** The provided text consists of three documents related to Tesla's compliance with Securities and Exchange Commission (SEC) regulations.  The first document, sourced directly from the SEC, is an excerpt from a filing indicating that Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024. This certification confirms that the company's systems are designed to ensure timely and accurate reporting of information required by the SEC. The second and third documents, from Tesla's Investor Relations website, provide links and information regarding Tesla's SEC filings. These documents outline the various types of reports and filings Tesla makes available to the public, including annual and quarterly reports, current reports, and proxy filings.  Together, these documents demonstrate Tesla's commitment to transparency and compliance with SEC regulations. The information presented focuses on the mechanisms and processes Tesla uses to meet SEC reporting requirements.  There is no substantive news or events reported; rather, the documents serve as confirmation of compliance and as a directory of available filings.  The lack of specific content within the SEC filing excerpt limits the depth of analysis possible.",
-          "key_points": [
-            "Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024, ensuring compliance with SEC reporting requirements.",
-            "Tesla's Investor Relations website provides a comprehensive list of its SEC filings.",
-            "The filings include annual and quarterly reports, current reports, Section 16 filings, proxy filings, registration statements, and other filings.",
-            "The provided SEC excerpt focuses on the processes for recording, processing, summarizing, and reporting information to the SEC.",
-            "The documents highlight Tesla's commitment to transparency and adherence to SEC regulations.",
-            "*3. Factual Information Only:**  The analysis above strictly adheres to the factual information provided in the source documents. No speculation or interpretation beyond the explicit content of the documents has been included."
-          ],
-          "generated_at": "2025-09-12T21:15:59.968143",
-          "model_used": "gemini-1.5-flash",
-          "confidence": 1.0,
-          "word_count": 188
-        }
-      },
-      {
-        "id": "cluster_0_20250912_211556",
-        "chunk_count": 2,
-        "source_count": 2,
-        "metadata": {
-          "primary_ticker": "TESLA",
-          "topics": [
-            "general_news"
-          ],
-          "time_range": [
-            "2025-09-12T21:15:56.344907",
-            "2025-09-12T21:15:56.346969"
-          ],
-          "source_types": [
-            "financial_news",
-            "sec_filing"
-          ],
-          "confidence_score": 0.6469002957794491,
-          "cluster_size": 2,
-          "dominant_language": "en"
-        },
-        "created_at": "2025-09-12T21:15:56.979136",
-        "updated_at": "2025-09-12T21:15:56.979138",
-        "sources": [
-          {
-            "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
-            "title": "tsla-20231231",
-            "author": null,
-            "timestamp": "2025-09-12T21:15:56.344907",
-            "excerpt": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
-            "relevance_score": 1.0
-          },
-          {
-            "url": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
-            "title": "tsla-20250422-gen.pdf",
-            "author": null,
-            "timestamp": "2025-09-12T21:15:56.346969",
-            "excerpt": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
-            "relevance_score": 1.0
-          }
-        ],
-        "summary": {
-          "id": "a0ba1be3-8490-408b-ad03-6396d3416ca5",
-          "cluster_id": "cluster_0_20250912_211556",
-          "summary": "Tesla released its First Quarter 2025 Update on September 12th, 2025, reporting financial results for the quarter ended March 31st, 2025.  This release, found on Tesla's investor relations website (ir.tesla.com), provides details of the company's performance during that period.  A separate filing with the Securities and Exchange Commission (SEC), dated September 12th, 2025, indicates that Tesla will submit a proxy statement within 120 days of its fiscal year ending December 31st, 2023.  This proxy statement will likely contain information relevant to shareholder voting and corporate governance.  The specific financial details from the Q1 2025 update are not provided in the available text. The two documents highlight Tesla's ongoing reporting obligations to both investors and regulatory bodies.  The release of the Q1 2025 financial results fulfills a requirement for timely disclosure of financial performance. The SEC filing indicates compliance with regulations regarding shareholder information and upcoming corporate actions.  The lack of specific numerical data in the provided text limits the depth of analysis possible.",
-          "key_points": [
-            "Tesla released its First Quarter 2025 financial results on September 12th, 2025.",
-            "The Q1 2025 results cover the period ending March 31st, 2025.",
-            "The financial results were published on Tesla's investor relations website (ir.tesla.com).",
-            "Tesla filed a notice with the SEC indicating an upcoming proxy statement.",
-            "The proxy statement will be filed within 120 days of the fiscal year ending December 31st, 2023."
-          ],
-          "generated_at": "2025-09-12T21:15:59.636220",
-          "model_used": "gemini-1.5-flash",
-          "confidence": 0.8,
-          "word_count": 163
-        }
-      }
-    ],
+    "enabled": false,
+    "clusters": [],
     "stats": {
-      "processing_time_seconds": 3.950218915939331,
-      "total_clusters": 2,
-      "total_sources": 5,
-      "total_chunks_processed": 5,
-      "timestamp": "2025-09-12T21:15:59.999021"
+      "error": "Aggregation failed or disabled"
     },
-    "cluster_count": 2,
-    "total_sources": 5
+    "cluster_count": 0,
+    "total_sources": 0
   },
-  "summaries": [
-    {
-      "id": "cluster_1_20250912_211556",
-      "title": "SEC: General News",
-      "summary": "**1. Comprehensive Summary:** The provided text consists of three documents related to Tesla's compliance with Securities and Exchange Commission (SEC) regulations.  The first document, sourced directly from the SEC, is an excerpt from a filing indicating that Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024. This certification confirms that the company's systems are designed to ensure timely and accurate reporting of information required by the SEC. The second and third documents, from Tesla's Investor Relations website, provide links and information regarding Tesla's SEC filings. These documents outline the various types of reports and filings Tesla makes available to the public, including annual and quarterly reports, current reports, and proxy filings.  Together, these documents demonstrate Tesla's commitment to transparency and compliance with SEC regulations. The information presented focuses on the mechanisms and processes Tesla uses to meet SEC reporting requirements.  There is no substantive news or events reported; rather, the documents serve as confirmation of compliance and as a directory of available filings.  The lack of specific content within the SEC filing excerpt limits the depth of analysis possible.",
-      "key_points": [
-        "Tesla's CEO and CFO certified the effectiveness of their disclosure controls and procedures as of September 30, 2024, ensuring compliance with SEC reporting requirements.",
-        "Tesla's Investor Relations website provides a comprehensive list of its SEC filings.",
-        "The filings include annual and quarterly reports, current reports, Section 16 filings, proxy filings, registration statements, and other filings.",
-        "The provided SEC excerpt focuses on the processes for recording, processing, summarizing, and reporting information to the SEC.",
-        "The documents highlight Tesla's commitment to transparency and adherence to SEC regulations.",
-        "*3. Factual Information Only:**  The analysis above strictly adheres to the factual information provided in the source documents. No speculation or interpretation beyond the explicit content of the documents has been included."
-      ],
-      "sources": [
-        {
-          "url": "https://ir.tesla.com/sec-filings",
-          "title": "SEC Filings | Tesla Investor Relations",
-          "author": null,
-          "timestamp": "2025-09-12T21:15:56.341685",
-          "excerpt": "Annual & Quarterly Reports \u00b7 Current Reports \u00b7 Section 16 Filings \u00b7 Proxy Filings \u00b7 Registration Statements \u00b7 Other Filings.",
-          "relevance_score": 1.0
-        },
-        {
-          "url": "https://ir.tesla.com/",
-          "title": "Tesla Investor Relations",
-          "author": null,
-          "timestamp": "2025-09-12T21:15:56.344104",
-          "excerpt": "Quarterly Disclosure Other Documents & Events. Year, Year, Quarter, Earnings Date, Production & Delivery, Shareholder Deck, Webcast with Q&A, SEC Filing. 2025.",
-          "relevance_score": 1.0
-        },
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024043486/tsla-20240930.htm",
-          "title": "",
-          "author": null,
-          "timestamp": "2025-09-12T21:15:56.361213",
-          "excerpt": "Based on this evaluation, our Chief Executive Officer and our Chief Financial Officer concluded that, as of September 30, 2024, our disclosure controls and procedures were designed at a reasonable ass...",
-          "relevance_score": 1.0
-        }
-      ],
-      "metadata": {
-        "ticker": "SEC",
-        "topics": [
-          "general_news"
-        ],
-        "source_count": 3,
-        "confidence": 1.0,
-        "cluster_score": 1.0
-      }
-    },
-    {
-      "id": "cluster_0_20250912_211556",
-      "title": "TESLA: General News",
-      "summary": "Tesla released its First Quarter 2025 Update on September 12th, 2025, reporting financial results for the quarter ended March 31st, 2025.  This release, found on Tesla's investor relations website (ir.tesla.com), provides details of the company's performance during that period.  A separate filing with the Securities and Exchange Commission (SEC), dated September 12th, 2025, indicates that Tesla will submit a proxy statement within 120 days of its fiscal year ending December 31st, 2023.  This proxy statement will likely contain information relevant to shareholder voting and corporate governance.  The specific financial details from the Q1 2025 update are not provided in the available text. The two documents highlight Tesla's ongoing reporting obligations to both investors and regulatory bodies.  The release of the Q1 2025 financial results fulfills a requirement for timely disclosure of financial performance. The SEC filing indicates compliance with regulations regarding shareholder information and upcoming corporate actions.  The lack of specific numerical data in the provided text limits the depth of analysis possible.",
-      "key_points": [
-        "Tesla released its First Quarter 2025 financial results on September 12th, 2025.",
-        "The Q1 2025 results cover the period ending March 31st, 2025.",
-        "The financial results were published on Tesla's investor relations website (ir.tesla.com).",
-        "Tesla filed a notice with the SEC indicating an upcoming proxy statement.",
-        "The proxy statement will be filed within 120 days of the fiscal year ending December 31st, 2023."
-      ],
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828024002390/tsla-20231231.htm",
-          "title": "tsla-20231231",
-          "author": null,
-          "timestamp": "2025-09-12T21:15:56.344907",
-          "excerpt": "Such proxy statement will be filed with the Securities and Exchange Commission within 120 days of the registrant's fiscal year ended December 31, 2023. TESLA, ...",
-          "relevance_score": 1.0
-        },
-        {
-          "url": "https://ir.tesla.com/_flysystem/s3/sec/000162828025018851/tsla-20250422-gen.pdf",
-          "title": "tsla-20250422-gen.pdf",
-          "author": null,
-          "timestamp": "2025-09-12T21:15:56.346969",
-          "excerpt": "On April 22, 2025, Tesla, Inc. released its financial results for the quarter ended March 31, 2025 by posting its First Quarter 2025 Update on ...",
-          "relevance_score": 1.0
-        }
-      ],
-      "metadata": {
-        "ticker": "TESLA",
-        "topics": [
-          "general_news"
-        ],
-        "source_count": 2,
-        "confidence": 0.8,
-        "cluster_score": 1.0
-      }
-    }
-  ],
+  "summaries": [],
   "processing_stats": {
-    "query": "Tesla Q3 earnings SEC filings",
-    "retrieval_time": 11.486157,
-    "aggregation_enabled": true,
+    "query": "Tesla new products",
+    "retrieval_time": 13.689871,
+    "aggregation_enabled": false,
     "user_preferences_used": false,
-    "timestamp": "2025-09-12T21:15:59.999205",
-    "total_time": 15.43662
+    "timestamp": "2025-09-13T13:40:04.608442",
+    "total_time": 13.689915
   }
 }

@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, FileText, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, User, Building, Rss, Bookmark, ChevronDown, MessageCircle, Send, BarChart3, ArrowLeft } from "lucide-react"
+import { Search, FileText, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, User, Building, Rss, Bookmark, ChevronDown, MessageCircle, Send, BarChart3, ArrowLeft, List, Clock, ChevronUp } from "lucide-react"
 import { ApiService, SecDocument } from "@/services/api"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 
@@ -14,6 +14,20 @@ export default function SecDocsPage() {
   const [loading, setLoading] = useState(false)
   const [searchResults, setSearchResults] = useState<SecDocument[]>([])
   const [selectedDocument, setSelectedDocument] = useState<SecDocument | null>(null)
+  const [searchHistory, setSearchHistory] = useState<Array<{
+    query: string
+    timestamp: Date
+    results: SecDocument[]
+    response: string
+  }>>([])
+  const [selectedDocumentSections, setSelectedDocumentSections] = useState<Array<{
+    id: string
+    title: string
+    content: string
+    page: number
+    elementIndex?: number
+  }>>([])
+  const [activeSection, setActiveSection] = useState<string | null>(null)
   const [documentContent, setDocumentContent] = useState<string>("")
   const [chatResponse, setChatResponse] = useState<string>("")
   const [isChatLoading, setIsChatLoading] = useState(false)
@@ -47,39 +61,48 @@ export default function SecDocsPage() {
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return
-    
+
     setLoading(true)
     setIsSecSearchLoading(true)
     setShowSecSearchResponse(true)
     setSecSearchResponse("Searching SEC documents...")
-    
+
     try {
       // Search using real SEC API - get more documents to include 10-K reports
       const documents = await ApiService.searchSecDocuments(query, 50)
-      
+
       setSearchResults(documents)
-      
+
       // Generate AI response about the search with document type counts
       let responseText = `Found ${documents.length} SEC document${documents.length !== 1 ? 's' : ''} matching "${query}".`
-      
+
       if (documents.length > 0) {
         // Group documents by type for summary
         const typeCounts: Record<string, number> = {}
         documents.forEach(doc => {
           typeCounts[doc.documentType] = (typeCounts[doc.documentType] || 0) + 1
         })
-        
+
         const countSummary = Object.entries(typeCounts)
           .map(([type, count]) => `${count} ${type}${count !== 1 ? 's' : ''}`)
           .join(', ')
-        
+
         responseText += ` Including: ${countSummary}. Click on any category below to expand and view individual documents.`
       } else {
         responseText += ' Try searching for company names like Apple, Tesla, or Microsoft, or document types like 10-K, 8-K, 10-Q.'
       }
-      
+
       setSecSearchResponse(responseText)
-      
+
+      // Save to search history
+      const historyEntry = {
+        query: query,
+        timestamp: new Date(),
+        results: documents,
+        response: responseText
+      }
+      setSearchHistory(prev => [historyEntry, ...prev].slice(0, 10)) // Keep last 10 searches
+
     } catch (error) {
       console.error('Search error:', error)
       setSecSearchResponse("Error searching SEC documents. Please try again.")
@@ -97,7 +120,13 @@ export default function SecDocsPage() {
     setDocumentPages([])
     setIsHtmlContent(false)
     setIsDocumentFocusMode(true)
-    
+    setSelectedDocumentSections([])
+    setActiveSection(null)
+
+    // Clear previous chat responses when selecting new document
+    setChatResponse("")
+    setShowChatResponse(false)
+
     try {
       // Fetch full document content with highlighting
       const fullDocument = await ApiService.getSecDocument(document.id, searchQuery)
@@ -105,7 +134,7 @@ export default function SecDocsPage() {
         // Prefer HTML content over plain text
         const content = fullDocument.html_content || fullDocument.content || ""
         setDocumentContent(content)
-        
+
         if (fullDocument.html_content) {
           // HTML content - split into pages (will be recalculated when dimensions are available)
           setIsHtmlContent(true)
@@ -113,6 +142,10 @@ export default function SecDocsPage() {
           setDocumentPages(pages)
           setTotalPages(pages.length)
           setCurrentPage(1)
+
+          // Extract document sections for navigation
+          const sections = extractDocumentSections(fullDocument.html_content)
+          setSelectedDocumentSections(sections)
         } else {
           // Plain text content - use viewport-based pagination
           setIsHtmlContent(false)
@@ -122,15 +155,32 @@ export default function SecDocsPage() {
           const linesPerPage = calculateLinesPerPage()
           setTotalPages(Math.ceil(lines.length / linesPerPage))
           setCurrentPage(1)
+
+          // Extract sections from plain text
+          const sections = extractPlainTextSections(content)
+          setSelectedDocumentSections(sections)
         }
-        
+
         // Update the selected document with the full content
-        setSelectedDocument(prev => prev ? { 
-          ...prev, 
+        setSelectedDocument(prev => prev ? {
+          ...prev,
           content: fullDocument.content,
           html_content: fullDocument.html_content,
-          highlights: fullDocument.highlights 
+          highlights: fullDocument.highlights
         } : null)
+
+        // Process document for RAG in the background
+        try {
+          const ragStatus = await ApiService.getSecDocumentRAGStatus(document.id)
+          if (ragStatus.status !== 'processed') {
+            console.log('Processing document for RAG search...')
+            await ApiService.processSecDocumentForRAG(document.id)
+            console.log('Document processed for RAG search')
+          }
+        } catch (ragError) {
+          console.warn('Could not process document for RAG, but document will still load:', ragError)
+        }
+
       } else {
         setDocumentContent("Failed to load document content. Please try again.")
         setTotalPages(1)
@@ -398,6 +448,216 @@ export default function SecDocsPage() {
     return Math.ceil(baseHeight * zoomFactor)
   }
 
+  // Extract sections from HTML content for navigation
+  const extractDocumentSections = (htmlContent: string): Array<{
+    id: string
+    title: string
+    content: string
+    page: number
+    elementIndex: number
+  }> => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(htmlContent, 'text/html')
+    const sections: Array<{
+      id: string
+      title: string
+      content: string
+      page: number
+      elementIndex: number
+    }> = []
+
+    // First, split content into pages to get accurate page mapping
+    const pages = splitHtmlIntoPages(htmlContent)
+
+    // Look for common SEC document section markers
+    const headings = doc.querySelectorAll('h1, h2, h3, h4, .FormData, [style*="font-weight:bold"], [style*="font-weight: bold"]')
+    let sectionCounter = 0
+
+    headings.forEach((heading, index) => {
+      const text = heading.textContent?.trim()
+      if (text && text.length > 5 && text.length < 200) {
+        // Get content after this heading until next heading
+        let content = ''
+        let nextElement = heading.nextElementSibling
+        let contentLength = 0
+
+        while (nextElement && contentLength < 1000) {
+          const elementText = nextElement.textContent?.trim() || ''
+          if (elementText && !headings[index + 1]?.contains(nextElement)) {
+            content += elementText + ' '
+            contentLength += elementText.length
+          }
+          nextElement = nextElement.nextElementSibling
+        }
+
+        // Calculate which page this section appears on
+        const sectionText = heading.outerHTML
+        let calculatedPage = 1
+
+        // Find which page contains this section
+        for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+          if (pages[pageIndex].includes(sectionText) || pages[pageIndex].includes(text)) {
+            calculatedPage = pageIndex + 1
+            break
+          }
+        }
+
+        sections.push({
+          id: `section-${++sectionCounter}`,
+          title: text,
+          content: content.trim().substring(0, 500),
+          page: calculatedPage,
+          elementIndex: index
+        })
+      }
+    })
+
+    return sections.slice(0, 20) // Limit to first 20 sections
+  }
+
+  // Extract sections from plain text content
+  const extractPlainTextSections = (textContent: string): Array<{
+    id: string
+    title: string
+    content: string
+    page: number
+    elementIndex: number
+  }> => {
+    const sections: Array<{
+      id: string
+      title: string
+      content: string
+      page: number
+      elementIndex: number
+    }> = []
+
+    // Split by common SEC patterns
+    const lines = textContent.split('\n')
+    let currentSection: { title: string; content: string; lineStart: number } | null = null
+    let sectionCounter = 0
+
+    // Calculate lines per page based on current viewport settings
+    const linesPerPage = calculateLinesPerPage()
+
+    lines.forEach((line, index) => {
+      const trimmed = line.trim()
+
+      // Look for section headers (ITEM, PART, etc.)
+      const sectionMatch = trimmed.match(/^(ITEM|PART|SECTION)\s+([\d\w\.\s]+)/i)
+      if (sectionMatch || (trimmed.length < 100 && trimmed.toUpperCase() === trimmed && trimmed.length > 10)) {
+        // Save previous section
+        if (currentSection && currentSection.title) {
+          const calculatedPage = Math.floor(currentSection.lineStart / linesPerPage) + 1
+          sections.push({
+            id: `section-${++sectionCounter}`,
+            title: currentSection.title,
+            content: currentSection.content.substring(0, 500),
+            page: calculatedPage,
+            elementIndex: currentSection.lineStart
+          })
+        }
+
+        // Start new section
+        currentSection = {
+          title: sectionMatch ? `${sectionMatch[1]} ${sectionMatch[2]}` : trimmed,
+          content: '',
+          lineStart: index
+        }
+      } else if (currentSection && trimmed) {
+        currentSection.content += trimmed + ' '
+      }
+    })
+
+    // Add last section
+    if (currentSection && currentSection.title) {
+      const calculatedPage = Math.floor(currentSection.lineStart / linesPerPage) + 1
+      sections.push({
+        id: `section-${++sectionCounter}`,
+        title: currentSection.title,
+        content: currentSection.content.substring(0, 500),
+        page: calculatedPage,
+        elementIndex: currentSection.lineStart
+      })
+    }
+
+    return sections.slice(0, 20)
+  }
+
+  // Handle section navigation with improved search and highlighting
+  const handleSectionClick = (section: { id: string; title: string; content: string; page: number; elementIndex?: number }) => {
+    setActiveSection(section.id)
+
+    // Navigate to the correct page
+    if (section.page <= totalPages && section.page !== currentPage) {
+      setCurrentPage(section.page)
+    }
+
+    // Scroll to section if possible - try multiple methods
+    setTimeout(() => {
+      // Try to find by section id first
+      let sectionElement = document.querySelector(`[data-section-id="${section.id}"]`)
+
+      // If not found, try to find by text content in the document viewer
+      if (!sectionElement) {
+        const documentViewer = document.querySelector('.document-content-viewer')
+        if (documentViewer) {
+          const allElements = documentViewer.querySelectorAll('h1, h2, h3, h4, .FormData, p, div, td, th')
+          allElements.forEach(el => {
+            const elementText = el.textContent?.trim() || ''
+            const sectionTitle = section.title.trim()
+
+            // Try exact match first
+            if (elementText === sectionTitle || el.innerHTML.includes(sectionTitle)) {
+              sectionElement = el
+            }
+            // Then try partial match for search results
+            else if (section.id.startsWith('rag-chunk-') && elementText.includes(section.content.substring(0, 50))) {
+              sectionElement = el
+            }
+          })
+        }
+      }
+
+      // If found, scroll to it and highlight
+      if (sectionElement) {
+        sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+        // Add visual highlight to the found element
+        const htmlElement = sectionElement as HTMLElement
+        htmlElement.style.backgroundColor = '#fef3c7'
+        htmlElement.style.transition = 'background-color 2s ease'
+
+        setTimeout(() => {
+          htmlElement.style.backgroundColor = ''
+        }, 2000)
+      }
+    }, section.page !== currentPage ? 800 : 200) // Longer timeout if changing pages
+  }
+
+  // Restore previous search from history
+  const restoreSearchFromHistory = (historyItem: {
+    query: string
+    timestamp: Date
+    results: SecDocument[]
+    response: string
+  }) => {
+    setSearchQuery(historyItem.query)
+    setSearchResults(historyItem.results)
+    setSecSearchResponse(historyItem.response)
+    setShowSecSearchResponse(true)
+
+    // Re-group documents for display
+    const uniqueDocuments: Record<string, SecDocument> = {}
+    historyItem.results.forEach(doc => {
+      if (!uniqueDocuments[doc.id]) {
+        uniqueDocuments[doc.id] = doc
+      }
+    })
+
+    // This will trigger the useMemo for groupedDocuments
+    setSearchResults(Object.values(uniqueDocuments))
+  }
+
   // Get content for current page
   const getCurrentPageContent = () => {
     if (!documentContent) return ""
@@ -484,28 +744,79 @@ export default function SecDocsPage() {
     setShowChatResponse(false)
   }
 
-  // Chat functionality
+  // RAG Chat functionality - Uses document-specific search
   const handleChatSubmit = async () => {
-    if (!chatInput.trim() || isChatLoading) return
+    if (!chatInput.trim() || isChatLoading || !selectedDocument) return
 
     const query = chatInput
     setChatInput("")
     
     setIsChatLoading(true)
     setShowChatResponse(true)
-    setChatResponse("Analyzing SEC documents...")
+    setChatResponse("Searching through the document...")
 
     try {
-      const chatMessage = await ApiService.sendChatMessage(query)
+      // Use RAG to query the specific document instead of general chat
+      const ragResponse = await ApiService.querySecDocumentRAG(selectedDocument.id, query)
       
-      const responseContent = typeof chatMessage.content === 'string' 
-        ? chatMessage.content 
-        : JSON.stringify(chatMessage.content)
-      setChatResponse(responseContent)
+      if (ragResponse.error) {
+        setChatResponse(`Error: ${ragResponse.error}`)
+      } else {
+        // Format the response with chunks information
+        let formattedResponse = ragResponse.answer
+        
+        if (ragResponse.chunks && ragResponse.chunks.length > 0) {
+          formattedResponse += "\n\n📋 **Relevant sections found:**\n"
+          ragResponse.chunks.slice(0, 3).forEach((chunk, index) => {
+            const preview = chunk.content.substring(0, 150).trim()
+            formattedResponse += `\n${index + 1}. ${preview}... [Click to view source]`
+          })
+
+          if (ragResponse.chunks.length > 3) {
+            formattedResponse += `\n\n(Found ${ragResponse.chunks.length} total relevant sections)`
+          }
+
+          // Create clickable sections for the chunks with better page mapping
+          const chunkSections = ragResponse.chunks.slice(0, 5).map((chunk, index) => {
+            // Try to find the chunk in the document pages for accurate page mapping
+            let calculatedPage = 1
+            const chunkText = chunk.content.substring(0, 100)
+
+            if (documentPages.length > 0) {
+              for (let pageIndex = 0; pageIndex < documentPages.length; pageIndex++) {
+                if (documentPages[pageIndex].includes(chunkText)) {
+                  calculatedPage = pageIndex + 1
+                  break
+                }
+              }
+            } else if (documentContent) {
+              // For plain text, estimate based on content position
+              const contentIndex = documentContent.indexOf(chunkText)
+              if (contentIndex !== -1) {
+                const linesPerPage = calculateLinesPerPage()
+                const lineNumber = documentContent.substring(0, contentIndex).split('\n').length
+                calculatedPage = Math.floor(lineNumber / linesPerPage) + 1
+              }
+            }
+
+            return {
+              id: `rag-chunk-${index}`,
+              title: `Search Result ${index + 1}`,
+              content: chunk.content,
+              page: calculatedPage,
+              elementIndex: chunk.chunk_index
+            }
+          })
+
+          setSelectedDocumentSections(prev => [...chunkSections, ...prev])
+        }
+        
+        setChatResponse(formattedResponse)
+      }
       
     } catch (error) {
-      console.error('Chat error:', error)
-      setChatResponse("I apologize, but I'm experiencing technical difficulties. Please try again.")
+      console.error('RAG chat error:', error)
+      setChatResponse("I apologize, but I'm experiencing technical difficulties searching through this document. Please try again.")
     } finally {
       setIsChatLoading(false)
     }
@@ -514,6 +825,72 @@ export default function SecDocsPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      <style jsx global>{`
+        .search-history-item {
+          transition: all 0.2s ease;
+        }
+        .search-history-item:hover {
+          background-color: #f8f9fa;
+          transform: translateX(2px);
+        }
+        .section-nav-item {
+          transition: all 0.2s ease;
+          position: relative;
+        }
+        .section-nav-item:hover {
+          background-color: #e3f2fd;
+          transform: translateX(2px);
+        }
+        .section-nav-item.active {
+          background-color: #1976d2;
+          color: white;
+        }
+        .section-nav-item.search-result {
+          background-color: #fffbf0;
+          border-left: 3px solid #f59e0b;
+        }
+        .section-nav-item.search-result:hover {
+          background-color: #fef3c7;
+        }
+        .section-nav-item.search-result.active {
+          background-color: #f59e0b;
+          color: white;
+        }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .animate-highlight {
+          animation: highlight 1s ease-in-out;
+        }
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: .5;
+          }
+        }
+        @keyframes highlight {
+          0% {
+            background-color: #fef3c7;
+            transform: scale(1);
+          }
+          50% {
+            background-color: #f59e0b;
+            transform: scale(1.02);
+          }
+          100% {
+            background-color: #fffbf0;
+            transform: scale(1);
+          }
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
       {/* Haven News Header */}
       <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-10">
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
@@ -612,8 +989,8 @@ export default function SecDocsPage() {
         {/* Document Focus Mode - Chat Only */}
         {isDocumentFocusMode && selectedDocument ? (
           <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            {/* Back Button and Chat Interface */}
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+            {/* Left Sidebar: Back Button, Document Sections, and Chat Interface */}
+            <ResizablePanel defaultSize={30} minSize={25} maxSize={45}>
               <div className="border-r border-gray-200 flex flex-col bg-gray-50 h-full">
               {/* Back Button */}
               <div className="p-4 border-b border-gray-200 bg-white">
@@ -635,12 +1012,67 @@ export default function SecDocsPage() {
                   {selectedDocument.documentType}
                 </span>
               </div>
+
+              {/* Document Sections Navigation */}
+              {selectedDocumentSections.length > 0 && (
+                <div className="border-b border-gray-200 bg-white max-h-64 overflow-y-auto">
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <List className="h-4 w-4" />
+                      Document Sections
+                    </h3>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {selectedDocumentSections.map((section) => (
+                      <div
+                        key={section.id}
+                        className={`section-nav-item p-3 cursor-pointer border-b border-gray-100 transition-all ${
+                          activeSection === section.id ? 'active' : ''
+                        } ${
+                          section.id.startsWith('rag-chunk-') ? 'search-result' : ''
+                        }`}
+                        onClick={() => {
+                          handleSectionClick(section)
+                          // Add highlight animation
+                          const element = document.querySelector(`[data-section-id="${section.id}"]`)
+                          if (element) {
+                            element.classList.add('animate-highlight')
+                            setTimeout(() => element.classList.remove('animate-highlight'), 1000)
+                          }
+                        }}
+                      >
+                        <div className={`text-xs font-medium mb-1 ${
+                          section.id.startsWith('rag-chunk-') ? 'text-orange-800' : 'text-gray-900'
+                        }`}>
+                          {section.title}
+                          {section.id.startsWith('rag-chunk-') && (
+                            <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              Search Hit
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-600 line-clamp-2">
+                          {section.content.substring(0, 100)}...
+                        </div>
+                        <div className={`text-xs mt-1 ${
+                          section.id.startsWith('rag-chunk-') ? 'text-orange-600' : 'text-blue-600'
+                        }`}>
+                          Page {section.page}
+                          {activeSection === section.id && (
+                            <span className="ml-2 text-green-600 font-medium">● Active</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Chat Interface */}
               <div className="flex-1 flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-white">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Search Document</h3>
-                  <p className="text-xs text-gray-600">Ask questions about this SEC document</p>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Document Q&A</h3>
+                  <p className="text-xs text-gray-600">Ask questions about this specific SEC document using RAG search</p>
                 </div>
                 
                 {/* Chat Messages Area */}
@@ -674,7 +1106,7 @@ export default function SecDocsPage() {
                     <textarea
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask about this SEC document..."
+                      placeholder="Ask a question about this document (e.g. 'What was the revenue?' or 'What are the main risks?')"
                       className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}
                       onKeyDown={(e) => {
@@ -699,9 +1131,9 @@ export default function SecDocsPage() {
             </ResizablePanel>
             
             <ResizableHandle withHandle />
-            
+
             {/* Document Viewer - Full Width */}
-            <ResizablePanel defaultSize={75}>
+            <ResizablePanel defaultSize={70}>
               <div className="flex flex-col bg-white h-full">
               {/* Document Header */}
               <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -879,6 +1311,44 @@ export default function SecDocsPage() {
             </div>
           )}
 
+          {/* Search History */}
+          {searchHistory.length > 0 && (
+            <div className="border-b border-gray-200 bg-gray-50">
+              <div className="p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Previous Searches
+                </h3>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {searchHistory.slice(0, 3).map((historyItem, index) => (
+                    <div
+                      key={index}
+                      className="search-history-item p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all"
+                      onClick={() => restoreSearchFromHistory(historyItem)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-gray-900 mb-1">
+                            "{historyItem.query}"
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {historyItem.results.length} documents • {historyItem.timestamp.toLocaleDateString()}
+                          </div>
+                        </div>
+                        <ChevronRight className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </div>
+                  ))}
+                  {searchHistory.length > 3 && (
+                    <div className="text-xs text-gray-500 text-center py-1">
+                      +{searchHistory.length - 3} more searches
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Search Results */}
           <div className={`${selectedDocument ? 'flex-shrink-0 max-h-60' : 'flex-1'} scrollable-content`}>
             {loading ? (
@@ -1010,8 +1480,8 @@ export default function SecDocsPage() {
           {selectedDocument && (
             <div className="flex-1 flex flex-col border-t border-gray-200 bg-gray-50">
               <div className="p-4 border-b border-gray-200 bg-white">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Search Document</h3>
-                <p className="text-xs text-gray-600">Ask questions about the selected SEC document</p>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Document Q&A</h3>
+                <p className="text-xs text-gray-600">Ask questions about the selected SEC document using RAG search</p>
               </div>
               
               {/* Chat Messages Area */}
@@ -1045,7 +1515,7 @@ export default function SecDocsPage() {
                   <textarea
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Ask about this SEC document..."
+                    placeholder="Ask a question about this document (e.g. 'What was the revenue?' or 'What are the main risks?')"
                     className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={2}
                     onKeyDown={(e) => {
