@@ -2,18 +2,6 @@
 import logging
 from typing import List, Tuple, Any
 from ..prompts import pick_retriever
-try:
-    from ..prompts import create_sec_focused_query, create_breaking_news_query, create_multi_source_query
-except ImportError:
-    # Fallback functions if the specialized prompt functions don't exist yet
-    def create_sec_focused_query(query: str) -> str:
-        return f"SEC filings financial documents regulatory {query}"
-    
-    def create_breaking_news_query(query: str) -> str:
-        return f"breaking news latest urgent {query}"
-    
-    def create_multi_source_query(query: str) -> str:
-        return f"multiple sources verification {query}"
 
 # Import all available retrievers
 from ..retrievers.custom.custom import CustomRetriever
@@ -26,62 +14,9 @@ from ..retrievers.searx.searx import SearxRetriever
 from ..retrievers.serpapi.serpapi import SerpAPIRetriever
 from ..retrievers.serper.serper import SerperRetriever
 from ..retrievers.tavily.tavily_search import TavilyRetriever
+from ..retrievers.EDGAR.EDGAR import EDGARRetriever
 
 logger = logging.getLogger(__name__)
-
-# Define retriever priorities and capabilities
-RETRIEVER_CONFIG = {
-    'TavilyRetriever': {
-        'priority': 1,
-        'specialties': ['breaking_news', 'real_time'],
-        'rate_limit': 5  # requests per minute
-    },
-    'GoogleRetriever': {
-        'priority': 2, 
-        'specialties': ['comprehensive', 'sec_filings'],
-        'rate_limit': 10
-    },
-    'SerperRetriever': {
-        'priority': 3,
-        'specialties': ['news', 'multi_source'],
-        'rate_limit': 15
-    },
-    'SerpAPIRetriever': {
-        'priority': 4,
-        'specialties': ['structured_data', 'financial'],
-        'rate_limit': 10
-    },
-    'ExaRetriever': {
-        'priority': 5,
-        'specialties': ['semantic_search', 'content_quality'],
-        'rate_limit': 20
-    },
-    'SearchAPIRetriever': {
-        'priority': 6,
-        'specialties': ['general_news', 'coverage'],
-        'rate_limit': 25
-    },
-    'DuckDuckGoRetriever': {
-        'priority': 7,
-        'specialties': ['privacy', 'unbiased'],
-        'rate_limit': 30
-    },
-    'SearxRetriever': {
-        'priority': 8,
-        'specialties': ['aggregated', 'privacy'],
-        'rate_limit': 20
-    },
-    'CustomRetriever': {
-        'priority': 9,
-        'specialties': ['custom_logic', 'specialized'],
-        'rate_limit': 15
-    },
-    'MCPRetriever': {
-        'priority': 10,
-        'specialties': ['protocol_specific', 'structured'],
-        'rate_limit': 10
-    }
-}
 
 def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     """
@@ -95,6 +30,7 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     """
     retriever_classes = [
         TavilyRetriever,
+        EDGARRetriever,
         SerperRetriever,
         GoogleRetriever,
         SerpAPIRetriever,
@@ -118,57 +54,3 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     
     return tasks
     
-
-def get_priority_retrievers(query: str, max_retrievers: int = 5) -> List[Tuple[Any, str]]:
-    """
-    Get only the highest priority retrievers for faster results.
-    
-    Args:
-        query (str): The query to search for
-        max_retrievers (int): Maximum number of retrievers to use
-        
-    Returns:
-        List[Tuple[Any, str]]: Prioritized list of retriever tasks
-    """
-    all_tasks = get_retriever_tasks(query)
-    
-    # Sort by priority based on config
-    def get_priority(task_tuple):
-        retriever, _ = task_tuple
-        retriever_name = retriever.__class__.__name__
-        return RETRIEVER_CONFIG.get(retriever_name, {}).get('priority', 999)
-    
-    sorted_tasks = sorted(all_tasks, key=get_priority)
-    return sorted_tasks[:max_retrievers]
-
-def get_specialized_retrievers(specialty: str, query: str) -> List[Tuple[Any, str]]:
-    """
-    Get retrievers that specialize in a particular type of search.
-    
-    Args:
-        specialty (str): The type of specialty needed ('breaking_news', 'sec_filings', etc.)
-        query (str): The query to search for
-        
-    Returns:
-        List[Tuple[Any, str]]: List of specialized retriever tasks
-    """
-    all_tasks = get_retriever_tasks(query)
-    specialized_tasks = []
-    
-    for retriever, task in all_tasks:
-        retriever_name = retriever.__class__.__name__
-        retriever_specialties = RETRIEVER_CONFIG.get(retriever_name, {}).get('specialties', [])
-        
-        if specialty in retriever_specialties:
-            specialized_tasks.append((retriever, task))
-    
-    return specialized_tasks
-
-def get_retriever_info():
-    """
-    Get information about all available retrievers and their capabilities.
-    
-    Returns:
-        dict: Information about retrievers and their configurations
-    """
-    return RETRIEVER_CONFIG

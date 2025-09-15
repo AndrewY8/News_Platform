@@ -69,7 +69,7 @@ class TavilyRetriever:
         data = {
         "query": query,
         "search_depth": search_depth,
-        # "topic": topic,
+        "topic": topic,
         "days": days,
         "max_results": max_results,
         "include_answer": include_answer,

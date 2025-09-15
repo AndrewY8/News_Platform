@@ -1,0 +1,3 @@
+site:sec.gov Microsoft (10-K OR 10-Q OR 8-K OR "proxy statement" OR "annual report")
+Microsoft ("earnings report" OR "analyst ratings" OR "stock price reaction" OR "market impact") news
+Microsoft (international OR global OR Europe OR Asia OR "antitrust" OR "cloud market" OR "gaming industry") analysis news reports
