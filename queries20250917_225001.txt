@@ -1,3 +1,0 @@
-site:sec.gov Microsoft "AI" "cloud computing" ("10-K" OR "10-Q" OR "8-K")
-Microsoft "AI announcement" "cloud computing" (earnings OR "analyst report" OR "market reaction" OR "stock impact")
-Microsoft "AI announcement" "cloud computing" (international OR "global market" OR "tech industry report" OR "analyst firm" OR "specialized media")

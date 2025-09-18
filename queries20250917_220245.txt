@@ -1,3 +1,0 @@
-Amazon AWS "cloud revenue" "quarterly earnings" filetype:pdf (10-K OR 10-Q OR 8-K) site:sec.gov
-Amazon AWS "cloud revenue" "quarterly earnings" "earnings report" "analyst coverage" "market impact" 2023 OR 2024
-Amazon AWS "cloud revenue" "quarterly earnings" (report OR analysis OR forecast) (techcrunch OR reuters OR bloomberg OR "cloud market")

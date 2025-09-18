@@ -1,3 +1,0 @@
-site:sec.gov Apple (iPhone OR "product innovation" OR "future development") 2024 (10-K OR 10-Q OR 8-K)
-Apple iPhone (2024 OR "next generation") ("earnings call" OR "analyst report" OR "market reaction" OR "stock forecast" OR "revenue projections")
-Apple iPhone 2024 (features OR rumored OR expected OR "new model" OR "specifications") (international OR global OR "tech news" OR "industry report" OR "smartphone review")

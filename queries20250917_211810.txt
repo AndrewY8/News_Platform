@@ -1,3 +1,0 @@
-site:sec.gov Amazon "AWS revenue" "quarterly" ("10-Q" OR "10-K" OR "8-K")
-Amazon AWS cloud revenue "quarterly earnings" (analyst OR "market impact" OR "earnings call transcript")
-Amazon "AWS revenue" "quarterly results" (analysis OR "industry report" OR "cloud market share") site:gartner.com OR site:forbes.com OR site:techcrunch.com

@@ -1,3 +1,0 @@
-site:sec.gov amazon AWS revenue "10-Q" OR "10-K" OR "8-K"
-amazon AWS cloud revenue "earnings call" OR "analyst report" OR "stock reaction" news
-amazon AWS revenue "quarterly performance" "financial analysis" "growth outlook" -site:sec.gov

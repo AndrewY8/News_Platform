@@ -1,3 +1,0 @@
-site:sec.gov Apple "iPhone" (10-K OR 10-Q OR 8-K) (2023 OR 2024) ("future products" OR "innovation" OR "product development")
-Apple iPhone "new features 2024" (earnings OR "analyst report" OR "market impact" OR "financial forecast")
-Apple iPhone "new features 2024" (rumors OR leaks OR speculation OR "mockup" OR "concept design" OR "tech blog") -site:nytimes.com -site:wsj.com -site:cnbc.com -site:reuters.com -site:bloomberg.com

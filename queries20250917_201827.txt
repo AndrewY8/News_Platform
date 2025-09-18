@@ -1,3 +1,0 @@
-Amazon "AWS revenue" "quarterly earnings" "10-Q" OR "10-K" OR "8-K"
-Amazon "AWS cloud revenue" "quarterly earnings" (report OR "analyst coverage" OR "market impact" OR "earnings call")
-Amazon "AWS cloud revenue" "quarterly earnings" (analysis OR "industry trends" OR "tech sector insights" OR "global financial commentary")

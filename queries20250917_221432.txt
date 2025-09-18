@@ -1,3 +1,0 @@
-Microsoft "AI announcement" "cloud computing" (10-K OR 10-Q OR 8-K OR "SEC filing")
-Microsoft "AI announcement" "cloud computing" ("earnings report" OR "analyst coverage" OR "market impact")
-Microsoft "AI announcement" "cloud computing" (analysis OR outlook OR "industry trends" OR "global perspective")

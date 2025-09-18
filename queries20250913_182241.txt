@@ -1,4 +1,0 @@
-Microsoft AI developments "breaking news" OR "latest updates" OR "recent developments"
-Microsoft "artificial intelligence" SEC filing OR "10-K" OR "10-Q" OR "8-K" site:sec.gov
-Microsoft AI developments earnings OR "analyst report" OR "market impact" OR revenue
-Microsoft AI developments "international news" OR "global coverage" OR "industry analysis" OR "tech review"
