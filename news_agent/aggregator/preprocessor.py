@@ -560,6 +560,10 @@ class TextPreprocessor:
         """
         chunks = []
         
+        if not isinstance(planner_results, dict):
+            logger.error(f"Expected planner_results to be a dictionary, but got {type(planner_results)}. Skipping processing.")
+            return []
+
         # Process each category
         categories = ['breaking_news', 'financial_news', 'sec_filings', 'general_news']
         
@@ -568,6 +572,12 @@ class TextPreprocessor:
                 continue
             
             items = planner_results[category]
+            
+            # Ensure items is a list before iterating
+            if not isinstance(items, list):
+                logger.warning(f"Expected items for category '{category}' to be a list, but got {type(items)}. Skipping.")
+                continue
+
             logger.info(f"Processing {len(items)} items from {category}")
             
             for item in items:

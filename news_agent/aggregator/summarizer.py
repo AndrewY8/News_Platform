@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import time
 import re
+from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
 
 try:
     import google.generativeai as genai
@@ -90,6 +91,11 @@ class GeminiSummarizer:
             # Generate summary using Gemini
             summary_response = self._generate_summary(input_text, cluster)
             
+            # Check for API error string
+            if summary_response.startswith("API_ERROR:"):
+                logger.error(f"Gemini API failed for cluster {cluster.id}: {summary_response}")
+                return self._create_fallback_summary(cluster, error_message=summary_response)
+
             # Parse response
             summary_text, key_points = self._parse_summary_response(summary_response)
             
@@ -99,7 +105,7 @@ class GeminiSummarizer:
                 cluster_id=cluster.id,
                 summary=summary_text,
                 key_points=key_points,
-                generated_at=datetime.utcnow(),
+                generated_at=datetime.datetime.now(datetime.timezone.utc),
                 model_used=self.config.model_name,
                 confidence=self._calculate_summary_confidence(summary_text, cluster),
                 word_count=len(summary_text.split())
@@ -321,6 +327,14 @@ class GeminiSummarizer:
                 else:
                     raise ValueError("Empty response from Gemini API")
                 
+            except (ResourceExhausted, ServiceUnavailable) as e:
+                logger.warning(f"Gemini API rate limit or unavailability encountered (attempt {attempt + 1}): {e}")
+                if attempt < self.config.retry_attempts - 1:
+                    delay = self.config.retry_delay * (2 ** attempt)
+                    time.sleep(delay)
+                else:
+                    logger.error(f"All retry attempts failed for Gemini API: {e}")
+                    return "API_ERROR: " + str(e) # Return a specific error string
             except Exception as e:
                 logger.warning(f"Summarization attempt {attempt + 1} failed: {e}")
                 

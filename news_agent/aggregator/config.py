@@ -324,7 +324,7 @@ def get_config() -> AggregatorConfig:
         try:
             config = AggregatorConfig.from_file(config_file)
         except (FileNotFoundError, ValueError) as e:
-            print(f"Warning: Could not load config file {config_file}: {e}")
+            logger.warning(f"Could not load config file {config_file}: {e}")
             config = AggregatorConfig.from_env()
     else:
         config = AggregatorConfig.from_env()

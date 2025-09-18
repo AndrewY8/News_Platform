@@ -1,0 +1,1 @@
+"Amazon quarterly earnings" "AWS cloud revenue" (SEC OR 10-Q OR 10-K OR 8-K OR analyst OR forecast OR "earnings call" OR "market impact")

@@ -135,6 +135,8 @@ async def test_enhanced_planner_async():
         # Create enhanced planner with aggregation
         planner = create_enhanced_planner(
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
+            supabase_url=os.getenv("SUPABASE_URL"),
+            supabase_key=os.getenv("SUPABASE_KEY"),
             max_retrievers=5,
             config_overrides={
                 'clustering': {
@@ -149,10 +151,11 @@ async def test_enhanced_planner_async():
         )
 
         print(f"Enhanced Planner Summary:")
-        summary = planner.get_planner_summary()
-        print(f"  Aggregation Enabled: {summary['aggregation_enabled']}")
-        print(f"  Has Aggregator: {summary['has_aggregator']}")
-        print(f"  Max Concurrent Retrievers: {summary['max_concurrent_retrievers']}")
+        # No direct get_planner_summary on EnhancedPlannerAgent, access through planner_agent
+        # For now, we'll just print a placeholder or remove this section if not directly available
+        # print(f"  Aggregation Enabled: {planner.enable_aggregation}")
+        # print(f"  Has Aggregator: {planner.aggregator is not None}")
+        # print(f"  Max Concurrent Retrievers: {planner.planner_agent.max_concurrent_retrievers}")
 
         print(f"\nRunning query: '{query}'")
         print(f"User preferences: {user_preferences}")
@@ -169,7 +172,11 @@ async def test_enhanced_planner_async():
         print(f"\nSearch completed in {(end_time - start_time).total_seconds():.2f} seconds")
 
         # Display results
-        print_enhanced_results(results)
+        if results:
+            for result in results:
+                print_enhanced_results(result)
+        else:
+            print("\nNo results returned from async enhanced planner test.")
 
         # Save results
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -205,7 +212,7 @@ def test_enhanced_planner_sync():
             max_retrievers=3,
             config_overrides={
                 'clustering': {
-                    'min_cluster_size': 1,
+                    'min_cluster_size': 2, # Changed from 1 to 2
                     'similarity_threshold': 0.7
                 }
             }
@@ -225,7 +232,11 @@ def test_enhanced_planner_sync():
         print(f"\nSync search completed in {(end_time - start_time).total_seconds():.2f} seconds")
 
         # Display results
-        print_enhanced_results(results)
+        if results and isinstance(results, list) and len(results) > 0:
+            # Sync run returns a list of dictionaries, process the first one for display
+            print_enhanced_results(results[0])
+        else:
+            print("\nNo results returned from sync enhanced planner test.")
 
         # Cleanup
         planner.cleanup()
@@ -259,7 +270,11 @@ def test_fallback_mode():
         print(f"\nFallback search completed in {(end_time - start_time).total_seconds():.2f} seconds")
 
         # Display basic results
-        print_basic_results(results)
+        if results and isinstance(results, list) and len(results) > 0:
+            # Fallback mode returns a list of dictionaries, process the first one for display
+            print_basic_results(results[0])
+        else:
+            print("\nNo results returned from fallback mode test.")
 
         return results
 
@@ -288,8 +303,13 @@ def compare_modes():
         time_with_agg = (datetime.now() - start_time).total_seconds()
 
         print(f"  Time: {time_with_agg:.2f}s")
-        print(f"  Clusters: {len(results_with_agg.get('summaries', []))}")
-        print(f"  Total Sources: {results_with_agg.get('aggregation', {}).get('total_sources', 0)}")
+        # results_with_agg is a list of dicts, so we need to iterate or access the first element
+        if results_with_agg and isinstance(results_with_agg, list) and len(results_with_agg) > 0:
+            first_result = results_with_agg[0]
+            print(f"  Clusters: {len(first_result.get('summaries', []))}")
+            print(f"  Total Sources: {first_result.get('aggregation', {}).get('total_sources', 0)}")
+        else:
+            print("  No aggregated results for comparison.")
 
         planner_with_agg.cleanup()
 
@@ -302,15 +322,24 @@ def compare_modes():
         results_without_agg = planner_without_agg.run(query=query, return_aggregated=False)
         time_without_agg = (datetime.now() - start_time).total_seconds()
 
-        summary = results_without_agg.get('retriever_summary', {})
-        print(f"  Time: {time_without_agg:.2f}s")
-        print(f"  Total Articles: {summary.get('total_articles', 0)}")
-        print(f"  Successful Retrievers: {summary.get('successful_retrievers', 0)}")
+        # results_without_agg is a list of dicts, so we need to access the first element
+        if results_without_agg and isinstance(results_without_agg, list) and len(results_without_agg) > 0:
+            first_result_without_agg = results_without_agg[0]
+            summary = first_result_without_agg.get('retriever_summary', {})
+            print(f"  Time: {time_without_agg:.2f}s")
+            print(f"  Total Articles: {summary.get('total_articles', 0)}")
+            print(f"  Successful Retrievers: {summary.get('successful_retrievers', 0)}")
+        else:
+            print("  No non-aggregated results for comparison.")
 
         # Comparison summary
         print(f"\nComparison Summary:")
         print(f"  Aggregation overhead: +{time_with_agg - time_without_agg:.2f}s")
-        print(f"  Value added: {len(results_with_agg.get('summaries', []))} organized clusters")
+        if results_with_agg and isinstance(results_with_agg, list) and len(results_with_agg) > 0:
+            first_result_agg = results_with_agg[0]
+            print(f"  Value added: {len(first_result_agg.get('summaries', []))} organized clusters")
+        else:
+            print("  No aggregated results for value added comparison.")
 
         return results_with_agg, results_without_agg
 
@@ -341,14 +370,14 @@ async def main():
         # Test 1: Async mode with full aggregation
         await test_enhanced_planner_async()
 
-        # # Test 2: Sync mode with aggregation
-        # test_enhanced_planner_sync()
+        # Test 2: Sync mode with aggregation
+        test_enhanced_planner_sync()
 
-        # # Test 3: Fallback mode without aggregation
-        # test_fallback_mode()
+        # Test 3: Fallback mode without aggregation
+        test_fallback_mode()
 
-        # # Test 4: Compare modes
-        # compare_modes()
+        # Test 4: Compare modes
+        compare_modes()
 
         print_separator("ALL TESTS COMPLETED")
 

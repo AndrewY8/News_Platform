@@ -1,0 +1,1 @@
+"Amazon quarterly earnings AWS cloud revenue" AND (site:sec.gov OR "10-Q" OR "10-K" OR "8-K" OR EDGAR) AND ("earnings call" OR "analyst report" OR "market commentary" OR "financial press release" OR "revenue figures" OR "investor presentation")

@@ -10,7 +10,7 @@ import logging
 import asyncio
 import os
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+import datetime
 
 # Import existing PlannerAgent
 from ..agent import PlannerAgent
@@ -37,7 +37,6 @@ class EnhancedPlannerAgent:
     def __init__(self, 
                  max_concurrent_retrievers: int = 5,
                  gemini_api_key: Optional[str] = None,
-                 database_url: Optional[str] = None,
                  aggregator_config: Optional[AggregatorConfig] = None,
                  enable_aggregation: bool = True):
         """
@@ -60,15 +59,11 @@ class EnhancedPlannerAgent:
         if enable_aggregation:
             try:
                 if aggregator_config:
-                    # Read Supabase credentials from environment if not in config
-                    supabase_url = aggregator_config.supabase.url or os.getenv("SUPABASE_URL")
-                    supabase_key = aggregator_config.supabase.key or os.getenv("SUPABASE_KEY")
-                    
                     self.aggregator = AggregatorAgent(
                         config=aggregator_config,
                         gemini_api_key=gemini_api_key,
-                        supabase_url=supabase_url,
-                        supabase_key=supabase_key
+                        supabase_url=aggregator_config.supabase.url,
+                        supabase_key=aggregator_config.supabase.key
                     )
                 else:
                     # Read Supabase credentials from environment
@@ -76,7 +71,7 @@ class EnhancedPlannerAgent:
                     supabase_key = os.getenv("SUPABASE_KEY")
                     
                     self.aggregator = create_aggregator_agent(
-                        gemini_api_key=gemini_api_key or "dummy-key",  # Will need real key
+                        gemini_api_key=gemini_api_key,
                         supabase_url=supabase_url,
                         supabase_key=supabase_key
                     )
@@ -92,7 +87,7 @@ class EnhancedPlannerAgent:
     
     async def run_async(self, query: str, 
                        user_preferences: Optional[Dict[str, Any]] = None,
-                       return_aggregated: bool = True) -> Dict[str, Any]:
+                       return_aggregated: bool = True) -> List[Dict[str, Any]]:
         """
         Enhanced async run method with optional aggregation.
         
@@ -108,54 +103,70 @@ class EnhancedPlannerAgent:
             logger.info(f"Starting enhanced search for query: '{query}'")
             
             # Step 1: Run original PlannerAgent
-            start_time = datetime.utcnow()
-            planner_results = await self.planner_agent.run_async(query)
-            retrieval_time = (datetime.utcnow() - start_time).total_seconds()
+            start_time = datetime.datetime.now(datetime.timezone.utc)
+            planner_raw_results = await self.planner_agent.run_async(query)
+            retrieval_time = (datetime.datetime.now(datetime.timezone.utc) - start_time).total_seconds()
             
             logger.info(f"PlannerAgent completed in {retrieval_time:.2f}s")
+
+            # Check if planner_raw_results is an error dictionary
+            if isinstance(planner_raw_results, dict) and 'errors' in planner_raw_results:
+                logger.error(f"PlannerAgent returned an error: {planner_raw_results.get('errors')}")
+                return [self._create_error_response(str(planner_raw_results.get('errors')))]
+            
+            # Ensure planner_raw_results is always a list for consistency with aggregation
+            if not isinstance(planner_raw_results, list):
+                planner_raw_results = [planner_raw_results]
             
             # Step 2: Aggregate results if enabled and requested
-            aggregated_results = None
+            aggregated_results: List[Optional[AggregatorOutput]] = [None] * len(planner_raw_results)
             if self.enable_aggregation and return_aggregated and self.aggregator:
                 try:
                     logger.info("Starting aggregation process")
-                    aggregation_start = datetime.utcnow()
+                    aggregation_start = datetime.datetime.now(datetime.timezone.utc)
                     
-                    aggregated_results = await self.aggregator.process_planner_results_async(
-                        planner_results, user_preferences
+                    processed_aggregated_results = await self.aggregator.process_planner_results_async(
+                        planner_raw_results, user_preferences
                     )
                     
-                    aggregation_time = (datetime.utcnow() - aggregation_start).total_seconds()
+                    if len(processed_aggregated_results) == len(planner_raw_results):
+                        aggregated_results = processed_aggregated_results
+                    else:
+                        logger.warning("Mismatch in length between planner_raw_results and processed_aggregated_results. Filling with Nones.")
+                        aggregated_results = processed_aggregated_results + [None] * (len(planner_raw_results) - len(processed_aggregated_results))
+
+                    aggregation_time = (datetime.datetime.now(datetime.timezone.utc) - aggregation_start).total_seconds()
                     logger.info(f"Aggregation completed in {aggregation_time:.2f}s")
                     
                 except Exception as e:
                     logger.error(f"Aggregation failed: {e}")
-                    # Continue with just planner results
-                    aggregated_results = None
             
             # Step 3: Combine results
             enhanced_results = self._combine_results(
-                planner_results, 
+                planner_raw_results,
                 aggregated_results,
                 retrieval_time,
                 query,
                 user_preferences
             )
             
-            total_time = (datetime.utcnow() - start_time).total_seconds()
-            enhanced_results['processing_stats']['total_time'] = total_time
+            total_time = (datetime.datetime.now(datetime.timezone.utc) - start_time).total_seconds()
+            for res in enhanced_results:
+                if 'processing_stats' in res:
+                    res['processing_stats']['total_time'] = total_time
             
             logger.info(f"Enhanced search completed in {total_time:.2f}s")
             return enhanced_results
             
         except Exception as e:
             logger.error(f"Enhanced PlannerAgent failed: {e}")
+            return [self._create_error_response(str(e))]
             # Fallback to original planner results
-            try:
-                return await self.planner_agent.run_async(query)
-            except Exception as fallback_error:
-                logger.error(f"Fallback also failed: {fallback_error}")
-                return self._create_error_response(str(e))
+            # try:
+            #     return await self.planner_agent.run_async(query)
+            # except Exception as fallback_error:
+            #     logger.error(f"Fallback also failed: {fallback_error}")
+            #     return self._create_error_response(str(e))
     
     def run(self, query: str, 
             user_preferences: Optional[Dict[str, Any]] = None,
@@ -191,11 +202,11 @@ class EnhancedPlannerAgent:
             # No event loop exists, create a new one
             return asyncio.run(self.run_async(query, user_preferences, return_aggregated))
     
-    def _combine_results(self, planner_results: Dict[str, Any], 
-                        aggregated_results: Optional[AggregatorOutput],
+    def _combine_results(self, planner_results: List[Dict[str, Any]], 
+                        aggregated_results: List[Optional[AggregatorOutput]],
                         retrieval_time: float,
                         query: str,
-                        user_preferences: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+                        user_preferences: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Combine raw planner results with aggregated results.
         
@@ -209,59 +220,63 @@ class EnhancedPlannerAgent:
         Returns:
             Combined results dictionary
         """
-        # Start with original planner results
-        enhanced_results = planner_results.copy()
-        
-        # Add aggregation section
-        if aggregated_results:
-            enhanced_results['aggregation'] = {
-                'enabled': True,
-                'clusters': [cluster.to_dict() for cluster in aggregated_results.clusters],
-                'stats': aggregated_results.processing_stats,
-                'cluster_count': len(aggregated_results.clusters),
-                'total_sources': aggregated_results.total_sources
-            }
-            
-            # Add structured summaries for easy frontend consumption
-            enhanced_results['summaries'] = []
-            for cluster in aggregated_results.clusters:
-                if cluster.summary:
-                    structured_summary = {
-                        'id': cluster.id,
-                        'title': self._generate_cluster_title(cluster),
-                        'summary': cluster.summary.summary,
-                        'key_points': cluster.summary.key_points,
-                        'sources': [source.to_dict() for source in cluster.get_sources()],
-                        'metadata': {
-                            'ticker': cluster.metadata.primary_ticker,
-                            'topics': cluster.metadata.topics,
-                            'source_count': cluster.source_count,
-                            'confidence': cluster.summary.confidence,
-                            'cluster_score': getattr(cluster.metadata, 'final_score', None)
+
+        enhanced_results = []
+        for i in range(len(planner_results)):
+            # Start with original planner results
+            aggregated_result = aggregated_results[i]
+            enhanced_result = planner_results[i].copy()
+            # Add aggregation section
+            if aggregated_result:
+                enhanced_result['aggregation'] = {
+                    'enabled': True,
+                    'clusters': [cluster.to_dict() for cluster in aggregated_result.clusters],
+                    'stats': aggregated_result.processing_stats,
+                    'cluster_count': len(aggregated_result.clusters),
+                    'total_sources': aggregated_result.total_sources
+                }
+                
+                # Add structured summaries for easy frontend consumption
+                enhanced_result['summaries'] = []
+                for cluster in aggregated_result.clusters:
+                    if cluster.summary:
+                        structured_summary = {
+                            'id': cluster.id,
+                            'title': self._generate_cluster_title(cluster),
+                            'summary': cluster.summary.summary,
+                            'key_points': cluster.summary.key_points,
+                            'sources': [source.to_dict() for source in cluster.get_sources()],
+                            'metadata': {
+                                'ticker': cluster.metadata.primary_ticker,
+                                'topics': cluster.metadata.topics,
+                                'source_count': cluster.source_count,
+                                'confidence': cluster.summary.confidence,
+                                'cluster_score': getattr(cluster.metadata, 'final_score', None)
+                            }
                         }
-                    }
-                    enhanced_results['summaries'].append(structured_summary)
-        else:
-            enhanced_results['aggregation'] = {
-                'enabled': self.enable_aggregation,
-                'clusters': [],
-                'stats': {'error': 'Aggregation failed or disabled'},
-                'cluster_count': 0,
-                'total_sources': 0
-            }
-            enhanced_results['summaries'] = []
-        
-        # Enhanced processing stats
-        if 'processing_stats' not in enhanced_results:
-            enhanced_results['processing_stats'] = {}
-        
-        enhanced_results['processing_stats'].update({
-            'query': query,
-            'retrieval_time': retrieval_time,
-            'aggregation_enabled': self.enable_aggregation,
-            'user_preferences_used': user_preferences is not None,
-            'timestamp': datetime.utcnow().isoformat()
-        })
+                        enhanced_result['summaries'].append(structured_summary)
+            else:
+                enhanced_result['aggregation'] = {
+                    'enabled': self.enable_aggregation,
+                    'clusters': [],
+                    'stats': {'error': 'Aggregation failed or disabled'},
+                    'cluster_count': 0,
+                    'total_sources': 0
+                }
+                enhanced_result['summaries'] = []
+            
+            # Enhanced processing stats
+            if 'processing_stats' not in enhanced_result:
+                enhanced_result['processing_stats'] = {}
+            
+            enhanced_result['processing_stats'].update({
+                'query': query,
+                'retrieval_time': retrieval_time,
+                'aggregation_enabled': self.enable_aggregation,
+                'user_preferences_used': user_preferences is not None,
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
+            })
+            enhanced_results.append(enhanced_result)
         
         return enhanced_results
     
@@ -278,7 +293,7 @@ class EnhancedPlannerAgent:
             return f"{main_topic} Update"
         else:
             return f"News Cluster ({cluster.source_count} sources)"
-    
+
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
         """Create error response in expected format."""
         return {
@@ -303,7 +318,7 @@ class EnhancedPlannerAgent:
             "summaries": [],
             "processing_stats": {
                 "error": error_message,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
     
@@ -349,7 +364,6 @@ class EnhancedPlannerAgent:
 
 # Convenience functions for easy integration
 def create_enhanced_planner(gemini_api_key: str,
-                           database_url: Optional[str] = None,
                            supabase_url: Optional[str] = None,
                            supabase_key: Optional[str] = None,
                            max_retrievers: int = 5,
@@ -359,7 +373,6 @@ def create_enhanced_planner(gemini_api_key: str,
     
     Args:
         gemini_api_key: Gemini API key for summarization
-        database_url: Optional database connection string (legacy parameter)
         supabase_url: Optional Supabase URL (reads from SUPABASE_URL env if None)
         supabase_key: Optional Supabase key (reads from SUPABASE_KEY env if None)
         max_retrievers: Maximum concurrent retrievers
@@ -400,7 +413,6 @@ def create_enhanced_planner(gemini_api_key: str,
     return EnhancedPlannerAgent(
         max_concurrent_retrievers=max_retrievers,
         gemini_api_key=gemini_api_key,
-        database_url=database_url,
         aggregator_config=aggregator_config,
         enable_aggregation=True
     )
@@ -447,17 +459,17 @@ async def example_enhanced_usage():
         )
         
         # Print results
-        print(f"Found {len(results['summaries'])} cluster summaries")
+        logger.info(f"Found {len(results['summaries'])} cluster summaries")
         for i, summary in enumerate(results['summaries']):
-            print(f"\nSummary {i+1}: {summary['title']}")
-            print(f"Sources: {summary['metadata']['source_count']}")
-            print(f"Summary: {summary['summary'][:100]}...")
+            logger.info(f"\nSummary {i+1}: {summary['title']}")
+            logger.info(f"Sources: {summary['metadata']['source_count']}")
+            logger.info(f"Summary: {summary['summary'][:100]}...")
         
         # Cleanup
         planner.cleanup()
         
     except Exception as e:
-        print(f"Enhanced planner example failed: {e}")
+        logger.error(f"Enhanced planner example failed: {e}")
 
 
 if __name__ == "__main__":

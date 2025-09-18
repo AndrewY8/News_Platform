@@ -1,0 +1,3 @@
+"Amazon AWS revenue" "quarterly" site:sec.gov (10-Q OR 10-K OR 8-K)
+"Amazon quarterly earnings" "AWS cloud revenue" (analyst report OR market reaction OR stock performance)
+"Amazon AWS revenue" "quarterly results" (industry analysis OR market share OR investor call transcript OR global impact)

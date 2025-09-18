@@ -245,8 +245,8 @@ class AggregatorAgent:
             processing_time = time.time() - start_time
             return self._create_error_output(str(e), processing_time)
     
-    async def process_planner_results_async(self, planner_results: Dict[str, Any],
-                                          user_preferences: Optional[Dict[str, Any]] = None) -> AggregatorOutput:
+    async def process_planner_results_async(self, planner_results: List[Dict[str, Any]],
+                                          user_preferences: Optional[Dict[str, Any]] = None) -> List[AggregatorOutput]:
         """
         Asynchronously process planner results.
         
@@ -259,67 +259,82 @@ class AggregatorAgent:
         """
         start_time = time.time()
         
-        try:
-            logger.info("Starting async aggregation pipeline")
-            
-            # Stage 1: Preprocessing (sync)
-            chunks = self.preprocessor.process_planner_results(planner_results)
-            logger.info(f"Preprocessed {len(chunks)} content chunks")
-            
-            if not chunks:
-                return self._create_empty_output("No valid content chunks after preprocessing")
-            
-            # Stage 2: Generate embeddings (async)
-            chunks_with_embeddings = await self.embedding_manager.embed_chunks_async(chunks)
-            logger.info(f"Generated embeddings for {len(chunks_with_embeddings)} chunks")
-            
-            # Stage 3: Deduplication (sync)
-            deduped_chunks = self.deduplication_engine.deduplicate_chunks(chunks_with_embeddings)
-            logger.info(f"Deduplicated to {len(deduped_chunks)} chunks")
-            
-            if not deduped_chunks:
-                return self._create_empty_output("No chunks remaining after deduplication")
-            
-            # Stage 4: Clustering (sync)
-            clusters = self.clustering_engine.cluster_chunks(deduped_chunks)
-            logger.info(f"Created {len(clusters)} clusters")
-            
-            if not clusters:
-                return self._create_empty_output("No clusters created from content")
-            
-            # Stage 5: Scoring (sync)
-            scored_clusters = self.cluster_scorer.score_clusters(clusters, user_preferences)
-            top_clusters = scored_clusters[:self.config.processing.max_clusters_output]
-            
-            # Stage 6: Summary generation (async)
-            summaries = await self.summarizer.summarize_clusters_async(top_clusters)
-            
-            # Attach summaries
-            for cluster, summary in zip(top_clusters, summaries):
-                cluster.summary = summary
-            
-            # Stage 7: Database storage (if available)
-            if self.database_manager:
-                await asyncio.get_event_loop().run_in_executor(
-                    None, 
-                    self._store_results_in_database, 
-                    top_clusters, 
-                    deduped_chunks
+        outputs = []
+        for planner_result in planner_results:
+            try:
+                logger.info("Starting async aggregation pipeline for a single planner result")
+                
+                # Stage 1: Preprocessing (sync)
+                chunks = self.preprocessor.process_planner_results(planner_result)
+                logger.info(f"Preprocessed {len(chunks)} content chunks")
+                
+                if not chunks:
+                    outputs.append(self._create_empty_output("No valid content chunks after preprocessing"))
+                    continue
+                
+                # Stage 2: Generate embeddings (async)
+                chunks_with_embeddings = await self.embedding_manager.embed_chunks_async(chunks)
+                logger.info(f"Generated embeddings for {len(chunks_with_embeddings)} chunks")
+                
+                # Stage 3: Deduplication (sync)
+                deduped_chunks = self.deduplication_engine.deduplicate_chunks(chunks_with_embeddings)
+                dedup_stats = self.deduplication_engine.get_deduplication_stats(
+                    chunks_with_embeddings, deduped_chunks
                 )
+                logger.info(f"Deduplicated to {len(deduped_chunks)} chunks")
+                
+                if not deduped_chunks:
+                    outputs.append(self._create_empty_output("No chunks remaining after deduplication"))
+                    continue
+                
+                # Stage 4: Clustering (sync)
+                clusters = self.clustering_engine.cluster_chunks(deduped_chunks)
+                cluster_stats = self.clustering_engine.get_cluster_summary_stats(clusters)
+                logger.info(f"Created {len(clusters)} clusters")
+                
+                if not clusters:
+                    outputs.append(self._create_empty_output("No clusters created from content"))
+                    continue
+                
+                # Stage 5: Scoring (sync)
+                scored_clusters = self.cluster_scorer.score_clusters(clusters, user_preferences)
+                top_clusters = scored_clusters[:self.config.processing.max_clusters_output]
+                
+                # Stage 6: Summary generation (async)
+                summaries = await self.summarizer.summarize_clusters_async(top_clusters)
+                
+                # Attach summaries
+                for cluster, summary in zip(top_clusters, summaries):
+                    cluster.summary = summary
+                
+                # Stage 7: Database storage (if available)
+                if self.database_manager:
+                    await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        self._store_results_in_database,
+                        top_clusters,
+                        deduped_chunks
+                    )
+                
+                processing_time = time.time() - start_time # This should be per-result processing time
+                self.stats['processing_times'].append(processing_time)
+                self.stats['last_processing_time'] = processing_time
+                
+                outputs.append(self._create_aggregator_output(
+                    top_clusters,
+                    processing_time,
+                    dedup_stats,
+                    cluster_stats
+                ))
+                
+                logger.info(f"Async aggregation pipeline for a single result completed in {processing_time:.2f}s")
             
-            processing_time = time.time() - start_time
-            self.stats['processing_times'].append(processing_time)
-            self.stats['last_processing_time'] = processing_time
-            
-            output = self._create_aggregator_output(top_clusters, processing_time)
-            
-            logger.info(f"Async aggregation pipeline completed in {processing_time:.2f}s")
-            return output
-            
-        except Exception as e:
-            logger.error(f"Async aggregation pipeline failed: {e}")
-            processing_time = time.time() - start_time
-            return self._create_error_output(str(e), processing_time)
+            except Exception as e:
+                logger.error(f"Async aggregation pipeline failed for a result: {e}")
+                processing_time = time.time() - start_time # This should be per-result processing time
+                outputs.append(self._create_error_output(str(e), processing_time))
+                
+        return outputs
     
     def process_new_chunks(self, new_chunks: List[ContentChunk],
                           existing_clusters: Optional[List[ContentCluster]] = None,
@@ -439,10 +454,10 @@ class AggregatorAgent:
             logger.warning(f"Failed to get recent chunks from database: {e}")
             return []
     
-    def _create_aggregator_output(self, clusters: List[ContentCluster], 
-                                processing_time: float,
-                                dedup_stats: Optional[Dict[str, Any]] = None,
-                                cluster_stats: Optional[Dict[str, Any]] = None) -> AggregatorOutput:
+    def _create_aggregator_output(self, clusters: List[ContentCluster],
+                                 processing_time: float,
+                                 dedup_stats: Optional[Dict[str, Any]] = None,
+                                 cluster_stats: Optional[Dict[str, Any]] = None) -> AggregatorOutput:
         """Create structured aggregator output."""
         
         processing_stats = {
@@ -450,7 +465,7 @@ class AggregatorAgent:
             'total_clusters': len(clusters),
             'total_sources': sum(cluster.source_count for cluster in clusters),
             'total_chunks_processed': sum(cluster.chunk_count for cluster in clusters),
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
         
         if dedup_stats:
@@ -470,7 +485,7 @@ class AggregatorAgent:
             clusters=[],
             processing_stats={
                 'reason': reason,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'total_clusters': 0,
                 'total_sources': 0
             }
@@ -483,7 +498,7 @@ class AggregatorAgent:
             processing_stats={
                 'error': error_message,
                 'processing_time_seconds': processing_time,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'total_clusters': 0,
                 'total_sources': 0
             }
@@ -608,17 +623,17 @@ async def example_usage():
         output = await aggregator.process_planner_results_async(mock_planner_results)
         
         # Print summary
-        print(f"Generated {len(output.clusters)} clusters")
+        logger.info(f"Generated {len(output.clusters)} clusters")
         for i, cluster in enumerate(output.clusters):
-            print(f"\nCluster {i+1}:")
-            print(f"  Sources: {cluster.source_count}")
-            print(f"  Summary: {cluster.summary.summary[:100]}..." if cluster.summary else "  No summary")
+            logger.info(f"\nCluster {i+1}:")
+            logger.info(f"  Sources: {cluster.source_count}")
+            logger.info(f"  Summary: {cluster.summary.summary[:100]}..." if cluster.summary else "  No summary")
         
         # Cleanup
         aggregator.cleanup()
         
     except Exception as e:
-        print(f"Example failed: {e}")
+        logger.error(f"Example failed: {e}")
 
 
 if __name__ == "__main__":

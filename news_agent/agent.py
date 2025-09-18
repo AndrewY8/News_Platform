@@ -3,7 +3,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from .prompts import augment_query, pick_tavily_params
 from .actions.retriever import get_retriever_tasks
-from google import genai
+import google.genai as genai
 import json
 from datetime import datetime
 
@@ -128,7 +128,7 @@ class PlannerAgent:
         
         return all_results
     
-    async def run_async(self, query: str) -> Dict[str, Any]:
+    async def run_async(self, query: str) -> List[Dict[str, Any]]:
         """
         Async version of the main run method
         
@@ -170,6 +170,9 @@ class PlannerAgent:
             retriever_tasks.append((EDGARRetriever, query))
             all_results = await self._run_retrievers_batch(retriever_tasks)
             
+            print("jk")
+            print(type(all_results))
+            print(all_results)
             return all_results
             
         except Exception as e:

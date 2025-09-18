@@ -1,0 +1,3 @@
+Amazon AWS "cloud revenue" "quarterly earnings" "SEC filing" (10-Q OR 10-K OR 8-K)
+Amazon AWS "cloud revenue" "quarterly earnings report" (analyst OR market OR stock) (coverage OR reaction OR estimates)
+Amazon AWS "cloud revenue" "quarterly earnings" (analysis OR outlook OR forecast OR trends) (cloud OR enterprise OR marketshare) -"stock" -"price"
