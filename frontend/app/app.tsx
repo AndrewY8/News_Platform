@@ -499,11 +499,11 @@ const loadArticles = async (tickers?: string[]) => {
   const newUniqueArticles = fetchedArticles.filter(a => !existingIds.has(a.id))
   const combined = [...prevArticles, ...newUniqueArticles]
 
-  // Sort by ISO date string
-combined.sort((a, b) => Number(b.date) - Number(a.date))
+  combined.sort((a, b) => normalizeDate(b.date) - normalizeDate(a.date))
 
   return combined
 })
+
 
   } catch (err) {
     console.error('Error loading articles:', err)
@@ -513,6 +513,44 @@ combined.sort((a, b) => Number(b.date) - Number(a.date))
   }
 }
 
+// Convert formatted date strings back to a comparable timestamp
+const normalizeDate = (dateStr: string): number => {
+  const now = new Date()
+  
+  // Handle "Just now" or "Today"
+  if (dateStr === 'Just now' || dateStr === 'Today') return now.getTime()
+
+  // Handle "10:30 AM" style (assume today)
+  const timeMatch = dateStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/)
+  if (timeMatch) {
+    let hours = parseInt(timeMatch[1], 10)
+    const minutes = parseInt(timeMatch[2], 10)
+    const period = timeMatch[3]
+    if (period === 'PM' && hours !== 12) hours += 12
+    if (period === 'AM' && hours === 12) hours = 0
+    const d = new Date(now)
+    d.setHours(hours, minutes, 0, 0)
+    return d.getTime()
+  }
+
+  // Handle "Mon" style (within last 7 days)
+  const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+  if (weekdays.includes(dateStr)) {
+    const d = new Date(now)
+    const targetDay = weekdays.indexOf(dateStr)
+    const diff = (d.getDay() - targetDay + 7) % 7
+    d.setDate(d.getDate() - diff)
+    d.setHours(0,0,0,0)
+    return d.getTime()
+  }
+
+  // Handle "Apr 10" style
+  const parsed = Date.parse(dateStr)
+  if (!isNaN(parsed)) return parsed
+
+  // Fallback
+  return now.getTime()
+}
 
 
   const handleSearch = async (query: string) => {
