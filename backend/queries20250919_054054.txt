@@ -1,0 +1,3 @@
+site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR S-1 OR DEF 14A)
+AAPL (earnings report OR analyst consensus OR stock performance OR market reaction)
+AAPL (international sales OR global market share OR supply chain analysis OR ESG report OR patent news)

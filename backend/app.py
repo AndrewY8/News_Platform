@@ -23,7 +23,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
+import sys
+import os
+
+# Add parent directory to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from news_agent.integration.planner_aggregator import create_enhanced_planner
 from newsapi import NewsApiClient
+from fastapi import Query
 # from textblob import TextBlob  # Temporarily disabled due to NumPy version conflict
 
 # import spacy  # Temporarily disabled due to package conflicts
@@ -1288,12 +1295,21 @@ def fetch_news_from_newsapi(user_preferences: dict) -> List[dict]:
 
 
 # API Endpoints
-
-
 @app.get("/api/articles", response_model=List[ArticleModel])
 @limiter.limit("100/minute")
-async def get_articles(request: Request, db=Depends(get_db)):
+async def get_articles(
+    request: Request,
+    tickers: str = Query(None),  # <- this tells FastAPI to read ?tickers=...
+    db=Depends(get_db)
+):
     """Get personalized articles using NEW Gemini-powered system"""
+    
+    if tickers:
+        user_tickers = tickers.split(",")
+    else:
+        # fallback to saved trades
+        user = db.query(User).first()
+        user_tickers = eval(user.trades) if user and user.trades else []
 
     # Get or create user (simplified for demo)
     user = db.query(User).first()
@@ -1310,7 +1326,7 @@ async def get_articles(request: Request, db=Depends(get_db)):
         db.refresh(user)
 
     # Get user preferences
-    user_tickers = eval(user.trades) if user.trades else []
+    # user_tickers = eval(user.trades) if user.trades else []
     user_preferences = {
         "investment_style": "balanced",
         "experience_level": "intermediate",
@@ -1325,128 +1341,58 @@ async def get_articles(request: Request, db=Depends(get_db)):
 
     try:
         # Use the consolidated News Intelligence service
-        relevant_articles = await news_intelligence.get_personalized_news(
-            user_tickers, user_preferences, limit=20
+        planner = create_enhanced_planner(
+            gemini_api_key=os.getenv("GEMINI_API_KEY"),
+            supabase_url=os.getenv("SUPABASE_URL"),
+            supabase_key=os.getenv("SUPABASE_KEY"),
+            max_retrievers=5,
+            config_overrides={
+                'clustering': {
+                    'min_cluster_size': 2,
+                    'similarity_threshold': 0.65
+                },
+                'summarization': {
+                    'max_tokens': 200,
+                    'temperature': 0.3
+                }
+            }
         )
-
-        logger.info(f"✅ Found {len(relevant_articles)} relevant articles")
-
-        if not relevant_articles:
-            logger.warning(
-                "⚠️ No relevant articles found after filtering. This could mean:"
-            )
-            logger.warning("   1. No recent news for the selected tickers")
-            logger.warning("   2. Gemini filtered out all articles as irrelevant")
-            logger.warning("   3. NewsAPI rate limits or issues")
-            logger.info("🔄 Falling back to existing articles from database...")
-
-            # Fallback: return existing articles with relevance scores
-            existing_relevant_articles = (
-                db.query(Article)
-                .filter(
-                    Article.relevance_score.isnot(None), Article.relevance_score > 0.4
-                )
-                .order_by(Article.datetime.desc())
-                .limit(20)
-                .all()
-            )
-
-            logger.info(
-                f"📚 Found {len(existing_relevant_articles)} existing relevant articles"
-            )
-
-            if existing_relevant_articles:
-                response_articles = []
-                for article in existing_relevant_articles:
-                    response_articles.append(
-                        ArticleModel(
-                            id=article.id,
-                            headline=article.headline,
-                            summary=article.summary,
-                            url=article.url,
-                            datetime=article.datetime,
-                            category=article.category,
-                            sentiment_score=article.sentiment_score,
-                            relevance_score=article.relevance_score,
-                            source=article.source,
-                            tags=(
-                                article.tags
-                                if hasattr(article, "tags")
-                                else article.content_analysis
-                            ),
-                        )
-                    )
-
-                logger.info(f"✅ Returning {len(response_articles)} existing articles")
-                return response_articles
-            else:
-                logger.warning("📭 No existing relevant articles in database")
-                return []
-
-        # Process and store articles
+        
         processed_articles = []
-        for article_data in relevant_articles:
-            # Create article ID
-            article_id = hashlib.md5(
-                f"{article_data['title']}{article_data['publishedAt']}".encode()
-            ).hexdigest()
-
-            # Check if already exists
-            existing_article = (
-                db.query(Article).filter(Article.id == article_id).first()
+        print("tickers:", user_tickers)
+        for query in user_tickers:
+            results = await planner.run_async(
+                query=query,
+                user_preferences=user_preferences,
+                return_aggregated=True
             )
-            if not existing_article:
-                # Create new article with Gemini analysis
-                gemini_analysis = article_data.get("gemini_analysis", {})
-
-                new_article = Article(
-                    id=article_id,
-                    headline=article_data["title"],
-                    summary=article_data.get("description", ""),
-                    url=article_data["url"],
-                    datetime=int(
-                        datetime.fromisoformat(
-                            article_data["publishedAt"].replace("Z", "+00:00")
-                        ).timestamp()
-                    ),
-                    source=article_data["source"]["name"],
-                    relevance_score=article_data.get("relevance_score", 0.5),
-                    category=(
-                        gemini_analysis.get("key_topics", ["general"])[0]
-                        if gemini_analysis.get("key_topics")
-                        else "general"
-                    ),
-                    sentiment_score=0.0,  # Could add Gemini sentiment analysis later
-                    content_analysis=json.dumps(gemini_analysis),
-                )
-
-                db.add(new_article)
-                processed_articles.append(new_article)
-            else:
-                # Update relevance score if we have new analysis
-                if article_data.get("relevance_score"):
-                    existing_article.relevance_score = article_data["relevance_score"]
-                processed_articles.append(existing_article)
-
-        db.commit()
+            # results is a list of retriever dicts, extend instead of append
+            processed_articles.extend(results)
+            print(f"Processed articles for query '{query}': {results}")
 
         # Convert to response model
+             
         response_articles = []
-        for article in processed_articles:
-            response_articles.append(
-                ArticleModel(
-                    id=article.id,
-                    headline=article.headline,
-                    summary=article.summary,
-                    url=article.url,
-                    datetime=article.datetime,
-                    category=article.category,
-                    sentiment_score=article.sentiment_score,
-                    relevance_score=article.relevance_score,
-                    source=article.source,
-                    tags=article.tags,
-                )
-            )
+
+        for retriever_data in processed_articles:
+            if retriever_data.get("retriever") == "EDGARRetriever":
+                for article in retriever_data.get("results", []):
+                    article_datetime = datetime.strptime(article.get("filing_date"), "%Y-%m-%d")
+                    timestamp = int(article_datetime.timestamp())
+                    response_articles.append(
+                        ArticleModel(
+                            id=article.get("accession_number"),
+                            headline=article.get("title"),
+                            summary=article.get("body"),
+                            url=article.get("href"),
+                            datetime=timestamp,
+                            category=article.get("form_type"),
+                            sentiment_score=None,
+                            relevance_score=None,
+                            source="EDGAR",
+                            tags="",
+                        )
+                    )
 
         return response_articles
 

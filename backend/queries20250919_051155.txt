@@ -1,0 +1,3 @@
+site:sec.gov "AAPL" 10-K OR 10-Q OR 8-K OR S-1
+ "AAPL" earnings report AND (analyst rating OR "price target")
+ "AAPL" (news OR analysis) -"US" -"American"
