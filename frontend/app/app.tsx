@@ -596,6 +596,14 @@ const normalizeDate = (dateStr: string): number => {
     }
   }
 
+const getEmoji = (article: NewsArticle) => {
+  if (article.source === "EDGAR") return "📝"
+  if (article.sentiment === "positive") return "📈"
+  if (article.sentiment === "negative") return "📉"
+  return "💡"
+}
+
+
 const addTicker = async () => {
   if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
     const newTickerSymbol = newTicker.toUpperCase()
@@ -874,17 +882,21 @@ const addTicker = async () => {
 
         {/* Scrolling Banner Section */}
         <div className="bg-gray-900 text-white py-2 overflow-hidden">
-          <div className="flex animate-marquee whitespace-nowrap">
-            <span className="mx-8 text-sm font-medium">📈 AAPL up 2.3% after strong earnings report</span>
-            <span className="mx-8 text-sm font-medium">🔥 TSLA announces new Gigafactory in Texas</span>
-            <span className="mx-8 text-sm font-medium">💰 Bitcoin reaches new monthly high at $67,000</span>
-            <span className="mx-8 text-sm font-medium">📊 S&P 500 closes at record levels for third consecutive day</span>
-            <span className="mx-8 text-sm font-medium">⚡ NVDA partners with major automakers for AI development</span>
-            <span className="mx-8 text-sm font-medium">🏦 Federal Reserve hints at potential rate cuts in Q4</span>
-            <span className="mx-8 text-sm font-medium">🚀 Google unveils new AI breakthrough in quantum computing</span>
-            <span className="mx-8 text-sm font-medium">💎 Microsoft Azure revenue grows 35% year-over-year</span>
-          </div>
-        </div>
+  <div className="flex animate-marquee whitespace-nowrap">
+    {articles.slice(0, 10).map((article) => (
+      <a
+        key={article.id}
+        href={article.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mx-8 text-sm font-medium hover:underline flex items-center gap-1"
+      >
+        {getEmoji(article)} {article.title}
+      </a>
+    ))}
+  </div>
+</div>
+
       </div>
 
       <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
