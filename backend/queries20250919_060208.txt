@@ -1,3 +1,0 @@
-site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR "proxy statement" OR S-1)
-AAPL ("earnings report" OR "analyst coverage" OR "market impact" OR "stock forecast")
-AAPL ("global market share" OR "international sales" OR "supply chain" OR "patent portfolio" OR "chip technology" OR "regulatory challenges" OR "economic impact")

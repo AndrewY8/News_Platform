@@ -1,3 +1,0 @@
- "AAPL" SEC filings 10-K 10-Q 8-K
- "AAPL" earnings report analyst ratings market impact
- "AAPL" news international local Bloomberg Reuters Financial Times

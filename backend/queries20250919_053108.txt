@@ -1,3 +1,0 @@
-"AAPL" site:sec.gov (10-K OR 10-Q OR 8-K OR S-1 OR proxy)
-"AAPL" (earnings report OR analyst ratings OR stock forecast OR market reaction) news
-"AAPL" (international market share OR global supply chain OR competitive landscape OR specialized tech news)

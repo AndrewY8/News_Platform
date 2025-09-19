@@ -1,3 +1,0 @@
-AAPL "SEC filings" (10-K OR 10-Q OR 8-K) site:sec.gov
-AAPL (earnings OR "analyst ratings" OR "market reaction") news
-AAPL (international OR global OR "tech industry" OR "supply chain" OR "regulatory outlook") news

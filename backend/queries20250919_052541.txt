@@ -1,3 +1,0 @@
-AAPL (10-K OR 10-Q OR 8-K) site:sec.gov
-AAPL "earnings report" OR "analyst ratings" OR "stock forecast" OR "market reaction"
-AAPL "international market" OR "global supply chain" OR "European sales" OR "Asian market share" OR "tech patent news"

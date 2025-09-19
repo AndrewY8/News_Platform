@@ -1,3 +1,0 @@
-AAPL site:sec.gov "10-K" OR "10-Q" OR "8-K" OR "proxy statement"
-AAPL "earnings report" OR "analyst coverage" OR "market impact" OR "stock forecast"
-AAPL "international market share" OR "supply chain news" OR "regulatory challenge" OR "sustainability report" -site:bloomberg.com -site:reuters.com -site:wsj.com -site:cnbc.com

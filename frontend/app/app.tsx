@@ -895,7 +895,9 @@ case 'portfolio':
 
                       <div className="flex-1 flex flex-col justify-center">
                         <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-xs lg:text-sm tracking-wide">
-                          {article.title} ({article.source})
+                          <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            {article.title}
+                          </a>
                         </h3>
                         <p className="text-gray-600 text-xs leading-tight tracking-wide">{article.preview}</p>
                       </div>

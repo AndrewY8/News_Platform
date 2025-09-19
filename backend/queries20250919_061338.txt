@@ -1,3 +1,0 @@
-AAPL "SEC filings" (10-K OR 10-Q OR 8-K OR "proxy statement")
-AAPL (earnings OR "analyst coverage" OR "market impact") news report
-AAPL (international OR global OR "supply chain" OR regulatory) news analysis

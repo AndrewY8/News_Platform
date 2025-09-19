@@ -73,7 +73,7 @@ class TavilyRetriever:
         # "topic": topic,
         # "days": days,
         # "max_results": max_results,
-        # "include_answer": include_answer,
+        "include_answer": include_answer,
     }
         # if include_domains:
         #     data["include_domains"] = include_domains

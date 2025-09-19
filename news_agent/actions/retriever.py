@@ -50,6 +50,7 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
         # print(response.text)
         # index = int(response.text)
         tasks.append((ExaRetriever, query))
+        # tasks.append((TavilyRetriever, query))
 
     
     return tasks

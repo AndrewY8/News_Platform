@@ -1,3 +1,0 @@
-AAPL site:sec.gov (10-K OR 10-Q OR 8-K OR "proxy statement")
-AAPL (earnings OR "analyst report" OR "stock price impact" OR "quarterly results")
-AAPL ("international sales" OR "supply chain" OR "EU regulation" OR "China market" OR "tech industry news")

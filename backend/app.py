@@ -1367,64 +1367,67 @@ async def get_articles(
                 return_aggregated=True
             )
             # results is a list of retriever dicts, extend instead of append
-            processed_articles.extend(results)
+            processed_articles.append((results, query))
             print(f"Processed articles for query '{query}': {results}")
 
         # Convert to response model
              
         response_articles = []
-        print(retriever.get("retreiver") for retriever in processed_articles)
+        # print(retriever.get("retreiver") for retriever in processed_articles)
 
-        for retriever_data in processed_articles:
-            if retriever_data.get("retriever") == "EDGARRetriever":
-                for article in retriever_data.get("results", []):
-                    article_datetime = datetime.strptime(article.get("filing_date"), "%Y-%m-%d")
-                    timestamp = int(article_datetime.timestamp())
-                    response_articles.append(
-                        ArticleModel(
-                            id=article.get("accession_number"),
-                            headline=article.get("title"),
-                            summary=article.get("body"),
-                            url=article.get("href"),
-                            datetime=timestamp,
-                            category=article.get("form_type"),
-                            sentiment_score=None,
-                            relevance_score=None,
-                            source="EDGAR",
-                            tags="",
-                        )
-                    )
-            if retriever_data.get("retriever") == "ExaRetriever":
-                for article in retriever_data.get("results", []):
-                    # Handle published_date
-                    published_date = getattr(article, "published_date", None)
-                    if published_date:
-                        article_datetime = datetime.strptime(published_date[:10], "%Y-%m-%d")
+        for retriever_list, ticker in processed_articles:
+            for retriever_data in retriever_list:
+                if retriever_data.get("retriever") == "EDGARRetriever":
+                    for article in retriever_data.get("results", []):
+                        article_datetime = datetime.strptime(article.get("filing_date"), "%Y-%m-%d")
                         timestamp = int(article_datetime.timestamp())
-                    else:
-                        timestamp = int(datetime.utcnow().timestamp())
-
-                    # Use URL as ID
-                    article_id = getattr(article, "url", "no-id")
-
-                    # Headline fallback to URL if no title
-                    headline = getattr(article, "title", None) or "No title"
-                    summary = getattr(article, "summary", None) or "No summary"
-
-                    response_articles.append(
-                        ArticleModel(
-                            id=article_id,
-                            headline=headline,
-                            summary=summary,
-                            url=article_id,
-                            datetime=timestamp,
-                            category="News",
-                            sentiment_score=None,
-                            relevance_score=None,
-                            source="ExaRetriever",
-                            tags="",
+                        response_articles.append(
+                            ArticleModel(
+                                id=article.get("accession_number"),
+                                headline=article.get("title"),
+                                summary=article.get("body"),
+                                url=article.get("href"),
+                                datetime=timestamp,
+                                category=article.get("form_type"),
+                                sentiment_score=None,
+                                relevance_score=None,
+                                source="EDGAR",
+                                tags=ticker,
+                            )
                         )
-                    )
+                if retriever_data.get("retriever") == "ExaRetriever":
+                    for article in retriever_data.get("results", []):
+                        # Handle published_date
+                        published_date = getattr(article, "published_date", None)
+                        if published_date:
+                            article_datetime = datetime.strptime(published_date[:10], "%Y-%m-%d")
+                            timestamp = int(article_datetime.timestamp())
+                        else:
+                            timestamp = int(datetime.utcnow().timestamp())
+
+                        # Use URL as ID
+                        article_id = getattr(article, "url", "no-id")
+
+                        # Headline fallback to URL if no title
+                        headline = getattr(article, "title", None) or "No title"
+                        summary = getattr(article, "summary", None) or "No summary"
+
+                        response_articles.append(
+                            ArticleModel(
+                                id=article_id,
+                                headline=headline,
+                                summary=summary,
+                                url=article_id,
+                                datetime=timestamp,
+                                category="News",
+                                sentiment_score=None,
+                                relevance_score=None,
+                                source="ExaRetriever",
+                                tags=ticker,
+                            )
+                        )
+                        
+        response_articles = sorted(response_articles, key=lambda x: x.datetime, reverse=True)[:20]
 
         return response_articles
 

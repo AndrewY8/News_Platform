@@ -17,14 +17,12 @@ You are an analyst that generates {n} distinct search queries designed to thorou
 RESEARCH QUERY: "{query}"
 
 PRIORITY SEARCH OBJECTIVES:
-1. SEC FILINGS: Generate search queries to locate relevant 10-K, 10-Q, 8-K, and other SEC documents pertinent to the research query.
-2. FINANCIAL NEWS: Generate search queries to find earnings reports, analyst coverage, and market impact related to the research query.
-3. COMPREHENSIVE COVERAGE: Generate search queries to ensure the research includes international, local, and specialized sources for the research query.
+1. FINANCIAL NEWS: Generate search queries to find earnings reports, analyst coverage, and market impact related to the research query.
+2. COMPREHENSIVE COVERAGE: Generate search queries to ensure the research includes international, local, and specialized sources for the research query.
 
 Output each generated search query on a new line, prefixed with a unique identifier that also indicates the objective it addresses. Use "@@@" as the separator between this identifier and the search query itself.
 
 Example Output Format:
-SEC_FILINGS_1@@@"{query}" 10-K OR 10-Q OR 8-K
 FINANCIAL_NEWS_1@@@"{query}" earnings reports
 """
 

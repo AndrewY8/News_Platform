@@ -1,3 +1,0 @@
-AAPL site:sec.gov (10-K OR 10-Q OR 8-K OR proxy OR prospectus)
-AAPL (earnings OR "analyst report" OR "market impact" OR "stock performance" OR "investor call")
-AAPL ("global strategy" OR "international sales" OR "supply chain" OR "market share" OR "tech innovation" OR "competitor analysis")

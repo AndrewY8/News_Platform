@@ -39,7 +39,7 @@ class ExaRetriever:
         return api_key
 
     def search(
-        self, max_results=10, use_autoprompt=False, search_type="neural", **filters
+        self, max_results=10, use_autoprompt=False, search_type="auto", **filters
     ):
         """
         Searches the query using the Exa API.
@@ -50,13 +50,15 @@ class ExaRetriever:
             **filters: Additional filters (e.g., date range, domains).
         Returns:
             A list of search results.
-        """
-        results = self.client.search(
+        """    
+        results = self.client.search_and_contents(
             self.query,
             type=search_type,
             category="news",
-            use_autoprompt=use_autoprompt,
             num_results=max_results,
+            summary= {
+                "query" : "MAXIMUM WORD COUNT IS 50"
+                },
             include_domains=self.query_domains,
             **filters
         )

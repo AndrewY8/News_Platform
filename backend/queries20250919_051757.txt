@@ -1,3 +1,0 @@
-AAPL "SEC filings" (10-K OR 10-Q OR 8-K OR "DEF 14A") site:sec.gov
-AAPL "earnings report" OR "analyst rating" OR "market impact" OR "stock price reaction"
-AAPL (international OR global) (market share OR "supply chain" OR "regulatory issues") report OR analysis

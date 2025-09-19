@@ -1,3 +1,0 @@
-site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR proxy statement)
-AAPL earnings reports analyst coverage market impact news
-AAPL (global OR international OR regional) market analysis OR (tech OR supply chain) report news

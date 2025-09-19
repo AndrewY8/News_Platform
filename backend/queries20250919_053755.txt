@@ -1,3 +1,0 @@
-site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR proxy OR filing)
-AAPL (earnings report OR analyst coverage OR stock forecast OR market reaction OR investor relations)
-AAPL (international strategy OR global supply chain OR antitrust investigation OR ESG report OR tech industry analysis)
