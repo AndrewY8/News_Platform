@@ -9,7 +9,7 @@ deduplication, clustering, scoring, and summarization.
 import logging
 import asyncio
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 import time
 
@@ -465,7 +465,7 @@ class AggregatorAgent:
             'total_clusters': len(clusters),
             'total_sources': sum(cluster.source_count for cluster in clusters),
             'total_chunks_processed': sum(cluster.chunk_count for cluster in clusters),
-            'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         
         if dedup_stats:
@@ -485,7 +485,7 @@ class AggregatorAgent:
             clusters=[],
             processing_stats={
                 'reason': reason,
-                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'total_clusters': 0,
                 'total_sources': 0
             }
@@ -498,7 +498,7 @@ class AggregatorAgent:
             processing_stats={
                 'error': error_message,
                 'processing_time_seconds': processing_time,
-                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'total_clusters': 0,
                 'total_sources': 0
             }
