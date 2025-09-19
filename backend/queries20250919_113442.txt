@@ -1,0 +1,2 @@
+AAPL "earnings report" OR "analyst ratings" OR "stock market impact" news
+AAPL "global market trends" OR "international sales" OR "regional economic impact" OR "tech industry analysis" OR "supply chain news"

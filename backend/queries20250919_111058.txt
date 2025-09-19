@@ -1,0 +1,2 @@
+AAPL "earnings report" "analyst rating" "market impact" news
+AAPL "global operations" OR "tech industry analysis" OR "regional business news"

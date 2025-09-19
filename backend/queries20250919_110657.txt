@@ -1,0 +1,2 @@
+AAPL "latest earnings report" "analyst ratings" "stock market reaction" financial news
+AAPL (international OR global) (news OR analysis) OR "tech industry report" OR "supply chain" OR "regulatory filings"

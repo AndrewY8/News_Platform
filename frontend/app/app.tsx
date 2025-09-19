@@ -457,38 +457,36 @@ const [cachedPersonalized, setCachedPersonalized] = useState<NewsArticle[]>([])
     }
   }
 
-  const loadArticles = async (tickers? : string[]) => {
-  setLoading(true)
+const loadArticles = async (tickers?: string[]) => {
+  if (cachedPersonalized.length == 0) {setLoading(true)}
 
   try {
     let fetchedArticles: NewsArticle[] = []
 
+    // console.log("Active tab:", activeTab)
     switch (activeTab) {
       case 'personalized':
-  if (cachedPersonalized.length === 0) {
-    const data = await ApiService.getPersonalizedNews(tickers)
-    setCachedPersonalized(data)
-    fetchedArticles = data
-  } else {
-    fetchedArticles = cachedPersonalized
-  }
-  break
+        console.log("Fetching personalized news for tickers:", tickers)
+        const data = await ApiService.getPersonalizedNews(tickers)
+        setCachedPersonalized(data)
+        fetchedArticles = data
+        break
 
-case 'portfolio':
-  if (cachedPersonalized.length === 0) {
-    const data = await ApiService.getPersonalizedNews()
-    setCachedPersonalized(data)
-  } else {
-  }
-  break
+      case 'portfolio':
+        if (cachedPersonalized.length === 0) {
+          const data = await ApiService.getPersonalizedNews()
+          setCachedPersonalized(data)
+          fetchedArticles = data // ✅ assign here
+        } else {
+          fetchedArticles = cachedPersonalized
+        }
+        break
 
       case 'saved':
-        // Fetch saved articles from backend
         fetchedArticles = await ApiService.getSavedNews()
         break
 
       case 'sec-docs':
-        // SEC Docs tab starts empty
         fetchedArticles = []
         break
 
@@ -496,7 +494,17 @@ case 'portfolio':
         fetchedArticles = []
     }
 
-    setArticles(fetchedArticles)
+    setArticles(prevArticles => {
+  const existingIds = new Set(prevArticles.map(a => a.id))
+  const newUniqueArticles = fetchedArticles.filter(a => !existingIds.has(a.id))
+  const combined = [...prevArticles, ...newUniqueArticles]
+
+  // Sort by ISO date string
+combined.sort((a, b) => Number(b.date) - Number(a.date))
+
+  return combined
+})
+
   } catch (err) {
     console.error('Error loading articles:', err)
     setArticles([])
@@ -504,6 +512,7 @@ case 'portfolio':
     setLoading(false)
   }
 }
+
 
 
   const handleSearch = async (query: string) => {
@@ -549,30 +558,36 @@ case 'portfolio':
     }
   }
 
-  const addTicker = async () => {
-    if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
-      const newTickerSymbol = newTicker.toUpperCase()
-      setTickers([...tickers, newTickerSymbol])
-      
-      // Load data for the new ticker
-      try {
-        const stockData = await YahooFinanceService.getStockQuote(newTickerSymbol)
-        if (stockData) {
-          setTickerData(prev => [...prev, stockData])
-          
-          // If this is the first ticker, select it
-          if (tickers.length === 0) {
-            setSelectedTicker(newTickerSymbol)
-            await loadChartData(newTickerSymbol, selectedTimeframe)
-          }
+const addTicker = async () => {
+  if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
+    const newTickerSymbol = newTicker.toUpperCase()
+    const updatedTickers = [...tickers, newTickerSymbol]
+    setTickers(updatedTickers)
+
+    // Load data for the new ticker
+    try {
+      const stockData = await YahooFinanceService.getStockQuote(newTickerSymbol)
+      if (stockData) {
+        setTickerData(prev => [...prev, stockData])
+
+        // If this is the first ticker, select it
+        if (tickers.length === 0) {
+          setSelectedTicker(newTickerSymbol)
+          await loadChartData(newTickerSymbol, selectedTimeframe)
         }
-      } catch (error) {
-        console.error('Failed to load new ticker data:', error)
       }
-      
-      setNewTicker("")
+
+      // 🔥 Fetch personalized articles for the updated tickers
+      console.log("Getting articles for tickers:", updatedTickers)
+
+    } catch (error) {
+      console.error('Failed to load new ticker data:', error)
     }
+
+    await loadArticles([newTickerSymbol])
+    setNewTicker("")
   }
+}
 
   const handleTickerSelect = async (symbol: string) => {
     setSelectedTicker(symbol)
