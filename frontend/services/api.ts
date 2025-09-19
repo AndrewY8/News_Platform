@@ -147,24 +147,25 @@ export class ApiService {
     }
   }
 
-  static async getPersonalizedNews(): Promise<NewsArticle[]> {
-    try {
-      const timeoutPromise = this.createTimeoutPromise(5000, this.getFallbackArticles())
-      const fetchPromise = fetch(`${API_BASE_URL}/api/articles`)
-        .then(response => {
-          if (!response.ok) throw new Error(`Failed to fetch personalized news: ${response.status}`)
-          return response.json()
-        })
-        .then(data => this.transformArticles(data))
-        .catch(() => this.getFallbackArticles())
+  static async getPersonalizedNews(tickers?: string[]): Promise<NewsArticle[]> {
+  try {
+    const query = tickers && tickers.length > 0 ? `?tickers=${tickers.join(',')}` : ''
+    const timeoutPromise = this.createTimeoutPromise(60000, this.getFallbackArticles())
+    const fetchPromise = fetch(`${API_BASE_URL}/api/articles${query}`)
+      .then(response => {
+        if (!response.ok) throw new Error(`Failed to fetch personalized news: ${response.status}`)
+        return response.json()
+      })
+      .then(data => this.transformArticles(data))
+      .catch(() => this.getFallbackArticles())
 
-      const result = await Promise.race([fetchPromise, timeoutPromise])
-      return result
-    } catch (error) {
-      console.error('Error fetching personalized news:', error)
-      return this.getFallbackArticles()
-    }
+    const result = await Promise.race([fetchPromise, timeoutPromise])
+    return result
+  } catch (error) {
+    console.error('Error fetching personalized news:', error)
+    return this.getFallbackArticles()
   }
+}
 
   static async getSavedNews(): Promise<NewsArticle[]> {
     try {

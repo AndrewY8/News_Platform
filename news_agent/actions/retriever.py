@@ -43,13 +43,13 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     # ['TavilyRetriever', 'SerperSearch', 'GoogleSearch', 'SerpApiSearch', 'ExaSearch', 'SearchApiSearch']
     
     for query in queries:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash", contents=pick_retriever(query, ['TavilyRetriever'])
-        ) 
-        print("PICK RETRIEVER TEXT")
-        print(response.text)
-        index = int(response.text)
-        tasks.append((retriever_classes[index], query))
+        # response = client.generate_content(
+        #     pick_retriever(query, ['TavilyRetriever'])
+        # ) 
+        # print("PICK RETRIEVER TEXT")
+        # print(response.text)
+        # index = int(response.text)
+        tasks.append((ExaRetriever, query))
 
     
     return tasks

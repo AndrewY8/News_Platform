@@ -1,0 +1,3 @@
+site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR S-1 OR S-3)
+AAPL "earnings report" OR "analyst coverage" OR "market impact" news
+AAPL global "tech industry" "market analysis" OR "research report"

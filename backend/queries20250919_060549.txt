@@ -1,0 +1,3 @@
+AAPL (10-K OR 10-Q OR 8-K) site:sec.gov
+AAPL earnings OR "analyst coverage" OR "market impact" news
+AAPL "global sales" OR "supply chain" OR "ESG report" OR "market share analysis"

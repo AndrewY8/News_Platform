@@ -8,6 +8,7 @@ import { ThumbsUp, ThumbsDown, Search, Bookmark, Rss, User, X, Trash2, History, 
 import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/api"
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
+import { de } from "date-fns/locale"
 
 export default function HavenNewsApp() {
   const router = useRouter()
@@ -354,7 +355,7 @@ const hasInitialized = useRef(false)
 useEffect(() => {
   if (!hasInitialized.current) {
     initializeApp()
-    loadQueryHistory()
+    // loadQueryHistory()
     loadSystemPrompts()
     hasInitialized.current = true
   }
@@ -404,16 +405,15 @@ useEffect(() => {
   }
 
   // Load articles when tab changes
-  useEffect(() => {
-    if (!loading) {
-      loadArticles()
-    }
-  }, [activeTab, loading])
+useEffect(() => {
+  const defaultTickers = ["AAPL"]
+  loadArticles(defaultTickers)
+}, []) // empty dependency array = run once
 
   const initializeApp = async () => {
     try {
       // Set default tickers
-      const defaultTickers = ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL"]
+      const defaultTickers = ["AAPL"]
       setTickers(defaultTickers)
       
       // Load initial ticker data
@@ -440,6 +440,7 @@ useEffect(() => {
       console.error('Failed to load ticker data:', error)
     }
   }
+const [cachedPersonalized, setCachedPersonalized] = useState<NewsArticle[]>([])
 
   const loadChartData = async (symbol: string, timeframe: string) => {
     try {
@@ -456,40 +457,54 @@ useEffect(() => {
     }
   }
 
-  const loadArticles = async () => {
-    setLoading(true)
-    try {
-      let fetchedArticles: NewsArticle[] = []
-      
-      switch (activeTab) {
-        case 'personalized':
-          // Use fake data for personalized feed
-          fetchedArticles = fakeNewsData
-          break
-        case 'portfolio':
-          // Portfolio tab - show portfolio-related news (filter fake data)
-          fetchedArticles = fakeNewsData.filter(article => 
-            article.tags.some(tag => ['AAPL', 'MSFT', 'NVDA', 'TSLA', 'AMZN', 'GOOGL'].includes(tag))
-          )
-          break
-        case 'saved':
-          // Show a few saved articles
-          fetchedArticles = fakeNewsData.slice(0, 3)
-          break
-        case 'sec-docs':
-          // SEC Doc Searcher shows empty state initially
-          fetchedArticles = []
-          break
-      }
-      
-      setArticles(fetchedArticles)
-    } catch (error) {
-      console.error('Error loading articles:', error)
-      setArticles([])
-    } finally {
-      setLoading(false)
-    }
+  const loadArticles = async (tickers? : string[]) => {
+  setLoading(true)
+
+  try {
+    let fetchedArticles: NewsArticle[] = []
+
+    switch (activeTab) {
+      case 'personalized':
+  if (cachedPersonalized.length === 0) {
+    const data = await ApiService.getPersonalizedNews(tickers)
+    setCachedPersonalized(data)
+    fetchedArticles = data
+  } else {
+    fetchedArticles = cachedPersonalized
   }
+  break
+
+case 'portfolio':
+  if (cachedPersonalized.length === 0) {
+    const data = await ApiService.getPersonalizedNews()
+    setCachedPersonalized(data)
+  } else {
+  }
+  break
+
+      case 'saved':
+        // Fetch saved articles from backend
+        fetchedArticles = await ApiService.getSavedNews()
+        break
+
+      case 'sec-docs':
+        // SEC Docs tab starts empty
+        fetchedArticles = []
+        break
+
+      default:
+        fetchedArticles = []
+    }
+
+    setArticles(fetchedArticles)
+  } catch (err) {
+    console.error('Error loading articles:', err)
+    setArticles([])
+  } finally {
+    setLoading(false)
+  }
+}
+
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return

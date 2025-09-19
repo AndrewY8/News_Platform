@@ -1,0 +1,3 @@
+site:sec.gov AAPL (10-K OR 10-Q OR 8-K OR 20-F)
+AAPL "earnings report" OR "analyst rating" OR "stock market impact"
+AAPL "global strategy" OR "supply chain analysis" OR "international market share"

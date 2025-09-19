@@ -68,11 +68,12 @@ class TavilyRetriever:
 
         data = {
         "query": query,
-        "search_depth": search_depth,
-        "topic": topic,
-        "days": days,
-        "max_results": max_results,
-        "include_answer": include_answer,
+        "auto_parameters": True,
+        # "search_depth": search_depth,
+        # "topic": topic,
+        # "days": days,
+        # "max_results": max_results,
+        # "include_answer": include_answer,
     }
         # if include_domains:
         #     data["include_domains"] = include_domains

@@ -1,0 +1,3 @@
+AAPL "SEC filings" (10-K OR 10-Q OR 8-K OR S-1 OR DEF 14A) site:sec.gov
+AAPL (earnings report OR analyst coverage OR stock impact OR investor relations) news
+AAPL (Reuters OR Bloomberg OR "Financial Times" OR TechCrunch OR "supply chain analysis" OR "antitrust investigation" OR "market share data")

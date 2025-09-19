@@ -54,16 +54,17 @@ class ExaRetriever:
         results = self.client.search(
             self.query,
             type=search_type,
+            category="news",
             use_autoprompt=use_autoprompt,
             num_results=max_results,
             include_domains=self.query_domains,
             **filters
         )
 
-        search_response = [
-            {"href": result.url, "body": result.text} for result in results.results
-        ]
-        return search_response
+        # search_response = [
+        #     {"href": result.url, "body": result.text} for result in results.results
+        # ]
+        return results.results
 
     def find_similar(self, url, exclude_source_domain=False, **filters):
         """

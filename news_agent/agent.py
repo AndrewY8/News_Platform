@@ -3,7 +3,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from .prompts import augment_query, pick_tavily_params
 from .actions.retriever import get_retriever_tasks
-import google.genai as genai
+import google.generativeai as genai
 import json
 from datetime import datetime
 
@@ -21,7 +21,7 @@ class PlannerAgent:
             max_concurrent_retrievers (int): Maximum number of retrievers to run concurrently
         """
         self.max_concurrent_retrievers = max_concurrent_retrievers
-        self.client = genai.Client() 
+        self.client = genai.GenerativeModel("gemini-2.5-flash") 
     
     async def _run_retriever_task(self, retriever, task: str) -> Optional[Dict[str, Any]]:
         """
@@ -38,36 +38,36 @@ class PlannerAgent:
             retriever_name = retriever.__name__
             logger.info(f"Running {retriever_name} with task")
              
-            if (retriever == TavilyRetriever):
-            # get cusotm parameters for tavilly search
-                response = self.client.models.generate_content(
-                    model="gemini-2.0-flash", contents=pick_tavily_params(task), config={"response_mime_type": "application/json"}
-                ) 
-                print("TAVILY PARAMS")
-                print(response.text)
-                tavily_params = response.text
-                tavily_params = json.loads(tavily_params)
-                tavily_params["days"] = int(tavily_params["days"])
-                tavily_params["max_results"] = int(tavily_params["max_results"])
-                tavily_params["include_answer"] = bool(tavily_params["include_answer"])
+            # if (retriever == TavilyRetriever):
+            # # get cusotm parameters for tavilly search
+            #     response = self.client.generate_content(
+            #         pick_tavily_params(task), generation_config={"response_mime_type": "application/json"}
+            #     ) 
+            #     print("TAVILY PARAMS")
+            #     print(response.text)
+            #     tavily_params = response.text
+            #     tavily_params = json.loads(tavily_params)
+            #     tavily_params["days"] = int(tavily_params["days"])
+            #     tavily_params["max_results"] = int(tavily_params["max_results"])
+            #     tavily_params["include_answer"] = bool(tavily_params["include_answer"])
         
-                print(tavily_params)
+            #     print(tavily_params)
             
-                # Run the retriever
+            #     # Run the retriever
                 
-                ret_obj = retriever(task);
-                if asyncio.iscoroutinefunction(ret_obj.search):
-                    result = await ret_obj.search(**tavily_params)
-                else:
-                    result = ret_obj.search(**tavily_params)
+            #     ret_obj = retriever(task);
+            #     if asyncio.iscoroutinefunction(ret_obj.search):
+            #         result = await ret_obj.search(**tavily_params)
+            #     else:
+            #         result = ret_obj.search(**tavily_params)
+            # else:
+            print(f"PROCESSING {retriever_name}")
+            ret_obj = retriever(task);
+            if asyncio.iscoroutinefunction(ret_obj.search):
+                result = await ret_obj.search()
             else:
-                print(f"PROCESSING {retriever_name}")
-                ret_obj = retriever(task);
-                if asyncio.iscoroutinefunction(ret_obj.search):
-                    result = await ret_obj.search()
-                else:
-                    result = ret_obj.search()
-                print(f"PROCESSED{result}")
+                result = ret_obj.search()
+            print(f"PROCESSED{result}")
                 
             
             # Ensure result is in expected format
@@ -143,8 +143,8 @@ class PlannerAgent:
             
             # Step 1: Augment the query 
             
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash", contents=augment_query(query)
+            response = self.client.generate_content(
+                augment_query(query)
             ) 
             # parse response to a list of queries
             parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
