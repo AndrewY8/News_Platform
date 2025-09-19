@@ -686,7 +686,7 @@ case 'portfolio':
     <div className="min-h-screen bg-white font-sans">
       <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50">
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
-          <div className="flex items-center justify-between px-48">
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
             <Button
               variant="ghost"
@@ -700,7 +700,7 @@ case 'portfolio':
           
           {/* Horizontal Navigation */}
           <div className="bg-gray-100 border-t border-b border-gray py-1">
-            <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-48">
+            <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-4 sm:px-6 lg:px-8">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 
@@ -834,7 +834,7 @@ case 'portfolio':
         </div>
       </div>
 
-      <div className="flex px-48 min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
+      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
         {/* Main Content - Articles */}
         <div className="flex-1 lg:mr-6">
           <div className="py-3 sm:py-4 lg:py-6">
@@ -890,6 +890,7 @@ case 'portfolio':
                   >
                     <div className="flex gap-4 w-full">
                       <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-center tracking-wide">
+                        {article.date.includes(':') && <span className="mr-1">🔥</span>}
                         {article.date}
                       </div>
 
