@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef} from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -349,11 +349,16 @@ export default function HavenNewsApp() {
   }, [pathname])
 
   // Initialize app with data
-  useEffect(() => {
+const hasInitialized = useRef(false)
+
+useEffect(() => {
+  if (!hasInitialized.current) {
     initializeApp()
     loadQueryHistory()
     loadSystemPrompts()
-  }, [])
+    hasInitialized.current = true
+  }
+}, [])
 
   const loadSystemPrompts = () => {
     try {
