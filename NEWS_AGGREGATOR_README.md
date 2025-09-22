@@ -51,12 +51,12 @@ Multi-layered deduplication system:
 - Semantic similarity using embeddings
 - Quality-based duplicate resolution
 
-### 5. **ClusteringEngine** - Semantic Clustering
-HDBSCAN-based clustering of related content:
-- Density-based semantic clustering
-- Dynamic cluster management
-- Real-time cluster updates
-- Cluster quality assessment
+### 5. **ClusteringEngine** - Agentic Semantic Clustering
+Multi-agent based clustering of related content:
+- Utilizes Proposer, Evaluator, and Refiner agents
+- Iterative refinement for optimal cluster formation
+- Dynamic cluster management and real-time updates
+- LLM-powered semantic evaluation and refinement
 
 ### 6. **ClusterScorer** - Multi-factor Scoring
 Comprehensive scoring system based on:
