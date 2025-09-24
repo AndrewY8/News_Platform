@@ -118,9 +118,19 @@ class TavilyRetriever:
             sources = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
-            # Return the results
+            # Return the results with complete metadata
             search_response = [
-                {"href": obj["url"], "body": obj["content"]} for obj in sources
+                {
+                    "href": obj.get("url"),
+                    "url": obj.get("url"),
+                    "body": obj.get("content"),
+                    "content": obj.get("content"),
+                    "title": obj.get("title"),
+                    "source": obj.get("domain") or obj.get("url", "").split("//")[-1].split("/")[0] if obj.get("url") else "Unknown",
+                    "published_date": obj.get("published_date"),
+                    "score": obj.get("score"),
+                    "raw_content": obj.get("raw_content")
+                } for obj in sources
             ]
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
