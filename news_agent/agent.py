@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 from typing import List, Dict, Any, Optional
 from .prompts import augment_query, pick_tavily_params
 from .actions.retriever import get_retriever_tasks
@@ -16,12 +17,19 @@ class PlannerAgent:
     def __init__(self, max_concurrent_retrievers: int = 5):
         """
         Initialize the Planner Agent
-        
+
         Args:
             max_concurrent_retrievers (int): Maximum number of retrievers to run concurrently
         """
         self.max_concurrent_retrievers = max_concurrent_retrievers
+<<<<<<< HEAD
         self.client = genai.GenerativeModel("gemini-2.5-flash") 
+=======
+        # Configure Gemini API
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        # Initialize Gemini client for retriever tasks
+        self.client = genai 
+>>>>>>> 8307a4c (changed backend)
     
     async def _run_retriever_task(self, retriever, task: str) -> Optional[Dict[str, Any]]:
         """
@@ -38,6 +46,7 @@ class PlannerAgent:
             retriever_name = retriever.__name__
             logger.info(f"Running {retriever_name} with task")
              
+<<<<<<< HEAD
             # if (retriever == TavilyRetriever):
             # # get cusotm parameters for tavilly search
             #     response = self.client.generate_content(
@@ -50,6 +59,24 @@ class PlannerAgent:
             #     tavily_params["days"] = int(tavily_params["days"])
             #     tavily_params["max_results"] = int(tavily_params["max_results"])
             #     tavily_params["include_answer"] = bool(tavily_params["include_answer"])
+=======
+            if (retriever == TavilyRetriever):
+            # get cusotm parameters for tavilly search
+                model = genai.GenerativeModel('gemini-2.0-flash')
+                response = model.generate_content([pick_tavily_params(task)]) 
+                print("TAVILY PARAMS")
+                print(response.text)
+                tavily_params = response.text
+                # Extract JSON from markdown wrapper if present
+                if tavily_params.startswith('```json'):
+                    tavily_params = tavily_params.split('```json')[1].split('```')[0].strip()
+                elif tavily_params.startswith('```'):
+                    tavily_params = tavily_params.split('```')[1].strip()
+                tavily_params = json.loads(tavily_params)
+                tavily_params["days"] = int(tavily_params["days"])
+                tavily_params["max_results"] = int(tavily_params["max_results"])
+                tavily_params["include_answer"] = bool(tavily_params["include_answer"])
+>>>>>>> 8307a4c (changed backend)
         
             #     print(tavily_params)
             
@@ -143,16 +170,21 @@ class PlannerAgent:
             
             # Step 1: Augment the query 
             
+<<<<<<< HEAD
             response = self.client.generate_content(
                 augment_query(query)
             ) 
+=======
+            model = genai.GenerativeModel('gemini-2.0-flash')
+            response = model.generate_content([augment_query(query)]) 
+>>>>>>> 8307a4c (changed backend)
             # parse response to a list of queries
             parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
 
             augmented_queries = parse_queries(response.text)
 
             
-            with open(f"queries{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt", "w") as f:
+            with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
                 for augmented_query in augmented_queries:
                     f.write(augmented_query + "\n")
         

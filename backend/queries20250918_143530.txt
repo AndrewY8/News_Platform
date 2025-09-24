@@ -1,0 +1,3 @@
+"SEC filings Trump Organization" OR "SEC filings Trump Media"
+"Trump news" AND "market impact" AND "financial analysis"
+"(Trump OR Donald Trump) news" site:.com OR site:.org OR site:.gov -wikipedia

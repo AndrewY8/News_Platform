@@ -86,7 +86,7 @@ class AggregatorAgent:
         }
         
         logger.info("AggregatorAgent initialized successfully")
-    
+
     def _initialize_components(self):
         """Initialize all pipeline components."""
         try:
@@ -103,6 +103,7 @@ class AggregatorAgent:
                 self.config.deduplication, 
                 self.embedding_manager
             )
+
             logger.debug("DeduplicationEngine initialized")
             
             # Clustering
@@ -110,6 +111,7 @@ class AggregatorAgent:
                 self.config.clustering,
                 self.embedding_manager
             )
+
             logger.debug("ClusteringEngine initialized")
             
             # Scoring
@@ -121,6 +123,7 @@ class AggregatorAgent:
                 self.config.summarizer,
                 getattr(self.config.summarizer, 'api_key', None)
             )
+            
             logger.debug("GeminiSummarizer initialized")
             
             # Supabase manager (optional)

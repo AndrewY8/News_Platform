@@ -30,10 +30,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from news_agent.integration.planner_aggregator import create_enhanced_planner
 from newsapi import NewsApiClient
+<<<<<<< HEAD
 from fastapi import Query
 # from textblob import TextBlob  # Temporarily disabled due to NumPy version conflict
+=======
+>>>>>>> 8307a4c (changed backend)
 
-# import spacy  # Temporarily disabled due to package conflicts
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
@@ -51,45 +53,39 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import our secure auth system
-from auth import (
-    auth_system,
-    get_current_user,
-    get_current_user_optional,
-    TokenData,
-    AuthTokens,
-    UserInfo,
-)
-from ticker_validator import validate_ticker_list, get_ticker_suggestions
+# Simple auth placeholder (auth.py not available)
+def get_current_user_optional():
+    """Optional auth placeholder"""
+    return None
+# Ticker validation functions (simplified versions)
+def validate_ticker_list(tickers):
+    """Simple ticker validation - can be enhanced later"""
+    if not tickers or not isinstance(tickers, list):
+        return []
+    return [ticker.upper().strip() for ticker in tickers if ticker and isinstance(ticker, str)]
 
-# Import new Gemini-powered personalization system
-from news_intelligence import NewsIntelligenceService
-from simple_agent_integration import get_simple_agent_news_service
+def get_ticker_suggestions(query):
+    """Simple ticker suggestions - can be enhanced later"""
+    return []
+
+# Import Google Gemini for AI functionality
 import google.generativeai as genai
 
-# Import Enhanced Pipeline (before logger is defined)
-ENHANCED_PIPELINE_AVAILABLE = False
-enhanced_pipeline_import_error = None
+# Import News Agent System
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 try:
-    import sys
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-    from enhanced_news_pipeline import create_enhanced_news_pipeline
-    ENHANCED_PIPELINE_AVAILABLE = True
+    from news_agent.agent import PlannerAgent
+    from news_agent.aggregator.aggregator import AggregatorAgent
+    NEWS_AGENT_AVAILABLE = True
+    print("✅ News Agent System available")
 except Exception as e:
-    enhanced_pipeline_import_error = str(e)
-
-# Import SEC service
-from sec_service import sec_service
+    NEWS_AGENT_AVAILABLE = False
+    print(f"⚠️ News Agent System not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Log enhanced pipeline import status
-if ENHANCED_PIPELINE_AVAILABLE:
-    logger.info("✅ Enhanced News Pipeline available")
-else:
-    logger.warning(f"⚠️ Enhanced News Pipeline not available: {enhanced_pipeline_import_error}")
 
 # Configuration from environment
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "1f96d48a73e24ad19d3e68449d982290")
@@ -101,8 +97,6 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 
-# Security configuration is now handled in auth.py
-
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./secure_news.db")
 engine = create_engine(DATABASE_URL)
@@ -112,25 +106,21 @@ Base = declarative_base()
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
 
-# Enhanced Pipeline initialization
-enhanced_pipeline = None
-if ENHANCED_PIPELINE_AVAILABLE:
-    try:
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        tavily_key = os.getenv("TAVILY_API_KEY")
+# Initialize News Agent System
+news_agent = None
+aggregator_agent = None
 
-        if gemini_key and tavily_key:
-            enhanced_pipeline = create_enhanced_news_pipeline(
-                gemini_api_key=gemini_key,
-                tavily_api_key=tavily_key,
-                max_retrievers=5
-            )
-            logger.info("🚀 Enhanced News Discovery Pipeline initialized successfully")
-        else:
-            logger.warning("⚠️ Missing API keys for enhanced pipeline (GEMINI_API_KEY, TAVILY_API_KEY)")
+if NEWS_AGENT_AVAILABLE:
+    try:
+        news_agent = PlannerAgent(max_concurrent_retrievers=3)
+        from news_agent.aggregator.config import AggregatorConfig
+        aggregator_config = AggregatorConfig.from_env()
+        aggregator_agent = AggregatorAgent(config=aggregator_config)
+        logger.info("🚀 News Agent System initialized successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize enhanced pipeline: {e}")
-        enhanced_pipeline = None
+        logger.error(f"❌ Failed to initialize News Agent System: {e}")
+        news_agent = None
+        aggregator_agent = None
 
 
 # Enhanced Models for OAuth
@@ -181,802 +171,39 @@ class Article(Base):
     tags = Column(Text)  # JSON string of tags
     content_analysis = Column(Text)  # JSON string of analysis
 
-    # Relationships
-    interactions = relationship("UserInteraction", back_populates="article")
-
-
 class UserInteraction(Base):
     __tablename__ = "user_interactions"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
-        String, ForeignKey("users.id")
-    )  # Fixed: String to match User.id type
-    article_id = Column(String, ForeignKey("articles.id"))
-    interaction_type = Column(String)  # 'save', 'remove', 'click'
-    duration = Column(Integer)  # time spent in seconds
+    id = Column(String, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    article_id = Column(String, ForeignKey("articles.id"), nullable=False)
+    action = Column(String, nullable=False)  # 'view', 'save', 'click', etc.
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="interactions")
-    article = relationship("Article", back_populates="interactions")
-
 
 class ChatHistory(Base):
     __tablename__ = "chat_history"
-    
     id = Column(String, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     query = Column(Text, nullable=False)
     response = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    user = relationship("User")
-
 
 Base.metadata.create_all(bind=engine)
 
 
 # Pydantic models
-class ArticleModel(BaseModel):
-    id: str
-    headline: str
-    summary: str
-    url: str
-    datetime: int
-    category: Optional[str] = None
-    sentiment_score: Optional[float] = None
-    relevance_score: Optional[float] = None
-    source: Optional[str] = None
-    tags: Optional[str] = None
-
-
-class UserModel(BaseModel):
-    username: str
-    email: str
-    trades: List[str]
-    validation: Optional[dict] = None
-
-
-class InteractionModel(BaseModel):
-    article_id: str
-    interaction_type: str
-    duration: Optional[int] = None
-
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-
-# Market Data Models
-class TickerInfo(BaseModel):
-    symbol: str
-    name: str
-    current_price: float
-    previous_close: float
-    change: float
-    change_percent: float
-    volume: Optional[int] = None
-    market_cap: Optional[int] = None
-    day_high: Optional[float] = None
-    day_low: Optional[float] = None
-    year_high: Optional[float] = None
-    year_low: Optional[float] = None
-
-
-class MarketSummary(BaseModel):
-    tickers: List[TickerInfo]
-    last_updated: str
-
-
-# OAuth Models
-class DemoLoginRequest(BaseModel):
-    provider: str
-    email: str
-
-
-# Personalization Algorithm Components
-
-
-class ContentAnalysisEngine:
-    def __init__(self):
-        try:
-            # self.nlp = spacy.load("en_core_web_sm")  # Temporarily disabled
-            self.nlp = None
-        except (OSError, ImportError, TypeError):
-            logger.warning("spaCy model not available. Using fallback analysis.")
-            self.nlp = None
-        # self.sentiment_analyzer = TextBlob  # Temporarily disabled due to NumPy version conflict
-        self.sentiment_analyzer = None
-
-    def analyze_article(self, article_data: dict) -> dict:
-        """Comprehensive article analysis"""
-        text = article_data.get("title", "") + " " + article_data.get("description", "")
-
-        analysis = {
-            "entities": self._extract_entities(text),
-            "sentiment": self._analyze_sentiment(text),
-            "topics": self._extract_topics(text),
-            "readability": self._calculate_readability(text),
-            "urgency": self._assess_urgency(article_data.get("title", "")),
-            "relevance_indicators": self._extract_relevance_indicators(text),
-        }
-        return analysis
-
-    def _extract_entities(self, text: str) -> dict:
-        """Extract named entities from text"""
-        if not self.nlp:
-            # Fallback entity extraction
-            return {
-                "companies": self._extract_companies_fallback(text),
-                "people": [],
-                "locations": [],
-                "dates": [],
-                "money": [],
-            }
-
-        try:
-            doc = self.nlp(text)
-            entities = {
-                "companies": [ent.text for ent in doc.ents if ent.label_ == "ORG"],
-                "people": [ent.text for ent in doc.ents if ent.label_ == "PERSON"],
-                "locations": [ent.text for ent in doc.ents if ent.label_ == "GEO"],
-                "dates": [ent.text for ent in doc.ents if ent.label_ == "DATE"],
-                "money": [ent.text for ent in doc.ents if ent.label_ == "MONEY"],
-            }
-            return entities
-        except Exception as e:
-            logger.error(f"Error in entity extraction: {e}")
-            return {
-                "companies": self._extract_companies_fallback(text),
-                "people": [],
-                "locations": [],
-                "dates": [],
-                "money": [],
-            }
-
-    def _extract_companies_fallback(self, text: str) -> List[str]:
-        """Fallback company extraction using simple patterns"""
-        companies = []
-        # Common company patterns
-        company_patterns = [
-            r"\b[A-Z]{2,}(?:\.[A-Z]{2,})*\b",  # All caps words (like AAPL, MSFT)
-            r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Inc|Corp|LLC|Ltd|Company|Co)\b",  # Company names
-        ]
-
-        import re
-
-        for pattern in company_patterns:
-            matches = re.findall(pattern, text)
-            companies.extend(matches)
-
-        return list(set(companies))[:5]  # Limit to 5 companies
-
-    def _analyze_sentiment(self, text: str) -> dict:
-        """Analyze text sentiment"""
-        if self.sentiment_analyzer is None:
-            # Fallback sentiment analysis - simple keyword-based approach
-            positive_words = ['good', 'great', 'excellent', 'positive', 'up', 'rise', 'gain', 'profit', 'success', 'growth']
-            negative_words = ['bad', 'poor', 'negative', 'down', 'fall', 'loss', 'decline', 'drop', 'crash', 'failure']
-            
-            text_lower = text.lower()
-            pos_count = sum(1 for word in positive_words if word in text_lower)
-            neg_count = sum(1 for word in negative_words if word in text_lower)
-            
-            # Simple polarity calculation
-            total = pos_count + neg_count
-            polarity = (pos_count - neg_count) / max(total, 1) if total > 0 else 0
-            polarity = max(-1, min(1, polarity))  # Clamp to -1, 1
-            
-            return {
-                "polarity": polarity,
-                "subjectivity": 0.5,  # Default subjectivity
-                "emotion": self._classify_emotion(text),
-            }
-        
-        blob = self.sentiment_analyzer(text)
-        return {
-            "polarity": blob.sentiment.polarity,  # -1 to 1
-            "subjectivity": blob.sentiment.subjectivity,  # 0 to 1
-            "emotion": self._classify_emotion(text),
-        }
-
-    def _classify_emotion(self, text: str) -> str:
-        """Simple emotion classification"""
-        text_lower = text.lower()
-        if any(
-            word in text_lower for word in ["positive", "growth", "profit", "success"]
-        ):
-            return "positive"
-        elif any(
-            word in text_lower for word in ["negative", "loss", "decline", "failure"]
-        ):
-            return "negative"
-        else:
-            return "neutral"
-
-    def _extract_topics(self, text: str) -> dict:
-        """Extract main topics from text"""
-        text_lower = text.lower()
-
-        # Simple topic extraction based on keywords
-        topics = {
-            "earnings": [
-                "earnings",
-                "quarterly",
-                "revenue",
-                "profit",
-                "financial results",
-            ],
-            "technology": [
-                "tech",
-                "software",
-                "ai",
-                "artificial intelligence",
-                "digital",
-            ],
-            "finance": ["finance", "banking", "investment", "market", "trading"],
-            "regulatory": ["regulation", "compliance", "legal", "government", "policy"],
-        }
-
-        detected_topics = []
-        for topic, keywords in topics.items():
-            if any(keyword in text_lower for keyword in keywords):
-                detected_topics.append(topic)
-
-        return {
-            "primary_topic": detected_topics[0] if detected_topics else "general",
-            "secondary_topics": detected_topics[1:] if len(detected_topics) > 1 else [],
-            "keywords": self._extract_keywords(text),
-        }
-
-    def _extract_keywords(self, text: str) -> List[str]:
-        """Extract important keywords"""
-        # Simple keyword extraction
-        words = text.lower().split()
-        # Filter out common words and short words
-        stop_words = {
-            "the",
-            "a",
-            "an",
-            "and",
-            "or",
-            "but",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "of",
-            "with",
-            "by",
-        }
-        keywords = [word for word in words if len(word) > 3 and word not in stop_words]
-        return keywords[:10]  # Return top 10 keywords
-
-    def _calculate_readability(self, text: str) -> dict:
-        """Calculate readability metrics"""
-        words = text.split()
-        sentences = text.split(".")
-
-        return {
-            "word_count": len(words),
-            "sentence_count": len(sentences),
-            "avg_sentence_length": len(words) / len(sentences) if sentences else 0,
-            "complexity_level": "intermediate" if len(words) > 100 else "simple",
-        }
-
-    def _assess_urgency(self, headline: str) -> float:
-        """Assess how urgent/time-sensitive the article is"""
-        urgency_indicators = [
-            "breaking",
-            "urgent",
-            "immediate",
-            "just in",
-            "live",
-            "developing",
-            "update",
-            "alert",
-        ]
-
-        urgency_score = 0
-        headline_lower = headline.lower()
-        for indicator in urgency_indicators:
-            if indicator in headline_lower:
-                urgency_score += 0.2
-
-        return min(urgency_score, 1.0)
-
-    def _extract_relevance_indicators(self, text: str) -> dict:
-        """Extract indicators of article relevance"""
-        return {
-            "market_impact": self._assess_market_impact(text),
-            "sector_relevance": self._assess_sector_relevance(text),
-            "geographic_relevance": self._assess_geographic_relevance(text),
-        }
-
-    def _assess_market_impact(self, text: str) -> float:
-        """Assess potential market impact"""
-        impact_indicators = [
-            "stock",
-            "market",
-            "trading",
-            "price",
-            "shares",
-            "investor",
-        ]
-        text_lower = text.lower()
-        impact_score = sum(
-            0.15 for indicator in impact_indicators if indicator in text_lower
-        )
-        return min(impact_score, 1.0)
-
-    def _assess_sector_relevance(self, text: str) -> float:
-        """Assess sector relevance"""
-        sectors = ["technology", "finance", "healthcare", "energy", "consumer"]
-        text_lower = text.lower()
-        sector_score = sum(0.2 for sector in sectors if sector in text_lower)
-        return min(sector_score, 1.0)
-
-    def _assess_geographic_relevance(self, text: str) -> float:
-        """Assess geographic relevance"""
-        regions = ["us", "usa", "united states", "europe", "asia", "china", "japan"]
-        text_lower = text.lower()
-        geo_score = sum(0.15 for region in regions if region in text_lower)
-        return min(geo_score, 1.0)
-
-
-class UserProfileEngine:
-    def __init__(self):
-        self.profile_weights = {
-            "explicit_preferences": 0.3,
-            "implicit_preferences": 0.4,
-            "temporal_factors": 0.2,
-            "social_signals": 0.1,
-        }
-
-    def build_user_profile(self, user_id: int, db) -> dict:
-        """Build comprehensive user profile"""
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            return self._get_default_profile()
-
-        interactions = (
-            db.query(UserInteraction).filter(UserInteraction.user_id == user_id).all()
-        )
-
-        profile = {
-            "explicit_preferences": self._extract_explicit_preferences(user),
-            "implicit_preferences": self._learn_implicit_preferences(interactions),
-            "temporal_patterns": self._analyze_temporal_patterns(interactions),
-            "engagement_metrics": self._calculate_engagement_metrics(interactions),
-            "content_affinities": self._analyze_content_affinities(interactions),
-        }
-        return profile
-
-    def _get_default_profile(self) -> dict:
-        """Return default profile for new users"""
-        return {
-            "explicit_preferences": {"tickers": [], "categories": [], "sources": []},
-            "implicit_preferences": {
-                "categories": {},
-                "sentiment_preference": 0,
-                "article_length_preference": "medium",
-            },
-            "temporal_patterns": {"peak_usage_hours": [9, 12, 17], "recency_bias": 0.7},
-            "engagement_metrics": {
-                "avg_time_spent": 30,
-                "click_through_rate": 0.1,
-                "save_rate": 0.05,
-            },
-            "content_affinities": {
-                "topic_affinities": {},
-                "entity_affinities": {"companies": [], "people": []},
-            },
-        }
-
-    def _extract_explicit_preferences(self, user: User) -> dict:
-        """Extract user's explicitly stated preferences"""
-        trades = eval(user.trades) if user.trades else []
-        return {
-            "tickers": trades,
-            "categories": ["business", "technology", "finance"],  # Default categories
-            "sources": ["reuters", "bloomberg", "cnbc"],
-            "excluded_sources": [],
-        }
-
-    def _learn_implicit_preferences(self, interactions: List[UserInteraction]) -> dict:
-        """Learn preferences from user behavior patterns"""
-        preferences = {
-            "categories": {},
-            "sources": {},
-            "sentiment_preference": 0,
-            "article_length_preference": "medium",
-            "engagement_thresholds": {},
-        }
-
-        if not interactions:
-            return preferences
-
-        # Analyze interaction patterns
-        for interaction in interactions:
-            if interaction.article:
-                # Update category preferences based on engagement
-                if interaction.article.category:
-                    if interaction.article.category not in preferences["categories"]:
-                        preferences["categories"][interaction.article.category] = 0
-
-                    # Weight based on interaction type
-                    weight = 0.1
-                    if interaction.interaction_type == "save":
-                        weight = 0.8
-                    elif interaction.interaction_type == "click":
-                        weight = 0.3
-
-                    preferences["categories"][interaction.article.category] += weight
-
-                # Update sentiment preference
-                if interaction.article.sentiment_score:
-                    sentiment_weight = 0.1
-                    if interaction.interaction_type == "save":
-                        sentiment_weight = 0.5
-                    elif interaction.interaction_type == "remove":
-                        sentiment_weight = -0.3
-
-                    preferences["sentiment_preference"] += (
-                        interaction.article.sentiment_score * sentiment_weight
-                    )
-
-        # Normalize sentiment preference
-        if interactions:
-            preferences["sentiment_preference"] = max(
-                -1.0, min(1.0, preferences["sentiment_preference"])
-            )
-
-        return preferences
-
-    def _analyze_temporal_patterns(self, interactions: List[UserInteraction]) -> dict:
-        """Analyze time-based usage patterns"""
-        if not interactions:
-            return {"peak_usage_hours": [9, 12, 17], "recency_bias": 0.7}
-
-        hourly_usage = [0] * 24
-        for interaction in interactions:
-            hour = interaction.timestamp.hour
-            hourly_usage[hour] += 1
-
-        # Find peak hours (hours with usage above 70% of max)
-        max_usage = max(hourly_usage)
-        peak_threshold = max_usage * 0.7
-        peak_hours = [
-            hour for hour, usage in enumerate(hourly_usage) if usage >= peak_threshold
-        ]
-
-        return {
-            "peak_usage_hours": peak_hours if peak_hours else [9, 12, 17],
-            "hourly_usage": hourly_usage,
-            "recency_bias": 0.7,
-        }
-
-    def _calculate_engagement_metrics(
-        self, interactions: List[UserInteraction]
-    ) -> dict:
-        """Calculate various engagement metrics"""
-        if not interactions:
-            return {"avg_time_spent": 30, "click_through_rate": 0.1, "save_rate": 0.05}
-
-        total_time = sum(interaction.duration or 0 for interaction in interactions)
-        avg_time = total_time / len(interactions) if interactions else 30
-
-        click_count = sum(1 for i in interactions if i.interaction_type == "click")
-        save_count = sum(1 for i in interactions if i.interaction_type == "save")
-
-        return {
-            "avg_time_spent": avg_time,
-            "click_through_rate": (
-                click_count / len(interactions) if interactions else 0.1
-            ),
-            "save_rate": save_count / len(interactions) if interactions else 0.05,
-            "total_interactions": len(interactions),
-        }
-
-    def _analyze_content_affinities(self, interactions: List[UserInteraction]) -> dict:
-        """Analyze content-based preferences"""
-        topic_affinities = {}
-        entity_affinities = {"companies": [], "people": []}
-
-        for interaction in interactions:
-            if interaction.article and interaction.article.content_analysis:
-                try:
-                    analysis = json.loads(interaction.article.content_analysis)
-
-                    # Update topic affinities
-                    if "topics" in analysis and "primary_topic" in analysis["topics"]:
-                        topic = analysis["topics"]["primary_topic"]
-                        if topic not in topic_affinities:
-                            topic_affinities[topic] = 0
-
-                        weight = 0.1
-                        if interaction.interaction_type == "save":
-                            weight = 0.8
-                        elif interaction.interaction_type == "remove":
-                            weight = -0.3
-
-                        topic_affinities[topic] += weight
-
-                    # Update entity affinities
-                    if "entities" in analysis:
-                        entities = analysis["entities"]
-                        if "companies" in entities:
-                            for company in entities["companies"]:
-                                if company not in entity_affinities["companies"]:
-                                    entity_affinities["companies"].append(company)
-
-                except json.JSONDecodeError:
-                    continue
-
-        return {
-            "topic_affinities": topic_affinities,
-            "entity_affinities": entity_affinities,
-        }
-
-
-class RecommendationScoringEngine:
-    def __init__(self):
-        self.scoring_weights = {
-            "content_relevance": 0.35,
-            "user_affinity": 0.25,
-            "temporal_relevance": 0.20,
-            "source_quality": 0.10,
-            "diversity_factor": 0.10,
-        }
-
-    def calculate_article_score(self, article: Article, user_profile: dict) -> float:
-        """Calculate personalized score for an article"""
-        try:
-            content_analysis = (
-                json.loads(article.content_analysis) if article.content_analysis else {}
-            )
-        except json.JSONDecodeError:
-            content_analysis = {}
-
-        scores = {
-            "content_relevance": self._calculate_content_relevance(
-                article, user_profile, content_analysis
-            ),
-            "user_affinity": self._calculate_user_affinity(
-                article, user_profile, content_analysis
-            ),
-            "temporal_relevance": self._calculate_temporal_relevance(
-                article, user_profile
-            ),
-            "source_quality": self._calculate_source_quality(article),
-            "diversity_factor": self._calculate_diversity_factor(article, user_profile),
-        }
-
-        # Weighted sum of all scores
-        final_score = sum(
-            scores[component] * self.scoring_weights[component] for component in scores
-        )
-
-        return final_score
-
-    def _calculate_content_relevance(
-        self, article: Article, user_profile: dict, content_analysis: dict
-    ) -> float:
-        """Calculate how relevant the content is to user preferences"""
-        relevance_score = 0.0
-
-        # Check explicit preferences
-        user_tickers = user_profile["explicit_preferences"]["tickers"]
-        if (
-            "entities" in content_analysis
-            and "companies" in content_analysis["entities"]
-        ):
-            article_entities = content_analysis["entities"]["companies"]
-
-            # Direct ticker match
-            for ticker in user_tickers:
-                if ticker.upper() in [entity.upper() for entity in article_entities]:
-                    relevance_score += 0.4
-
-        # Topic affinity
-        user_topics = user_profile["content_affinities"]["topic_affinities"]
-        if (
-            "topics" in content_analysis
-            and "primary_topic" in content_analysis["topics"]
-        ):
-            article_topic = content_analysis["topics"]["primary_topic"]
-            if article_topic in user_topics:
-                relevance_score += min(user_topics[article_topic], 1.0) * 0.3
-
-        # Sentiment alignment
-        user_sentiment_pref = user_profile["implicit_preferences"][
-            "sentiment_preference"
-        ]
-        if article.sentiment_score:
-            sentiment_alignment = (
-                1 - abs(user_sentiment_pref - article.sentiment_score) / 2
-            )
-            relevance_score += sentiment_alignment * 0.2
-
-        return min(relevance_score, 1.0)
-
-    def _calculate_user_affinity(
-        self, article: Article, user_profile: dict, content_analysis: dict
-    ) -> float:
-        """Calculate user's historical affinity for similar content"""
-        affinity_score = 0.0
-
-        # Source preference
-        user_sources = user_profile["explicit_preferences"]["sources"]
-        if article.source and article.source.lower() in [
-            s.lower() for s in user_sources
-        ]:
-            affinity_score += 0.3
-
-        # Category preference
-        user_categories = user_profile["implicit_preferences"]["categories"]
-        if article.category and article.category in user_categories:
-            affinity_score += min(user_categories[article.category], 1.0) * 0.4
-
-        return min(affinity_score, 1.0)
-
-    def _calculate_temporal_relevance(
-        self, article: Article, user_profile: dict
-    ) -> float:
-        """Calculate temporal relevance based on user patterns"""
-        temporal_score = 0.0
-
-        # Recency bias
-        article_age_hours = (time.time() - article.datetime) / 3600
-        recency_bias = user_profile["temporal_patterns"]["recency_bias"]
-
-        if article_age_hours < 1:
-            temporal_score += recency_bias * 0.4
-        elif article_age_hours < 24:
-            temporal_score += recency_bias * 0.2
-
-        # Time of day preference
-        current_hour = datetime.now().hour
-        peak_hours = user_profile["temporal_patterns"]["peak_usage_hours"]
-
-        if current_hour in peak_hours:
-            temporal_score += 0.3
-
-        return min(temporal_score, 1.0)
-
-    def _calculate_source_quality(self, article: Article) -> float:
-        """Calculate source quality and reliability score"""
-        source_quality_scores = {
-            "reuters": 0.95,
-            "bloomberg": 0.92,
-            "financial times": 0.90,
-            "wall street journal": 0.88,
-            "cnbc": 0.85,
-            "marketwatch": 0.80,
-            "yahoo finance": 0.75,
-        }
-
-        if article.source:
-            return source_quality_scores.get(article.source.lower(), 0.5)
-        return 0.5
-
-    def _calculate_diversity_factor(
-        self, article: Article, user_profile: dict
-    ) -> float:
-        """Calculate diversity factor to avoid filter bubbles"""
-        diversity_score = 1.0
-
-        # Boost score for underrepresented topics
-        user_topics = user_profile["content_affinities"]["topic_affinities"]
-        if article.category and article.category not in user_topics:
-            diversity_score += 0.2
-
-        return max(diversity_score, 0.0)
-
-
-class LearningAndAdaptationEngine:
-    def __init__(self):
-        self.learning_rate = 0.1
-        self.decay_factor = 0.95
-        self.minimum_confidence = 0.3
-
-    def update_user_profile(self, user_id: int, interaction: UserInteraction, db):
-        """Update user profile based on new interaction"""
-        # This would update the user profile in real-time
-        # For now, we'll just log the interaction
-        logger.info(
-            f"User {user_id} {interaction.interaction_type} article {interaction.article_id}"
-        )
-
-    def _calculate_learning_signal(self, interaction: UserInteraction) -> float:
-        """Calculate the strength of the learning signal from interaction"""
-        base_signals = {
-            "click": 0.3,
-            "save": 0.8,
-            "remove": -0.5,
-        }
-
-        base_signal = base_signals.get(interaction.interaction_type, 0.0)
-
-        # Adjust based on duration (time spent)
-        if interaction.duration:
-            duration_factor = min(interaction.duration / 60, 2.0)  # Cap at 2 minutes
-            base_signal *= duration_factor
-
-        return base_signal
-
-
-class PersonalizationOrchestrator:
-    def __init__(self):
-        self.profile_engine = UserProfileEngine()
-        self.content_analyzer = ContentAnalysisEngine()
-        self.scoring_engine = RecommendationScoringEngine()
-        self.learning_engine = LearningAndAdaptationEngine()
-        self.cache = {}
-
-    def get_personalized_news(self, user_id: int, db, limit: int = 20) -> List[Article]:
-        """Main method to get personalized news feed"""
-
-        # Get user profile
-        user_profile = self.profile_engine.build_user_profile(user_id, db)
-
-        # Get candidate articles
-        candidate_articles = db.query(Article).filter(Article.removed == False).all()
-
-        # Score and rank articles
-        scored_articles = []
-        for article in candidate_articles:
-            score = self.scoring_engine.calculate_article_score(article, user_profile)
-            scored_articles.append((article, score))
-
-        # Sort by score and apply diversity
-        ranked_articles = self._apply_diversity_filter(scored_articles, limit)
-
-        return [article for article, score in ranked_articles]
-
-    def _apply_diversity_filter(
-        self, scored_articles: List[tuple], limit: int
-    ) -> List[tuple]:
-        """Apply diversity filter to avoid filter bubbles"""
-        if len(scored_articles) <= limit:
-            return scored_articles
-
-        # Sort by score first
-        sorted_articles = sorted(scored_articles, key=lambda x: x[1], reverse=True)
-
-        # Apply diversity penalty
-        selected_articles = []
-        category_counts = {}
-
-        for article, score in sorted_articles:
-            category = article.category or "general"
-
-            # Apply diversity penalty
-            diversity_penalty = category_counts.get(category, 0) * 0.1
-            adjusted_score = score - diversity_penalty
-
-            # Select article if it's still in top after penalty
-            if len(selected_articles) < limit:
-                selected_articles.append((article, adjusted_score))
-                category_counts[category] = category_counts.get(category, 0) + 1
-
-        return selected_articles
-
-
-# Initialize consolidated News Intelligence service
-news_intelligence = NewsIntelligenceService()
-
-# Initialize personalization orchestrator
-personalization_orchestrator = PersonalizationOrchestrator()
-
 # Configure Gemini
+print(os.getenv("GEMINI_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # FastAPI app setup
@@ -1003,6 +230,7 @@ app.add_middleware(
 )
 
 
+<<<<<<< HEAD
 # Utility functions
 def get_db():
     db = SessionLocal()
@@ -2171,6 +1399,8 @@ async def get_breaking_news(request: Request, db: Session = Depends(get_db)):
         return {"articles": [], "count": 0, "error": str(e)}
 
 
+=======
+>>>>>>> 8307a4c (changed backend)
 # Middleware for logging
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -2183,486 +1413,482 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-
-@app.post("/api/articles/{article_id}/unsave")
-def unsave_article(article_id: str, db=Depends(get_db)):
-    """Remove article from saved list"""
+# Database dependency
+def get_db():
     db = SessionLocal()
-    article = db.query(Article).filter(Article.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="Article not found")
-    article.saved = False
-    db.commit()
-    db.close()
-    return {"status": "unsaved"}
-
-
-@app.get("/api/articles/saved", response_model=List[ArticleModel])
-def get_saved_articles(db=Depends(get_db)):
-    """Get all saved articles"""
-    db = SessionLocal()
-    saved_articles = db.query(Article).filter(Article.saved == True).all()
-
-    response_articles = []
-    for article in saved_articles:
-        response_articles.append(
-            ArticleModel(
-                id=article.id,
-                headline=article.headline,
-                summary=article.summary,
-                url=article.url,
-                datetime=article.datetime,
-                category=article.category,
-                sentiment_score=article.sentiment_score,
-                relevance_score=article.relevance_score,
-                source=article.source,
-                tags=article.tags,
-            )
-        )
-
-    db.close()
-    return response_articles
-
-
-# Market Data Endpoints
-
-
-def get_ticker_info(symbol: str) -> TickerInfo:
-    """Get comprehensive ticker information from yfinance"""
     try:
-        if not YFINANCE_AVAILABLE:
-            return {"symbol": symbol, "price": 0.0, "change": 0.0, "changePercent": 0.0}
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        yield db
+    finally:
+        db.close()
 
-        # Get current price and calculate change
-        current_price = info.get("currentPrice", 0.0)
-        previous_close = info.get("previousClose", 0.0)
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-        if current_price == 0.0:
-            # Fallback to regular market price if currentPrice is not available
-            current_price = info.get("regularMarketPrice", 0.0)
+# Pydantic models for API requests/responses
+class ChatRequest(BaseModel):
+    message: str
+    user_id: Optional[int] = 1
+    conversation_history: Optional[List[Dict]] = []
 
-        change = current_price - previous_close if previous_close else 0.0
-        change_percent = (change / previous_close * 100) if previous_close else 0.0
-
-        return TickerInfo(
-            symbol=symbol.upper(),
-            name=info.get("longName", symbol),
-            current_price=round(current_price, 2),
-            previous_close=round(previous_close, 2),
-            change=round(change, 2),
-            change_percent=round(change_percent, 2),
-            volume=info.get("volume"),
-            market_cap=info.get("marketCap"),
-            day_high=info.get("dayHigh"),
-            day_low=info.get("dayLow"),
-            year_high=info.get("fiftyTwoWeekHigh"),
-            year_low=info.get("fiftyTwoWeekLow"),
-        )
-    except Exception as e:
-        logger.error(f"Error fetching ticker info for {symbol}: {e}")
-        # Return default ticker info on error
-        return TickerInfo(
-            symbol=symbol.upper(),
-            name=symbol,
-            current_price=0.0,
-            previous_close=0.0,
-            change=0.0,
-            change_percent=0.0,
-        )
-
-
-@app.get("/api/market/ticker/{symbol}", response_model=TickerInfo)
-@limiter.limit("60/minute")
-async def get_ticker(symbol: str, request: Request):
-    """Get detailed information for a specific ticker"""
-    return get_ticker_info(symbol)
-
-
-@app.get("/api/market/summary", response_model=MarketSummary)
-@limiter.limit("30/minute")
-async def get_market_summary(
-    request: Request, tickers: str = "AAPL,TSLA,MSFT,GOOGL,AMZN"
-):
-    """Get market summary for multiple tickers"""
-    ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
-
-    # Limit to 10 tickers to avoid rate limiting
-    ticker_list = ticker_list[:10]
-
-    ticker_infos = []
-    for symbol in ticker_list:
-        ticker_info = get_ticker_info(symbol)
-        ticker_infos.append(ticker_info)
-
-    return MarketSummary(tickers=ticker_infos, last_updated=datetime.now().isoformat())
-
-
-@app.get("/api/market/user-tickers", response_model=MarketSummary)
-@limiter.limit("60/minute")
-async def get_user_market_data(request: Request, db=Depends(get_db)):
-    """Get market data for user's preferred tickers"""
-
-    # Get or create user (simplified for demo)
-    user = db.query(User).filter(User.id == "demo_1").first()
-    if not user:
-        user = User(
-            id="demo_1",
-            username="demo_user",
-            email="demo@example.com",
-            provider="demo",
-            provider_id="demo_1",
-            trades=json.dumps([]),
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    # Get user preferences from trades
-    user_tickers = json.loads(user.trades) if user.trades else []
-    tickers = user_tickers
-
-    if not tickers:
-        # Default tickers if user has no preferences
-        tickers = ["AAPL", "TSLA", "MSFT"]
-
-    # Get market data for user's tickers
-    ticker_infos = []
-    for symbol in tickers[:10]:  # Limit to 10 tickers
-        ticker_info = get_ticker_info(symbol)
-        ticker_infos.append(ticker_info)
-
-    return MarketSummary(tickers=ticker_infos, last_updated=datetime.now().isoformat())
-
-
-@app.get("/api/market/search/{query}")
-@limiter.limit("30/minute")
-async def search_tickers(query: str, request: Request):
-    """Search for tickers by company name or symbol"""
-    try:
-        # Use yfinance search functionality
-        if not YFINANCE_AVAILABLE:
-            return {"results": []}
-        search_results = yf.search(query)
-
-        # Format results
-        results = []
-        for result in search_results.head(10).iterrows():
-            data = result[1]
-            results.append(
-                {
-                    "symbol": data.get("symbol", ""),
-                    "name": data.get("longname", ""),
-                    "type": data.get("quoteType", ""),
-                    "exchange": data.get("exchange", ""),
-                }
-            )
-
-        return {"results": results}
-    except Exception as e:
-        logger.error(f"Error searching tickers for query '{query}': {e}")
-        return {"results": []}
-
-
-
-
-# SEC Document Endpoints - Added by add_sec_routes.py
-try:
-    from sec_service import sec_service
-    SEC_SERVICE_AVAILABLE = True
-except ImportError:
-    print("Warning: SEC service not available")
-    SEC_SERVICE_AVAILABLE = False
-
-class SECSearchRequest(BaseModel):
+class EnhancedSearchRequest(BaseModel):
     query: str
-    limit: Optional[int] = 50
+    user_id: Optional[int] = 1
+    use_agent: bool = True
+    limit: int = 10
 
-class SECDocumentResponse(BaseModel):
-    id: str
-    title: str
-    company: str
-    ticker: str
-    documentType: str
-    filingDate: str
-    url: str
-    content: Optional[str] = None
-    html_content: Optional[str] = None
-    highlights: Optional[List[Dict]] = None
+# Result transformation functions
+def transform_agent_results_to_articles(agent_results):
+    """Transform news agent results to frontend-compatible article format"""
+    articles = []
 
-@app.post("/api/sec/search")
-@limiter.limit("20/minute")
-async def search_sec_documents(
-    sec_request: SECSearchRequest, 
-    request: Request,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Search for SEC documents by company name, ticker, or document type"""
-    if not SEC_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC service not available")
-    
+    if not agent_results or not isinstance(agent_results, list):
+        return articles
+
+    for result in agent_results:
+        if result.get('status') != 'success' or not result.get('results'):
+            continue
+
+        retriever_name = result.get('retriever', 'Unknown')
+        results = result.get('results', [])
+
+        # Handle different result formats from different retrievers
+        for item in results:
+            article = transform_single_result_to_article(item, retriever_name)
+            if article:
+                articles.append(article)
+
+    return articles
+
+def transform_single_result_to_article(item, source_retriever):
+    """Transform a single retrieval result to article format"""
     try:
-        logger.info(f"SEC search request: {sec_request.query}")
-        
-        # Search for documents
-        documents = sec_service.search_documents(sec_request.query, sec_request.limit)
-        
-        # Format response
-        response_docs = []
-        for doc in documents:
-            response_docs.append(SECDocumentResponse(
-                id=doc["id"],
-                title=doc["title"],
-                company=doc["company"],
-                ticker=doc["ticker"],
-                documentType=doc["documentType"],
-                filingDate=doc["filingDate"],
-                url=doc["url"]
-            ))
-        
-        return {"documents": response_docs}
-        
-    except Exception as e:
-        logger.error(f"Error in SEC search: {e}")
-        raise HTTPException(status_code=500, detail="Failed to search SEC documents")
-
-@app.get("/api/sec/document/{doc_id}")
-@limiter.limit("10/minute") 
-async def get_sec_document(
-    doc_id: str,
-    query: Optional[str] = None,
-    request: Request = None,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Get full SEC document content with optional query highlighting"""
-    if not SEC_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC service not available")
-        
-    try:
-        # Parse document ID (format: cik_accession)
-        parts = doc_id.split("_", 1)
-        if len(parts) != 2:
-            raise HTTPException(status_code=400, detail="Invalid document ID format")
-        
-        cik, accession = parts
-        
-        # Get document URL
-        acc_no_dash = accession.replace("-", "")
-        doc_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_no_dash}"
-        
-        # Get filings to find the primary document
-        filings_data = sec_service.get_latest_filings(cik)
-        if not filings_data:
-            raise HTTPException(status_code=404, detail="Document not found")
-        
-        # Find the specific filing
-        recent = filings_data.get("filings", {}).get("recent", {})
-        accessions = recent.get("accessionNumber", [])
-        docs = recent.get("primaryDocument", [])
-        forms = recent.get("form", [])
-        dates = recent.get("filingDate", [])
-        
-        primary_doc = None
-        form_type = None
-        filing_date = None
-        
-        for i, acc in enumerate(accessions):
-            if acc == accession:
-                primary_doc = docs[i] if i < len(docs) else None
-                form_type = forms[i] if i < len(forms) else "Unknown"
-                filing_date = dates[i] if i < len(dates) else "Unknown"
-                break
-        
-        if not primary_doc:
-            raise HTTPException(status_code=404, detail="Primary document not found")
-        
-        # Construct full URL
-        full_url = f"{doc_url}/{primary_doc}"
-        
-        # Get document content (both text and HTML)
-        content = sec_service.get_document_content(full_url)
-        html_content = sec_service.get_document_html(full_url)
-        if not content and not html_content:
-            raise HTTPException(status_code=404, detail="Failed to retrieve document content")
-        
-        # Generate highlights if query provided
-        highlights = []
-        if query:
-            highlights = sec_service.search_document_content(content, query)
-        
-        # Get company name
-        company_name = filings_data.get("name", "Unknown Company")
-        ticker = sec_service._get_ticker_from_cik(cik)
-        
-        return SECDocumentResponse(
-            id=doc_id,
-            title=f"Form {form_type}",
-            company=company_name,
-            ticker=ticker,
-            documentType=form_type,
-            filingDate=filing_date,
-            url=full_url,
-            content=content,
-            html_content=html_content,
-            highlights=highlights
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting SEC document {doc_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve document")
-
-@app.get("/api/sec/company/{ticker}")
-@limiter.limit("15/minute")
-async def get_company_filings(
-    ticker: str,
-    limit: Optional[int] = 50,
-    request: Request = None,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Get recent SEC filings for a specific company by ticker"""
-    if not SEC_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC service not available")
-        
-    try:
-        # Get CIK from ticker
-        cik = sec_service.get_cik_from_ticker(ticker)
-        if not cik:
-            raise HTTPException(status_code=404, detail=f"Company not found for ticker: {ticker}")
-        
-        # Get company filings
-        filings = sec_service.get_company_filings(cik, limit=limit)
-        
-        # Format response
-        response_docs = []
-        for filing in filings[:limit]:
-            response_docs.append(SECDocumentResponse(
-                id=filing["id"],
-                title=filing["title"],
-                company=filing["company"],
-                ticker=filing["ticker"],
-                documentType=filing["documentType"],
-                filingDate=filing["filingDate"],
-                url=filing["url"]
-            ))
-        
-        return {"documents": response_docs}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting filings for ticker {ticker}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve company filings")
-
-# SEC RAG Endpoints - Document-specific RAG search
-try:
-    from sec_rag_service import sec_rag_service
-    SEC_RAG_SERVICE_AVAILABLE = True
-except ImportError:
-    logger.warning("SEC RAG service not available")
-    SEC_RAG_SERVICE_AVAILABLE = False
-
-class SECRAGQueryRequest(BaseModel):
-    document_id: str
-    query: str
-    top_k: Optional[int] = 5
-
-class SECRAGResponse(BaseModel):
-    answer: str
-    chunks: List[Dict]
-    document_info: Optional[Dict] = None
-    metadata: Optional[Dict] = None
-    query: str
-    error: Optional[str] = None
-
-@app.post("/api/sec/rag/query")
-@limiter.limit("10/minute")
-async def query_sec_document_rag(
-    rag_request: SECRAGQueryRequest,
-    request: Request,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Query a SEC document using RAG (Retrieval-Augmented Generation)"""
-    if not SEC_RAG_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC RAG service not available")
-    
-    try:
-        logger.info(f"SEC RAG query for document {rag_request.document_id}: {rag_request.query}")
-        
-        # First, ensure document is processed
-        document_processed = await sec_rag_service.process_document(rag_request.document_id)
-        if not document_processed:
-            raise HTTPException(status_code=500, detail="Failed to process document for RAG")
-        
-        # Query the document
-        result = sec_rag_service.query_document(rag_request.document_id, rag_request.query, rag_request.top_k)
-        
-        return SECRAGResponse(**result)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in SEC RAG query: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process RAG query")
-
-@app.post("/api/sec/rag/process/{doc_id}")
-@limiter.limit("5/minute")
-async def process_sec_document_for_rag(
-    doc_id: str,
-    request: Request,
-    force_refresh: Optional[bool] = False,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Process a SEC document for RAG queries"""
-    if not SEC_RAG_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC RAG service not available")
-    
-    try:
-        logger.info(f"Processing SEC document for RAG: {doc_id}")
-        
-        success = await sec_rag_service.process_document(doc_id, force_refresh=force_refresh)
-        
-        if success:
-            status_info = sec_rag_service.get_document_status(doc_id)
+        # Handle different item formats
+        if isinstance(item, dict):
             return {
-                "status": "success",
-                "document_id": doc_id,
-                "message": f"Document processed successfully into {status_info['chunk_count']} chunks",
-                **status_info
+                "id": item.get('id') or f"{source_retriever}-{hash(str(item))}"[:16],
+                "date": format_article_date(item.get('published_date') or item.get('date') or item.get('timestamp')),
+                "title": item.get('title') or item.get('headline') or 'Untitled Article',
+                "source": item.get('source') or source_retriever,
+                "preview": item.get('summary') or item.get('description') or item.get('content', '')[:200] + "...",
+                "sentiment": determine_sentiment(item.get('sentiment')),
+                "tags": extract_tags_from_item(item),
+                "url": item.get('url') or item.get('link'),
+                "relevance_score": item.get('relevance_score') or 0.5,
+                "category": item.get('category') or 'General'
             }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to process document")
-        
-    except HTTPException:
-        raise
+        elif isinstance(item, str):
+            return {
+                "id": f"{source_retriever}-{hash(item)}"[:16],
+                "date": "Today",
+                "title": item[:100] + "..." if len(item) > 100 else item,
+                "source": source_retriever,
+                "preview": item,
+                "sentiment": 'neutral',
+                "tags": [],
+                "url": None,
+                "relevance_score": 0.3,
+                "category": 'General'
+            }
     except Exception as e:
-        logger.error(f"Error processing document {doc_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process document for RAG")
+        logger.error(f"Error transforming item to article: {e}")
+        return None
 
-@app.get("/api/sec/rag/status/{doc_id}")
-@limiter.limit("20/minute")
-async def get_sec_document_rag_status(
-    doc_id: str,
-    request: Request,
-    current_user: Optional[UserInfo] = Depends(get_current_user_optional)
-):
-    """Get RAG processing status for a SEC document"""
-    if not SEC_RAG_SERVICE_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SEC RAG service not available")
-    
+def format_article_date(date_input):
+    """Format various date inputs to frontend-compatible format"""
+    if not date_input:
+        return "Today"
+
     try:
-        status_info = sec_rag_service.get_document_status(doc_id)
-        return {
-            "document_id": doc_id,
-            **status_info
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting RAG status for document {doc_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get document status")
+        if isinstance(date_input, str):
+            # Try parsing various date formats
+            from dateutil import parser
+            date_obj = parser.parse(date_input)
+        else:
+            date_obj = date_input
 
+        # Return relative time
+        now = datetime.now()
+        diff = now - date_obj
+
+        if diff.days == 0:
+            return "Today"
+        elif diff.days == 1:
+            return "Yesterday"
+        elif diff.days < 7:
+            return f"{diff.days} days ago"
+        else:
+            return date_obj.strftime("%b %d")
+    except:
+        return "Today"
+
+def determine_sentiment(sentiment_input):
+    """Determine sentiment from various inputs"""
+    if not sentiment_input:
+        return 'neutral'
+
+    if isinstance(sentiment_input, (int, float)):
+        if sentiment_input > 0.1:
+            return 'positive'
+        elif sentiment_input < -0.1:
+            return 'negative'
+        else:
+            return 'neutral'
+
+    sentiment_str = str(sentiment_input).lower()
+    if 'positive' in sentiment_str or 'bullish' in sentiment_str:
+        return 'positive'
+    elif 'negative' in sentiment_str or 'bearish' in sentiment_str:
+        return 'negative'
+    else:
+        return 'neutral'
+
+def extract_tags_from_item(item):
+    """Extract tags from various item formats"""
+    tags = []
+
+    # Try different tag fields
+    for field in ['tags', 'keywords', 'topics', 'symbols']:
+        if field in item and item[field]:
+            if isinstance(item[field], list):
+                tags.extend([str(tag) for tag in item[field]])
+            else:
+                tags.append(str(item[field]))
+
+    return list(set(tags))  # Remove duplicates
+
+# API Endpoints
+
+# Note: Enhanced search and chat endpoints are now handled by the chat_router
+
+def create_findings_summary(agent_results, articles):
+    """Create a summary of findings for Gemini"""
+    if not agent_results:
+        return "No results found."
+
+    summary_parts = []
+
+    # Count successful retrievers
+    if isinstance(agent_results, list):
+        successful = [r for r in agent_results if r.get('status') == 'success']
+        failed = [r for r in agent_results if r.get('status') == 'error']
+
+        summary_parts.append(f"Searched {len(agent_results)} sources, {len(successful)} successful.")
+
+        if successful:
+            sources = [r.get('retriever', 'Unknown') for r in successful]
+            summary_parts.append(f"Active sources: {', '.join(set(sources))}")
+
+    summary_parts.append(f"Found {len(articles)} relevant articles.")
+
+    # Add sample titles
+    if articles:
+        sample_titles = [a['title'] for a in articles[:3]]
+        summary_parts.append(f"Key articles: {'; '.join(sample_titles)}")
+
+    return "\n".join(summary_parts)
+
+# Import handler routers
+try:
+    from query_handler.chat_router import add_chat_routes
+    from query_handler.article_retriever_router import add_article_retrieval_routes
+    from query_handler.chat_history_routes import add_chat_history_routes
+    from ticker_handler.ticker_routes import add_ticker_routes
+    from db_handler.user_routes import add_user_routes
+    HANDLERS_AVAILABLE = True
+except Exception as e:
+    HANDLERS_AVAILABLE = False
+    logger.warning(f"Handler modules not available: {e}")
+
+# Re-enable handlers after fixing parameter ordering
+HANDLERS_AVAILABLE = True
+logger.info("✅ Using handler routes with fixed parameter ordering")
+
+# Add all routes from handlers if available
+if HANDLERS_AVAILABLE:
+    try:
+        add_chat_routes(app, limiter, get_db, User, ChatHistory)
+        add_article_retrieval_routes(app, limiter, get_db, Article)
+        add_chat_history_routes(app, limiter, get_db, ChatHistory)
+        add_ticker_routes(app, limiter, get_db, User)
+        add_user_routes(app, limiter, get_db, User, Article)
+        logger.info("✅ All handler routes loaded successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to load handler routes: {e}")
+        HANDLERS_AVAILABLE = False
+
+# Fallback routes when handlers are not available
+if not HANDLERS_AVAILABLE:
+    logger.info("⚠️ Loading fallback routes since handlers are not available")
+
+    @app.get("/api/chat/history")
+    @limiter.limit("10/minute")
+    async def get_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
+        """Get chat history for user (fallback)"""
+        try:
+            history = db.query(ChatHistory).order_by(ChatHistory.timestamp.desc()).limit(50).all()
+            return JSONResponse(content=[
+                {
+                    "id": chat.id,
+                    "query": chat.query,
+                    "response": chat.response,
+                    "timestamp": chat.timestamp.isoformat()
+                }
+                for chat in history
+            ])
+        except Exception as e:
+            logger.error(f"Error getting chat history: {e}")
+            return JSONResponse(content=[])
+
+    @app.post("/api/chat/history")
+    @limiter.limit("20/minute")
+    async def save_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
+        """Save chat query to history (fallback)"""
+        try:
+            data = await request.json()
+            chat_entry = ChatHistory(
+                id=f"chat-{int(time.time())}-{hash(data.get('query', '')) % 10000}",
+                user_id="1",
+                query=data.get('query', ''),
+                response=data.get('response', ''),
+                timestamp=datetime.utcnow()
+            )
+            db.add(chat_entry)
+            db.commit()
+            return JSONResponse(content={"success": True})
+        except Exception as e:
+            logger.error(f"Error saving chat history: {e}")
+            return JSONResponse(content={"success": False, "error": str(e)})
+
+    @app.delete("/api/chat/history/{query_id}")
+    @limiter.limit("10/minute")
+    async def delete_chat_history_fallback(query_id: str, request: Request, db: Session = Depends(get_db)):
+        """Delete chat history entry (fallback)"""
+        try:
+            chat_entry = db.query(ChatHistory).filter(ChatHistory.id == query_id).first()
+            if chat_entry:
+                db.delete(chat_entry)
+                db.commit()
+            return JSONResponse(content={"success": True})
+        except Exception as e:
+            logger.error(f"Error deleting chat history: {e}")
+            return JSONResponse(content={"success": False, "error": str(e)})
+
+    @app.get("/api/market/summary")
+    @limiter.limit("30/minute")
+    async def get_market_summary_fallback(tickers: str, request: Request):
+        """Get market data for tickers (fallback)"""
+        try:
+            ticker_list = tickers.split(',')
+            mock_data = {
+                'AAPL': {'price': 175.20, 'change': 2.15, 'change_percent': 1.24},
+                'MSFT': {'price': 378.85, 'change': -1.25, 'change_percent': -0.33},
+                'NVDA': {'price': 821.67, 'change': 15.42, 'change_percent': 1.91},
+                'TSLA': {'price': 195.33, 'change': -3.12, 'change_percent': -1.57},
+                'AMZN': {'price': 152.74, 'change': 0.87, 'change_percent': 0.57},
+                'GOOGL': {'price': 138.25, 'change': 1.34, 'change_percent': 0.98}
+            }
+            ticker_data = []
+            for ticker in ticker_list:
+                ticker = ticker.strip().upper()
+                if ticker in mock_data:
+                    data = mock_data[ticker]
+                    ticker_data.append({
+                        'symbol': ticker,
+                        'current_price': data['price'],
+                        'change': data['change'],
+                        'change_percent': data['change_percent']
+                    })
+                else:
+                    ticker_data.append({
+                        'symbol': ticker,
+                        'current_price': 100.0,
+                        'change': 0.0,
+                        'change_percent': 0.0
+                    })
+            return JSONResponse(content={'tickers': ticker_data})
+        except Exception as e:
+            logger.error(f"Error getting market data: {e}")
+            return JSONResponse(content={'tickers': []})
+
+    @app.post("/api/user")
+    @limiter.limit("10/minute")
+    async def update_user_fallback(request: Request, db: Session = Depends(get_db)):
+        """Update user preferences (fallback)"""
+        try:
+            data = await request.json()
+            return JSONResponse(content={"success": True})
+        except Exception as e:
+            logger.error(f"Error updating user: {e}")
+            return JSONResponse(content={"success": False, "error": str(e)})
+
+    @app.post("/api/articles/{article_id}/save")
+    @limiter.limit("20/minute")
+    async def save_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
+        """Save an article (fallback)"""
+        try:
+            article = db.query(Article).filter(Article.id == article_id).first()
+            if article:
+                article.saved = True
+                db.commit()
+            return JSONResponse(content={"success": True})
+        except Exception as e:
+            logger.error(f"Error saving article: {e}")
+            return JSONResponse(content={"success": False, "error": str(e)})
+
+    @app.post("/api/articles/{article_id}/unsave")
+    @limiter.limit("20/minute")
+    async def unsave_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
+        """Unsave an article (fallback)"""
+        try:
+            article = db.query(Article).filter(Article.id == article_id).first()
+            if article:
+                article.saved = False
+                db.commit()
+            return JSONResponse(content={"success": True})
+        except Exception as e:
+            logger.error(f"Error unsaving article: {e}")
+            return JSONResponse(content={"success": False, "error": str(e)})
+
+    @app.get("/api/articles/saved")
+    @limiter.limit("30/minute")
+    async def get_saved_articles_fallback(request: Request, db: Session = Depends(get_db)):
+        """Get saved articles (fallback)"""
+        try:
+            saved = db.query(Article).filter(Article.saved == True).limit(20).all()
+            articles = []
+            for article in saved:
+                articles.append({
+                    "id": article.id,
+                    "date": format_article_date(article.datetime),
+                    "title": article.headline,
+                    "source": article.source or 'Unknown',
+                    "preview": article.summary or 'No preview available',
+                    "sentiment": determine_sentiment(article.sentiment_score),
+                    "tags": extract_tags_from_item({"tags": article.tags}) if article.tags else [],
+                    "url": article.url,
+                    "relevance_score": article.relevance_score or 0.5,
+                    "category": article.category or 'General'
+                })
+            return JSONResponse(content=articles)
+        except Exception as e:
+            logger.error(f"Error getting saved articles: {e}")
+            return JSONResponse(content=[])
+
+# Additional aggregated search endpoint for advanced functionality
+@app.post("/api/search/aggregated")
+@limiter.limit("5/minute")
+async def aggregated_search(request: EnhancedSearchRequest, req: Request, db: Session = Depends(get_db)):
+    """Search using both agent and aggregator pipeline"""
+    try:
+        if not NEWS_AGENT_AVAILABLE or not news_agent:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "News agent system not available", "articles": []}
+            )
+
+        logger.info(f"Aggregated search request: {request.query}")
+
+        # Step 1: Use PlannerAgent to get raw results
+        agent_results = await news_agent.run_async(request.query)
+
+        # Step 2: If aggregator is available, process through aggregation pipeline
+        if aggregator_agent:
+            try:
+                # Convert agent results to aggregator input format
+                content_chunks = convert_agent_results_to_chunks(agent_results)
+
+                # Run through aggregator
+                aggregated_output = await aggregator_agent.run_async(content_chunks)
+
+                # Transform aggregated results back to articles
+                articles = transform_aggregated_results_to_articles(aggregated_output)
+
+                return JSONResponse(content={
+                    "success": True,
+                    "articles": articles[:request.limit],
+                    "search_method": "agent_plus_aggregator",
+                    "processing_details": {
+                        "raw_results": len(agent_results) if isinstance(agent_results, list) else 0,
+                        "aggregated_clusters": getattr(aggregated_output, 'clusters', []),
+                        "final_articles": len(articles)
+                    }
+                })
+
+            except Exception as e:
+                logger.error(f"Aggregator processing failed, falling back to agent only: {e}")
+                # Fall back to just agent results
+                articles = transform_agent_results_to_articles(agent_results)
+
+        else:
+            # Just use agent results
+            articles = transform_agent_results_to_articles(agent_results)
+
+        return JSONResponse(content={
+            "success": True,
+            "articles": articles[:request.limit],
+            "search_method": "agent_only",
+            "total_found": len(articles)
+        })
+
+    except Exception as e:
+        logger.error(f"Aggregated search error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e), "articles": []}
+        )
+
+def convert_agent_results_to_chunks(agent_results):
+    """Convert agent results to format expected by aggregator"""
+    chunks = []
+
+    if not isinstance(agent_results, list):
+        return chunks
+
+    for result in agent_results:
+        if result.get('status') != 'success' or not result.get('results'):
+            continue
+
+        retriever_name = result.get('retriever', 'Unknown')
+        results = result.get('results', [])
+
+        for item in results:
+            if isinstance(item, dict):
+                chunk = {
+                    'content': item.get('summary') or item.get('description') or str(item),
+                    'title': item.get('title') or item.get('headline'),
+                    'url': item.get('url') or item.get('link'),
+                    'source': retriever_name,
+                    'metadata': item
+                }
+                chunks.append(chunk)
+
+    return chunks
+
+def transform_aggregated_results_to_articles(aggregated_output):
+    """Transform aggregator output back to article format"""
+    articles = []
+
+    try:
+        if hasattr(aggregated_output, 'clusters'):
+            for cluster in aggregated_output.clusters:
+                # Create an article from each cluster
+                article = {
+                    "id": f"cluster-{hash(str(cluster))}",
+                    "date": "Today",
+                    "title": getattr(cluster, 'title', 'Cluster Summary'),
+                    "source": "Aggregated",
+                    "preview": getattr(cluster, 'summary', 'Aggregated news summary'),
+                    "sentiment": determine_sentiment(getattr(cluster, 'sentiment', None)),
+                    "tags": getattr(cluster, 'tags', []),
+                    "url": None,
+                    "relevance_score": getattr(cluster, 'relevance_score', 0.7),
+                    "category": getattr(cluster, 'category', 'General')
+                }
+                articles.append(article)
+    except Exception as e:
+        logger.error(f"Error transforming aggregated results: {e}")
+
+    return articles
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
