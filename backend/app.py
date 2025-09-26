@@ -82,15 +82,6 @@ def get_ticker_suggestions(query):
 # Import Google Gemini for AI functionality
 import google.generativeai as genai
 
-# Import News Agent System
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-try:
-    from news_agent.agent import PlannerAgent
-    from news_agent.aggregator.aggregator import AggregatorAgent
-    NEWS_AGENT_AVAILABLE = True
-    print("✅ News Agent System available")
-# Import News Agent System
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 try:
@@ -127,11 +118,6 @@ Base = declarative_base()
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize News Agent System
-news_agent = None
-aggregator_agent = None
-
-if NEWS_AGENT_AVAILABLE:
 # Initialize News Agent System
 news_agent = None
 aggregator_agent = None
@@ -627,13 +613,6 @@ if HANDLERS_AVAILABLE:
         logger.error(f"❌ Failed to load handler routes: {e}")
         HANDLERS_AVAILABLE = False
 
-# Fallback routes when handlers are not available
-if not HANDLERS_AVAILABLE:
-    logger.info("⚠️ Loading fallback routes since handlers are not available")
-                tags.append(str(item[field]))
-
-    return list(set(tags))  # Remove duplicates
-
 # API Endpoints
 
 # Note: Enhanced search and chat endpoints are now handled by the chat_router
@@ -910,19 +889,6 @@ if not HANDLERS_AVAILABLE:
         except Exception as e:
             logger.error(f"Error saving article: {e}")
             return JSONResponse(content={"success": False, "error": str(e)})
-    @app.post("/api/articles/{article_id}/save")
-    @limiter.limit("20/minute")
-    async def save_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
-        """Save an article (fallback)"""
-        try:
-            article = db.query(Article).filter(Article.id == article_id).first()
-            if article:
-                article.saved = True
-                db.commit()
-            return JSONResponse(content={"success": True})
-        except Exception as e:
-            logger.error(f"Error saving article: {e}")
-            return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.post("/api/articles/{article_id}/unsave")
     @limiter.limit("20/minute")
@@ -1018,108 +984,39 @@ async def aggregated_search(request: EnhancedSearchRequest, req: Request, db: Se
             "search_method": "agent_only",
             "total_found": len(articles)
         })
-
-    @app.post("/api/articles/{article_id}/unsave")
-    @limiter.limit("20/minute")
-    async def unsave_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
-        """Unsave an article (fallback)"""
-        try:
-            article = db.query(Article).filter(Article.id == article_id).first()
-            if article:
-                article.saved = False
-                db.commit()
-            return JSONResponse(content={"success": True})
-        except Exception as e:
-            logger.error(f"Error unsaving article: {e}")
-            return JSONResponse(content={"success": False, "error": str(e)})
-
-    @app.get("/api/articles/saved")
-    @limiter.limit("30/minute")
-    async def get_saved_articles_fallback(request: Request, db: Session = Depends(get_db)):
-        """Get saved articles (fallback)"""
-        try:
-            saved = db.query(Article).filter(Article.saved == True).limit(20).all()
-            articles = []
-            for article in saved:
-                articles.append({
-                    "id": article.id,
-                    "date": format_article_date(article.datetime),
-                    "title": article.headline,
-                    "source": article.source or 'Unknown',
-                    "preview": article.summary or 'No preview available',
-                    "sentiment": determine_sentiment(article.sentiment_score),
-                    "tags": extract_tags_from_item({"tags": article.tags}) if article.tags else [],
-                    "url": article.url,
-                    "relevance_score": article.relevance_score or 0.5,
-                    "category": article.category or 'General'
-                })
-            return JSONResponse(content=articles)
-        except Exception as e:
-            logger.error(f"Error getting saved articles: {e}")
-            return JSONResponse(content=[])
-
-# Additional aggregated search endpoint for advanced functionality
-@app.post("/api/search/aggregated")
-@limiter.limit("5/minute")
-async def aggregated_search(request: EnhancedSearchRequest, req: Request, db: Session = Depends(get_db)):
-    """Search using both agent and aggregator pipeline"""
-    try:
-        if not NEWS_AGENT_AVAILABLE or not news_agent:
-            return JSONResponse(
-                status_code=503,
-                content={"error": "News agent system not available", "articles": []}
-            )
-
-        logger.info(f"Aggregated search request: {request.query}")
-
-        # Step 1: Use PlannerAgent to get raw results
-        agent_results = await news_agent.run_async(request.query)
-
-        # Step 2: If aggregator is available, process through aggregation pipeline
-        if aggregator_agent:
-            try:
-                # Convert agent results to aggregator input format
-                content_chunks = convert_agent_results_to_chunks(agent_results)
-
-                # Run through aggregator
-                aggregated_output = await aggregator_agent.run_async(content_chunks)
-
-                # Transform aggregated results back to articles
-                articles = transform_aggregated_results_to_articles(aggregated_output)
-
-                return JSONResponse(content={
-                    "success": True,
-                    "articles": articles[:request.limit],
-                    "search_method": "agent_plus_aggregator",
-                    "processing_details": {
-                        "raw_results": len(agent_results) if isinstance(agent_results, list) else 0,
-                        "aggregated_clusters": getattr(aggregated_output, 'clusters', []),
-                        "final_articles": len(articles)
-                    }
-                })
-
-            except Exception as e:
-                logger.error(f"Aggregator processing failed, falling back to agent only: {e}")
-                # Fall back to just agent results
-                articles = transform_agent_results_to_articles(agent_results)
-
-        else:
-            # Just use agent results
-            articles = transform_agent_results_to_articles(agent_results)
-
-        return JSONResponse(content={
-            "success": True,
-            "articles": articles[:request.limit],
-            "search_method": "agent_only",
-            "total_found": len(articles)
-        })
-
     except Exception as e:
         logger.error(f"Aggregated search error: {e}")
         return JSONResponse(
             status_code=500,
             content={"error": str(e), "articles": []}
         )
+
+def convert_agent_results_to_chunks(agent_results):
+    """Convert agent results to format expected by aggregator"""
+    chunks = []
+
+    if not isinstance(agent_results, list):
+        return chunks
+
+    for result in agent_results:
+        if result.get('status') != 'success' or not result.get('results'):
+            continue
+
+        retriever_name = result.get('retriever', 'Unknown')
+        results = result.get('results', [])
+
+        for item in results:
+            if isinstance(item, dict):
+                chunk = {
+                    'content': item.get('summary') or item.get('description') or str(item),
+                    'title': item.get('title') or item.get('headline'),
+                    'url': item.get('url') or item.get('link'),
+                    'source': retriever_name,
+                    'metadata': item
+                }
+                chunks.append(chunk)
+
+    return chunks
 
 def convert_agent_results_to_chunks(agent_results):
     """Convert agent results to format expected by aggregator"""
@@ -1169,65 +1066,11 @@ def transform_aggregated_results_to_articles(aggregated_output):
                     "category": getattr(cluster, 'category', 'General')
                 }
                 articles.append(article)
-        logger.error(f"Aggregated search error: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e), "articles": []}
-        )
 
-def convert_agent_results_to_chunks(agent_results):
-    """Convert agent results to format expected by aggregator"""
-    chunks = []
-
-    if not isinstance(agent_results, list):
-        return chunks
-
-    for result in agent_results:
-        if result.get('status') != 'success' or not result.get('results'):
-            continue
-
-        retriever_name = result.get('retriever', 'Unknown')
-        results = result.get('results', [])
-
-        for item in results:
-            if isinstance(item, dict):
-                chunk = {
-                    'content': item.get('summary') or item.get('description') or str(item),
-                    'title': item.get('title') or item.get('headline'),
-                    'url': item.get('url') or item.get('link'),
-                    'source': retriever_name,
-                    'metadata': item
-                }
-                chunks.append(chunk)
-
-    return chunks
-
-def transform_aggregated_results_to_articles(aggregated_output):
-    """Transform aggregator output back to article format"""
-    articles = []
-
-    try:
-        if hasattr(aggregated_output, 'clusters'):
-            for cluster in aggregated_output.clusters:
-                # Create an article from each cluster
-                article = {
-                    "id": f"cluster-{hash(str(cluster))}",
-                    "date": "Today",
-                    "title": getattr(cluster, 'title', 'Cluster Summary'),
-                    "source": "Aggregated",
-                    "preview": getattr(cluster, 'summary', 'Aggregated news summary'),
-                    "sentiment": determine_sentiment(getattr(cluster, 'sentiment', None)),
-                    "tags": getattr(cluster, 'tags', []),
-                    "url": None,
-                    "relevance_score": getattr(cluster, 'relevance_score', 0.7),
-                    "category": getattr(cluster, 'category', 'General')
-                }
-                articles.append(article)
     except Exception as e:
         logger.error(f"Error transforming aggregated results: {e}")
         logger.error(f"Error transforming aggregated results: {e}")
 
-    return articles
     return articles
 
 # Create database tables
@@ -1235,5 +1078,4 @@ Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8004)
