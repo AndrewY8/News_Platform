@@ -22,6 +22,7 @@ from .clustering import ClusteringEngine
 from .scoring import ClusterScorer
 from .summarizer import GeminiSummarizer
 from .supabase_manager import SupabaseManager
+from langchain_google_genai import ChatGoogleGenerativeAI # Assuming LLM is Gemini
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -109,7 +110,8 @@ class AggregatorAgent:
             # Clustering
             self.clustering_engine = ClusteringEngine(
                 self.config.clustering,
-                self.embedding_manager
+                self.embedding_manager,
+                ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=self.config.summarizer.api_key)
             )
 
             logger.debug("ClusteringEngine initialized")
