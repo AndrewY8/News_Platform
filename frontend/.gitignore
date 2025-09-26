@@ -28,3 +28,7 @@ next-env.d.ts
 
 
 ./venv/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

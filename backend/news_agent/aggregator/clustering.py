@@ -31,6 +31,7 @@ from .config import ClusteringConfig
 from .embeddings import EmbeddingManager
 from news_agent.aggregator.agentic_clustering.agents import ProposerAgent, EvaluatorAgent, RefinerAgent, AgenticClusteringConfig
 from langchain_google_genai import ChatGoogleGenerativeAI # Assuming LLM is Gemini
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class ClusteringEngine:
     - Cluster quality assessment using LLM reasoning
     """
     
-    def __init__(self, config: ClusteringConfig, embedding_manager: EmbeddingManager, llm: ChatGoogleGenerativeAI):
+    def __init__(self, config: ClusteringConfig, embedding_manager: EmbeddingManager):
         """
         Initialize the clustering engine.
         
@@ -57,7 +58,7 @@ class ClusteringEngine:
         """
         self.config = config
         self.embedding_manager = embedding_manager
-        self.llm = llm
+        self.llm = model = genai.GenerativeModel('gemini-2.0-flash')
         self.active_clusters = {}  # cluster_id -> ContentCluster
         self.cluster_history = []  # For tracking cluster evolution
         

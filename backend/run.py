@@ -68,11 +68,12 @@ def main():
     print("=" * 50)
     
     # Run the FastAPI app
+    port = int(os.getenv("PORT", 8004))  # EB can override it
     uvicorn.run(
-        "app:app",
+        "main_app:app",
         host="0.0.0.0",
-        port=8004,
-        reload=True,  # Enable auto-reload during development
+        port=port,
+        reload=os.getenv("RELOAD", "false").lower() == "true",
         log_level="info"
     )
 
