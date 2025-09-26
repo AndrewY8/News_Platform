@@ -25,6 +25,10 @@ export function Sidebar({
   const [queryHistory, setQueryHistory] = useState<SearchQuery[]>([])
   const [showHistoryModal, setShowHistoryModal] = useState(false)
 
+  // Thinking steps state
+  const [thinkingSteps, setThinkingSteps] = useState<Array<{id: string, text: string, timestamp: number}>>([])
+  const [showThinkingSteps, setShowThinkingSteps] = useState(false)
+
   const tabs = [
     { id: "top-news" as TabId, label: "Top News", icon: Rss },
     { id: "personalized" as TabId, label: "Personalized Feed", icon: User },
@@ -80,6 +84,37 @@ export function Sidebar({
     localStorage.setItem('marathon-query-history', JSON.stringify(updatedHistory))
   }
 
+  const addThinkingStep = (step: string) => {
+    console.log('🎯 SIDEBAR - addThinkingStep called with:', step)
+    console.log('🎯 SIDEBAR - Current showThinkingSteps:', showThinkingSteps)
+    console.log('🎯 SIDEBAR - Current thinking steps count:', thinkingSteps.length)
+
+    const newStep = {
+      id: Date.now().toString(),
+      text: step,
+      timestamp: Date.now()
+    }
+
+    setThinkingSteps(prev => {
+      const updated = [newStep, ...prev]
+      console.log('🎯 SIDEBAR - Updated thinking steps:', updated.map(s => s.text))
+      // Keep only the last 4 steps for the stacking effect
+      return updated.slice(0, 4)
+    })
+
+    // Don't auto-remove individual steps - let the container control visibility
+    // Individual step removal was causing the container to disappear prematurely
+  }
+
+  // Debug the thinking steps rendering
+  useEffect(() => {
+    console.log('🎭 SIDEBAR - Render state changed:', {
+      showThinkingSteps,
+      stepsLength: thinkingSteps.length,
+      steps: thinkingSteps.map(s => s.text)
+    })
+  }, [showThinkingSteps, thinkingSteps])
+
   const handleChatSubmit = async () => {
     if (!searchQuery.trim() || isChatLoading) return
 
@@ -91,24 +126,63 @@ export function Sidebar({
 
     setChatMessages(prev => [...prev, userMessage])
     setIsChatLoading(true)
+    setShowThinkingSteps(true)
+    setThinkingSteps([])
+    console.log('🚀 SIDEBAR - State set: showThinkingSteps=true, thinkingSteps=[]')
+
+    const query = searchQuery
+    onSearchQueryChange("")
 
     try {
       // Save query to history
-      await saveQueryToHistory(searchQuery)
-      
-      // Send to backend Gemini API
-      const response = await ApiService.sendChatMessage(searchQuery, [])
-      
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: response.response || response.message || 'I received your message but encountered an error processing it.',
-        timestamp: new Date(),
-        suggested_articles: response.suggested_articles
-      }
+      await saveQueryToHistory(query)
 
-      setChatMessages(prev => [...prev, assistantMessage])
-      onSearchQueryChange("")
+      // Use streaming API for real-time thinking steps
+      console.log('🚀 SIDEBAR - Calling sendChatMessageStreaming')
+      await ApiService.sendChatMessageStreaming(
+        query,
+        // onThinkingStep
+        (step: string) => {
+          console.log('📨 SIDEBAR - onThinkingStep callback called with:', step)
+          addThinkingStep(step)
+        },
+        // onResponse
+        async (chatMessage: ChatMessage) => {
+          // Keep thinking steps visible for a moment, then hide them
+          setTimeout(() => {
+            setShowThinkingSteps(false)
+            // Clear the thinking steps array when hiding to reset for next query
+            setThinkingSteps([])
+          }, 2000)
+
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: typeof chatMessage.content === 'string'
+              ? chatMessage.content
+              : JSON.stringify(chatMessage.content),
+            timestamp: new Date(),
+            suggested_articles: chatMessage.suggested_articles
+          }
+
+          setChatMessages(prev => [...prev, assistantMessage])
+          setIsChatLoading(false)
+        },
+        // onError
+        (error: string) => {
+          setShowThinkingSteps(false)
+          setThinkingSteps([]) // Clear thinking steps on error
+          const errorMessage: ChatMessage = {
+            role: 'assistant',
+            content: error,
+            timestamp: new Date()
+          }
+          setChatMessages(prev => [...prev, errorMessage])
+          setIsChatLoading(false)
+        }
+      )
     } catch (error) {
+      setShowThinkingSteps(false)
+      setThinkingSteps([]) // Clear thinking steps on error
       console.error('Chat error:', error)
       const errorMessage: ChatMessage = {
         role: 'assistant',
@@ -116,7 +190,6 @@ export function Sidebar({
         timestamp: new Date()
       }
       setChatMessages(prev => [...prev, errorMessage])
-    } finally {
       setIsChatLoading(false)
     }
   }
@@ -186,6 +259,48 @@ export function Sidebar({
               {isChatLoading ? "..." : "→"}
             </Button>
           </div>
+
+          {/* Thinking Steps Display */}
+          {showThinkingSteps && thinkingSteps.length > 0 && (
+            <div className="mb-4">
+              <div className="relative">
+                {thinkingSteps.map((step, index) => {
+                  const opacity = index === 0 ? 'opacity-100' :
+                                index === 1 ? 'opacity-70' :
+                                index === 2 ? 'opacity-40' : 'opacity-20'
+
+                  const scale = index === 0 ? 'scale-100' :
+                               index === 1 ? 'scale-95' :
+                               index === 2 ? 'scale-90' : 'scale-85'
+
+                  return (
+                    <div
+                      key={step.id}
+                      className={`absolute inset-0 bg-white/90 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm px-3 py-2 w-full transition-all duration-500 ${opacity} ${scale}`}
+                      style={{
+                        transform: `translateY(${index * -6}px) ${scale}`,
+                        zIndex: 40 - index
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {index === 0 && (
+                          <div className="animate-spin rounded-full h-2 w-2 border border-blue-500 border-t-transparent"></div>
+                        )}
+                        <span className="text-xs text-gray-600 line-clamp-2">{step.text}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+                {/* Spacer to maintain height */}
+                <div className="invisible bg-white/90 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm px-3 py-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full h-2 w-2"></div>
+                    <span className="text-xs">Placeholder</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Chat Messages */}
           <div className="space-y-3 mb-4 flex-1 overflow-y-auto">

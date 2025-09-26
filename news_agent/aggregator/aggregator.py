@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 import time
+import os
 
 from .models import ContentChunk, ContentCluster, AggregatorOutput
 from .config import AggregatorConfig
@@ -106,7 +107,18 @@ class AggregatorAgent:
             )
 
             logger.debug("DeduplicationEngine initialized")
-            
+
+            # Initialize LLM for clustering
+            api_key = self.config.summarizer.api_key or os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY is required for clustering engine")
+
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash",
+                google_api_key=api_key,
+                temperature=0.3
+            )
+
             # Clustering
             self.clustering_engine = ClusteringEngine(
                 self.config.clustering,

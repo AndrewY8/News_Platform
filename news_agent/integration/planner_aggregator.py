@@ -161,12 +161,6 @@ class EnhancedPlannerAgent:
         except Exception as e:
             logger.error(f"Enhanced PlannerAgent failed: {e}")
             return [self._create_error_response(str(e))]
-            # Fallback to original planner results
-            # try:
-            #     return await self.planner_agent.run_async(query)
-            # except Exception as fallback_error:
-            #     logger.error(f"Fallback also failed: {fallback_error}")
-            #     return self._create_error_response(str(e))
     
     def run(self, query: str, 
             user_preferences: Optional[Dict[str, Any]] = None,

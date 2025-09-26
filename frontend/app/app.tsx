@@ -31,12 +31,16 @@ export default function HavenNewsApp() {
   const [showAllTickers, setShowAllTickers] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [newArticles, setNewArticles] = useState<Set<string>>(new Set())
-  
+
   // Gemini chat response state
   const [chatResponse, setChatResponse] = useState<string>("")
   const [showChatResponse, setShowChatResponse] = useState(false)
   const [showExpandedResponse, setShowExpandedResponse] = useState(false)
   const [isChatResponseLoading, setIsChatResponseLoading] = useState(false)
+
+  // Thinking steps state
+  const [thinkingSteps, setThinkingSteps] = useState<Array<{id: string, text: string, timestamp: number}>>([])
+  const [showThinkingSteps, setShowThinkingSteps] = useState(false)
   const [showSystemPromptsModal, setShowSystemPromptsModal] = useState(false)
   const [systemPrompts, setSystemPrompts] = useState<Array<{id: string, name: string, content: string}>>([])
   const [editingPrompt, setEditingPrompt] = useState<{id: string, name: string, content: string} | null>(null)
@@ -671,47 +675,112 @@ const addTicker = async () => {
     }, delay)
   }
 
+  const addThinkingStep = (step: string) => {
+    console.log('🎯 MAIN APP - addThinkingStep called with:', step)
+    console.log('🎯 MAIN APP - Current showThinkingSteps:', showThinkingSteps)
+    console.log('🎯 MAIN APP - Current thinking steps count:', thinkingSteps.length)
+
+    const newStep = {
+      id: Date.now().toString(),
+      text: step,
+      timestamp: Date.now()
+    }
+
+    setThinkingSteps(prev => {
+      const updated = [newStep, ...prev]
+      console.log('🎯 MAIN APP - Updated thinking steps:', updated.map(s => s.text))
+      // Keep only the last 4 steps for the stacking effect
+      return updated.slice(0, 4)
+    })
+
+    // Don't auto-remove individual steps - let the container control visibility
+    // Individual step removal was causing the container to disappear prematurely
+  }
+
+  // Debug the thinking steps rendering
+  useEffect(() => {
+    console.log('🎭 MAIN APP - Render state changed:', {
+      showThinkingSteps,
+      stepsLength: thinkingSteps.length,
+      steps: thinkingSteps.map(s => s.text)
+    })
+  }, [showThinkingSteps, thinkingSteps])
+
   const handleChatSubmit = async () => {
     if (!chatInput.trim() || isChatResponseLoading) return
 
     // Store the query
     const query = chatInput
     setChatInput("")
-    
-    // Show loading state
+
+    // Show loading state and thinking steps
+    console.log('🚀 MAIN APP - Starting chat submit')
     setIsChatResponseLoading(true)
-    setShowChatResponse(true)
-    setChatResponse("Thinking...")
+    setShowThinkingSteps(true)
+    setShowChatResponse(false)
+    setThinkingSteps([])
+    console.log('🚀 MAIN APP - State set: showThinkingSteps=true, thinkingSteps=[]')
 
     try {
-      // Call the Gemini API
-      const chatMessage = await ApiService.sendChatMessage(query)
-      
-      // Set the response (ensure it's a string)
-      const responseContent = typeof chatMessage.content === 'string' 
-        ? chatMessage.content 
-        : JSON.stringify(chatMessage.content)
-      setChatResponse(responseContent)
-      
-      // Save to history
-      await ApiService.saveQueryHistory(query, responseContent)
-      
-      // If there are suggested articles, insert them into the feed
-      if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
-        setIsAnimating(true)
-        chatMessage.suggested_articles.forEach((article, index) => {
-          insertArticleAtPosition(article, index, index * 800)
-        })
-        
-        // End animation after all articles are done
-        setTimeout(() => {
-          setIsAnimating(false)
-        }, chatMessage.suggested_articles.length * 800 + 1500)
-      }
+      // Use streaming API for real-time thinking steps
+      console.log('🚀 MAIN APP - Calling sendChatMessageStreaming')
+      await ApiService.sendChatMessageStreaming(
+        query,
+        // onThinkingStep
+        (step: string) => {
+          console.log('📨 MAIN APP - onThinkingStep callback called with:', step)
+          addThinkingStep(step)
+        },
+        // onResponse
+        async (chatMessage: ChatMessage) => {
+          // Keep thinking steps visible for a moment, then show response
+          setShowChatResponse(true)
+
+          // Hide thinking steps after a delay to let user see final step
+          setTimeout(() => {
+            setShowThinkingSteps(false)
+            // Clear the thinking steps array when hiding to reset for next query
+            setThinkingSteps([])
+          }, 2000)
+
+          const responseContent = typeof chatMessage.content === 'string'
+            ? chatMessage.content
+            : JSON.stringify(chatMessage.content)
+          setChatResponse(responseContent)
+
+          // Save to history
+          await ApiService.saveQueryHistory(query, responseContent)
+
+          // If there are suggested articles, insert them into the feed
+          if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
+            setIsAnimating(true)
+            chatMessage.suggested_articles.forEach((article, index) => {
+              insertArticleAtPosition(article, index, index * 800)
+            })
+
+            // End animation after all articles are done
+            setTimeout(() => {
+              setIsAnimating(false)
+            }, chatMessage.suggested_articles.length * 800 + 1500)
+          }
+
+          setIsChatResponseLoading(false)
+        },
+        // onError
+        (error: string) => {
+          setShowThinkingSteps(false)
+          setThinkingSteps([]) // Clear thinking steps on error
+          setShowChatResponse(true)
+          setChatResponse(error)
+          setIsChatResponseLoading(false)
+        }
+      )
     } catch (error) {
       console.error('Chat error:', error)
+      setShowThinkingSteps(false)
+      setThinkingSteps([]) // Clear thinking steps on error
+      setShowChatResponse(true)
       setChatResponse("I apologize, but I'm experiencing technical difficulties. Please try again.")
-    } finally {
       setIsChatResponseLoading(false)
     }
   }
@@ -1303,6 +1372,51 @@ const addTicker = async () => {
               >
                 Close
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Thinking Steps Display */}
+      {showThinkingSteps && thinkingSteps.length > 0 && (
+        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+          <div className="relative">
+            {thinkingSteps.map((step, index) => {
+              const opacity = index === 0 ? 'opacity-100' :
+                            index === 1 ? 'opacity-70' :
+                            index === 2 ? 'opacity-40' : 'opacity-20'
+
+              const scale = index === 0 ? 'scale-100' :
+                           index === 1 ? 'scale-95' :
+                           index === 2 ? 'scale-90' : 'scale-85'
+
+              const blur = index === 0 ? '' :
+                          index === 1 ? 'backdrop-blur-sm' : 'backdrop-blur-xs'
+
+              return (
+                <div
+                  key={step.id}
+                  className={`absolute inset-0 bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transition-all duration-500 ${opacity} ${scale} ${blur}`}
+                  style={{
+                    transform: `translateY(${index * -8}px) ${scale}`,
+                    zIndex: 40 - index
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {index === 0 && (
+                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
+                    )}
+                    <span className="text-sm text-gray-700 line-clamp-2">{step.text}</span>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Spacer to maintain height */}
+            <div className="invisible bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full h-3 w-3"></div>
+                <span className="text-sm">Placeholder</span>
+              </div>
             </div>
           </div>
         </div>

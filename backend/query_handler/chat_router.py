@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import Request, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -40,9 +40,8 @@ aggregator_agent = None
 if NEWS_AGENT_AVAILABLE:
     try:
         news_agent = PlannerAgent(max_concurrent_retrievers=3)
-        from news_agent.aggregator.config import AggregatorConfig
-        aggregator_config = AggregatorConfig.from_env()
-        aggregator_agent = AggregatorAgent(config=aggregator_config)
+        # Note: We don't need aggregator_agent for chat functionality
+        # Only initialize PlannerAgent for chat
         logger.info("Chat router: News Agent System initialized")
     except Exception as e:
         logger.error(f"Chat router: Failed to initialize News Agent System: {e}")
@@ -249,6 +248,187 @@ def create_findings_summary(agent_results, articles):
     return "\n".join(summary_parts)
 
 # Chat Route Functions
+async def chat_about_news_streaming(request: ChatRequest, db: Session, User, ChatHistory):
+    """Enhanced chat using news agent system with direct streaming thinking steps"""
+    import json
+    import asyncio
+
+    async def generate_stream():
+        try:
+            if not NEWS_AGENT_AVAILABLE or not news_agent:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'News research system unavailable'})}\n\n"
+                return
+
+            logger.info(f"Chat request: {request.message}")
+
+            # Send initial thinking step
+            yield f"data: {json.dumps({'type': 'thinking', 'step': 'Starting research on your query...'})}\n\n"
+
+            # Create a direct streaming callback that yields immediately
+            async def direct_stream_callback(data):
+                """Direct streaming callback that yields data immediately"""
+                yield data
+
+            # Custom streaming agent execution
+            async def stream_agent_execution():
+                try:
+                    import google.generativeai as genai
+                    import json
+                    from datetime import datetime
+
+                    # Step 1: Query Analysis
+                    yield f"data: {json.dumps({'type': 'thinking', 'step': 'Analyzing your query for search strategies...'})}\n\n"
+
+                    # Step 2: Generate search strategies
+                    yield f"data: {json.dumps({'type': 'thinking', 'step': 'Generating targeted search strategies...'})}\n\n"
+
+                    try:
+                        # Import agent functionality
+                        from news_agent.prompts import augment_query
+                        from news_agent.actions.retriever import get_retriever_tasks
+                        from news_agent.retrievers.tavily.tavily_search import TavilyRetriever
+                        from news_agent.retrievers.EDGAR.EDGAR import EDGARRetriever
+
+                        # Generate search queries
+                        model = genai.GenerativeModel('gemini-2.0-flash')
+                        response = model.generate_content([augment_query(request.message)])
+                        parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
+                        augmented_queries = parse_queries(response.text)
+
+                        # Log queries
+                        with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
+                            for augmented_query in augmented_queries:
+                                f.write(augmented_query + "\n")
+
+                        yield f"data: {json.dumps({'type': 'thinking', 'step': f'Generated {len(augmented_queries)} search strategies'})}\n\n"
+
+                        # Step 3: Prepare retriever tasks
+                        yield f"data: {json.dumps({'type': 'thinking', 'step': 'Preparing data sources for search...'})}\n\n"
+
+                        retriever_tasks = get_retriever_tasks(augmented_queries, genai)
+                        retriever_tasks.append((EDGARRetriever, request.message))
+
+                        yield f"data: {json.dumps({'type': 'thinking', 'step': f'Searching {len(retriever_tasks)} sources for relevant information...'})}\n\n"
+
+                        # Step 4: Execute retrievers with real-time updates
+                        all_results = []
+
+                        for i, (retriever, task) in enumerate(retriever_tasks, 1):
+                            retriever_name = retriever.__name__
+
+                            # Yield progress for each retriever
+                            if retriever == TavilyRetriever:
+                                yield f"data: {json.dumps({'type': 'thinking', 'step': f'Searching financial news via Tavily ({i}/{len(retriever_tasks)})...'})}\n\n"
+                            elif retriever == EDGARRetriever:
+                                yield f"data: {json.dumps({'type': 'thinking', 'step': f'Scanning SEC filings via EDGAR ({i}/{len(retriever_tasks)})...'})}\n\n"
+                            else:
+                                yield f"data: {json.dumps({'type': 'thinking', 'step': f'Searching {retriever_name} ({i}/{len(retriever_tasks)})...'})}\n\n"
+
+                            # Execute retriever
+                            try:
+                                ret_obj = retriever(task)
+                                if hasattr(ret_obj, 'search'):
+                                    if callable(getattr(ret_obj.search, '__call__', None)):
+                                        import asyncio
+                                        if asyncio.iscoroutinefunction(ret_obj.search):
+                                            result = await ret_obj.search()
+                                        else:
+                                            result = ret_obj.search()
+                                    else:
+                                        result = []
+                                else:
+                                    result = []
+
+                                # Ensure result is a list
+                                if result is None:
+                                    result = []
+
+                                result_count = len(result) if isinstance(result, list) else 0
+                                yield f"data: {json.dumps({'type': 'thinking', 'step': f'Found {result_count} articles from {retriever_name}'})}\n\n"
+
+                                all_results.append({
+                                    "retriever": retriever_name,
+                                    "status": "success",
+                                    "results": result
+                                })
+
+                            except Exception as e:
+                                logger.error(f"Error running {retriever_name}: {str(e)}")
+                                yield f"data: {json.dumps({'type': 'thinking', 'step': f'Error with {retriever_name}, trying alternatives...'})}\n\n"
+                                all_results.append({
+                                    "retriever": retriever_name,
+                                    "status": "error",
+                                    "error": str(e),
+                                    "results": []
+                                })
+
+                        # Step 5: Completion summary
+                        successful_results = [r for r in all_results if r.get('status') == 'success']
+                        total_articles = sum(len(r.get('results', [])) for r in successful_results)
+
+                        yield f"data: {json.dumps({'type': 'thinking', 'step': f'Search complete: {total_articles} articles from {len(successful_results)} sources'})}\n\n"
+
+                        agent_results = all_results
+
+                    except Exception as e:
+                        logger.error(f"Streaming agent execution error: {e}")
+                        yield f"data: {json.dumps({'type': 'thinking', 'step': 'Encountered an issue, providing basic response...'})}\n\n"
+                        agent_results = []
+
+                    # Process results
+                    suggested_articles = transform_agent_results_to_articles(agent_results)
+
+                    # Generate AI response
+                    yield f"data: {json.dumps({'type': 'thinking', 'step': 'Generating AI response...'})}\n\n"
+
+                    try:
+                        findings_summary = create_findings_summary(agent_results, suggested_articles)
+                        model = genai.GenerativeModel('gemini-2.0-flash')
+                        response = model.generate_content([
+                            f"Based on the following news research findings for the user query '{request.message}', provide a helpful, conversational response. Focus on the key insights and mention that I've found relevant articles to review:\n\n{findings_summary}\n\nProvide a response as if you're a knowledgeable financial news assistant."
+                        ])
+                        ai_response = response.text
+                    except Exception as e:
+                        logger.error(f"Gemini response error: {e}")
+                        ai_response = f"I've researched your query about '{request.message}' and found several relevant articles. Please review the suggested articles below for the latest information."
+
+                    # Save chat history
+                    try:
+                        import uuid
+                        chat_entry = ChatHistory(
+                            id=str(uuid.uuid4()),
+                            user_id=str(request.user_id),
+                            query=request.message,
+                            response=ai_response,
+                            timestamp=datetime.utcnow()
+                        )
+                        db.add(chat_entry)
+                        db.commit()
+                    except Exception as e:
+                        logger.error(f"Error saving chat history: {e}")
+
+                    # Send final response
+                    final_response = {
+                        'type': 'response',
+                        'response': ai_response,
+                        'suggested_articles': suggested_articles[:5]
+                    }
+                    yield f"data: {json.dumps(final_response)}\n\n"
+
+                except Exception as e:
+                    logger.error(f"Stream execution error: {e}")
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Error processing your query'})}\n\n"
+
+            # Stream the agent execution directly
+            async for chunk in stream_agent_execution():
+                yield chunk
+
+        except Exception as e:
+            logger.error(f"Chat endpoint error: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Error processing your query'})}\n\n"
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
+
 async def chat_about_news(request: ChatRequest, db: Session, User, ChatHistory):
     """Enhanced chat using news agent system"""
     try:
@@ -283,8 +463,9 @@ async def chat_about_news(request: ChatRequest, db: Session, User, ChatHistory):
 
         # Save chat history
         try:
+            import uuid
             chat_entry = ChatHistory(
-                id=f"chat-{int(time.time())}-{hash(request.message) % 10000}",
+                id=str(uuid.uuid4()),
                 user_id=str(request.user_id),
                 query=request.message,
                 response=ai_response,
@@ -293,7 +474,7 @@ async def chat_about_news(request: ChatRequest, db: Session, User, ChatHistory):
             db.add(chat_entry)
             db.commit()
         except Exception as e:
-            logger.error(f"Failed to save chat history: {e}")
+            logger.error(f"Error saving chat history: {e}")
 
         return JSONResponse(content={
             "response": ai_response,
@@ -370,6 +551,11 @@ def add_chat_routes(app, shared_limiter, get_db, User, ChatHistory):
     @shared_limiter.limit("20/minute")
     async def chat_endpoint(request: Request, chat_request: ChatRequest, db: Session = Depends(get_db)):
         return await chat_about_news(chat_request, db, User, ChatHistory)
+
+    @app.post("/api/chat/stream")
+    @shared_limiter.limit("20/minute")
+    async def chat_stream_endpoint(request: Request, chat_request: ChatRequest, db: Session = Depends(get_db)):
+        return await chat_about_news_streaming(chat_request, db, User, ChatHistory)
 
     @app.post("/api/search/enhanced")
     @shared_limiter.limit("10/minute")

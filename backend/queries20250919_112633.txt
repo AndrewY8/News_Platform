@@ -1,2 +1,0 @@
-AAPL "earnings report" "analyst coverage" "market impact" OR "stock forecast"
-AAPL "global market share" OR "supply chain analysis" OR "regulatory filings" OR "tech industry news"
