@@ -62,15 +62,15 @@ def main():
         print("  python database_utils.py init")
         print("\nContinuing anyway...")
     
-    print("\n🌐 Starting server on http://localhost:8004")
+    print("\n🌐 Starting server on http://localhost:8000")
     print("📱 Frontend should be running on http://localhost:3000")
     print("🛑 Press Ctrl+C to stop the server")
     print("=" * 50)
     
     # Run the FastAPI app
-    port = int(os.getenv("PORT", 8004))  # EB can override it
+    port = int(os.getenv("PORT", 8000))  # EB can override it
     uvicorn.run(
-        "main_app:app",
+        "app:app",
         host="0.0.0.0",
         port=port,
         reload=os.getenv("RELOAD", "false").lower() == "true",

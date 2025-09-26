@@ -245,7 +245,7 @@ app.add_middleware(
 )
 
 # Enhanced CORS with environment-based origins
-cors_origins = ["http://localhost:3000", "http://localhost:3001"]
+cors_origins = ["http://localhost:3000", "http://localhost:3001", "http://3.92.79.88:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -1078,4 +1078,4 @@ Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
