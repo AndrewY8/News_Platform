@@ -21,7 +21,6 @@ from ..aggregator.models import AggregatorOutput
 
 logger = logging.getLogger(__name__)
 
-
 class EnhancedPlannerAgent:
     """
     Enhanced PlannerAgent that combines content retrieval with aggregation.
@@ -434,7 +433,7 @@ async def example_enhanced_usage():
     
     # Create enhanced planner
     planner = create_enhanced_planner(
-        gemini_api_key="your-api-key-here",
+        gemini_api_key="",
         database_url="postgresql://user:pass@localhost/db"
     )
     

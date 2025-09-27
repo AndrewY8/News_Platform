@@ -295,6 +295,7 @@ class SupabaseManager:
         except Exception as e:
             logger.error(f"Failed to find similar chunks: {e}")
             return []
+        
     def get_recent_chunks_from_db(self, hours: int = 24, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get recent chunks from database for duplicate checking.

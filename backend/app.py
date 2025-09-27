@@ -118,6 +118,26 @@ Base = declarative_base()
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
 
+# Initialize Supabase Database Manager for article storage
+supabase_db = None
+try:
+    from db_handler.supaManager import dbManager, EmbeddingModel
+    from db_handler.company_extractor import CompanyExtractor
+
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
+
+    if supabase_url and supabase_key:
+        embedding_model = EmbeddingModel()
+        company_extractor = CompanyExtractor()
+        supabase_db = dbManager(supabase_url, supabase_key, embedding_model, company_extractor)
+        logger.info("✅ Supabase database manager initialized successfully for article storage")
+    else:
+        logger.warning("⚠️ Supabase credentials not found - article storage disabled")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to initialize Supabase database manager: {e} - article storage disabled")
+    supabase_db = None
+
 # Initialize News Agent System
 news_agent = None
 aggregator_agent = None
@@ -129,15 +149,7 @@ if NEWS_AGENT_AVAILABLE:
         aggregator_config = AggregatorConfig.from_env()
         aggregator_agent = AggregatorAgent(config=aggregator_config)
         logger.info("🚀 News Agent System initialized successfully")
-        news_agent = PlannerAgent(max_concurrent_retrievers=3)
-        from news_agent.aggregator.config import AggregatorConfig
-        aggregator_config = AggregatorConfig.from_env()
-        aggregator_agent = AggregatorAgent(config=aggregator_config)
-        logger.info("🚀 News Agent System initialized successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize News Agent System: {e}")
-        news_agent = None
-        aggregator_agent = None
         logger.error(f"❌ Failed to initialize News Agent System: {e}")
         news_agent = None
         aggregator_agent = None
@@ -603,7 +615,7 @@ logger.info("✅ Using handler routes with fixed parameter ordering")
 # Add all routes from handlers if available
 if HANDLERS_AVAILABLE:
     try:
-        add_chat_routes(app, limiter, get_db, User, ChatHistory)
+        add_chat_routes(app, limiter, supabase_db)
         add_article_retrieval_routes(app, limiter, get_db, Article)
         add_chat_history_routes(app, limiter, get_db, ChatHistory)
         add_ticker_routes(app, limiter, get_db, User)
@@ -616,7 +628,6 @@ if HANDLERS_AVAILABLE:
 # API Endpoints
 
 # Note: Enhanced search and chat endpoints are now handled by the chat_router
-
 def create_findings_summary(agent_results, articles):
     """Create a summary of findings for Gemini"""
     if not agent_results:
@@ -663,7 +674,7 @@ logger.info("✅ Using handler routes with fixed parameter ordering")
 # Add all routes from handlers if available
 if HANDLERS_AVAILABLE:
     try:
-        add_chat_routes(app, limiter, get_db, User, ChatHistory)
+        add_chat_routes(app, limiter, supabase_db)
         add_article_retrieval_routes(app, limiter, get_db, Article)
         add_chat_history_routes(app, limiter, get_db, ChatHistory)
         add_ticker_routes(app, limiter, get_db, User)

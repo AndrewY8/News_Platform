@@ -4,11 +4,10 @@ import { useState, useEffect, useRef} from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ThumbsUp, ThumbsDown, Search, Bookmark, Rss, User, X, Trash2, History, Menu, BarChart3, MessageCircle, Send, Minimize2, Maximize2, Settings, Plus, Edit, ChevronDown, Building } from "lucide-react"
+import { Search, Bookmark, Rss, User, X, Trash2, BarChart3, MessageCircle, Send, Minimize2, Maximize2, Settings, Plus, Edit, ChevronDown, Building } from "lucide-react"
 import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/api"
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
-import { de } from "date-fns/locale"
 
 export default function HavenNewsApp() {
   const router = useRouter()
@@ -467,7 +466,6 @@ const loadArticles = async (tickers?: string[]) => {
   try {
     let fetchedArticles: NewsArticle[] = []
 
-    // console.log("Active tab:", activeTab)
     switch (activeTab) {
       case 'personalized':
         console.log("Fetching personalized news for tickers:", tickers)
@@ -607,7 +605,6 @@ const getEmoji = (article: NewsArticle) => {
   return "💡"
 }
 
-
 const addTicker = async () => {
   if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
     const newTickerSymbol = newTicker.toUpperCase()
@@ -714,21 +711,16 @@ const addTicker = async () => {
     setChatInput("")
 
     // Show loading state and thinking steps
-    console.log('🚀 MAIN APP - Starting chat submit')
     setIsChatResponseLoading(true)
     setShowThinkingSteps(true)
     setShowChatResponse(false)
     setThinkingSteps([])
-    console.log('🚀 MAIN APP - State set: showThinkingSteps=true, thinkingSteps=[]')
 
     try {
-      // Use streaming API for real-time thinking steps
-      console.log('🚀 MAIN APP - Calling sendChatMessageStreaming')
       await ApiService.sendChatMessageStreaming(
         query,
         // onThinkingStep
         (step: string) => {
-          console.log('📨 MAIN APP - onThinkingStep callback called with:', step)
           addThinkingStep(step)
         },
         // onResponse
