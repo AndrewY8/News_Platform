@@ -257,7 +257,7 @@ app.add_middleware(
 )
 
 # Enhanced CORS with environment-based origins
-cors_origins = ["http://localhost:3000", "http://localhost:3001"]
+cors_origins = ["http://localhost:3000", "http://localhost:3001", "http://3.92.79.88:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
