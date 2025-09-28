@@ -309,9 +309,9 @@ class PlannerAgent:
             parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
             augmented_queries = parse_queries(response.text)
 
-            with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
-                for augmented_query in augmented_queries:
-                    f.write(augmented_query + "\n")
+            # with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
+            #     for augmented_query in augmented_queries:
+            #         f.write(augmented_query + "\n")
 
             logger.info("Query augmented successfully")
 
@@ -382,9 +382,9 @@ class PlannerAgent:
             parse_queries = lambda s: [line.split('@@@', 1)[1] for line in s.strip().split('\n') if '@@@' in line]
             augmented_queries = parse_queries(response.text)
 
-            with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
-                for augmented_query in augmented_queries:
-                    f.write(augmented_query + "\n")
+            # with open(f"queries{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "w") as f:
+            #     for augmented_query in augmented_queries:
+            #         f.write(augmented_query + "\n")
 
             logger.info("Query augmented successfully")
 

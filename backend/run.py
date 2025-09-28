@@ -70,7 +70,7 @@ def main():
     # Run the FastAPI app
     uvicorn.run(
         "app:app",
-        host="0.0.0.0",
+        host="localhost",
         port=8004,
         reload=True,  # Enable auto-reload during development
         log_level="info"

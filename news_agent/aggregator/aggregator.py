@@ -123,7 +123,7 @@ class AggregatorAgent:
             self.clustering_engine = ClusteringEngine(
                 self.config.clustering,
                 self.embedding_manager,
-                ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=self.config.summarizer.api_key)
+                llm
             )
 
             logger.debug("ClusteringEngine initialized")
@@ -135,7 +135,7 @@ class AggregatorAgent:
             # Summarization
             self.summarizer = GeminiSummarizer(
                 self.config.summarizer,
-                getattr(self.config.summarizer, 'api_key', None)
+                api_key=api_key 
             )
             
             logger.debug("GeminiSummarizer initialized")

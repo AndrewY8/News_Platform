@@ -41,7 +41,7 @@ if NEWS_AGENT_AVAILABLE:
         aggregator_agent = AggregatorAgent()
         logger.info("Article retriever router: News Agent System initialized")
     except Exception as e:
-        logger.error(f"Article retriever router: Failed to initialize News Agent System: {e}")
+        logger.error(f"Article retriever router: Failed to initialize News Agent System: {e}", exc_info=True)
         news_agent = None
         aggregator_agent = None
 

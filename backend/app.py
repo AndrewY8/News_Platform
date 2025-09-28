@@ -135,7 +135,7 @@ try:
     else:
         logger.warning("⚠️ Supabase credentials not found - article storage disabled")
 except Exception as e:
-    logger.warning(f"⚠️ Failed to initialize Supabase database manager: {e} - article storage disabled")
+    logger.warning(f"⚠️ Failed to initialize Supabase database manager: {e} - article storage disabled", exc_info=True)
     supabase_db = None
 
 # Initialize News Agent System

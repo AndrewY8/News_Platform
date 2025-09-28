@@ -53,6 +53,8 @@ class GeminiSummarizer:
         
         if not GEMINI_AVAILABLE:
             raise ImportError("google-generativeai is required for Gemini summarization")
+       
+        print(f"API KEY!!!!{api_key}")
         
         # Configure API
         api_key = api_key or getattr(config, 'api_key', None)
