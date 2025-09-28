@@ -1,19 +1,19 @@
 # Use official Python 3.11 slim image
 FROM python:3.11-slim
 
-# Environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
 WORKDIR /app
 
 # Copy requirements and install
-COPY requirements-dev.txt /app/
+COPY backend/requirements-dev.txt /app/
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements-dev.txt
+
+COPY backend /app/backend
+COPY news_agent /app/news_agent
+
+ENV PYTHONPATH=/app
 
 # Copy app code
 COPY . /app/
 
-
-CMD ["python", "run.py"]
+CMD ["python", "backend/run.py"]
