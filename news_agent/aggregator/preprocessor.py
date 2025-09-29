@@ -11,6 +11,8 @@ from typing import List, Optional, Tuple, Dict, Any
 from urllib.parse import urlparse
 from datetime import datetime
 
+from backend.ticker_validator import validate_ticker # Import the validation function
+
 try:
     from bs4 import BeautifulSoup
     BS4_AVAILABLE = True
@@ -36,6 +38,18 @@ from .config import PreprocessingConfig
 
 logger = logging.getLogger(__name__)
 
+COMPANY_TO_TICKER = {
+    "APPLE": "AAPL",
+    "MICROSOFT": "MSFT",
+    "GOOGLE": "GOOGL",
+    "ALPHABET": "GOOGL",
+    "TESLA": "TSLA",
+    "AMAZON": "AMZN",
+    "META": "META",
+    "FACEBOOK": "META",
+    "NETFLIX": "NFLX",
+    "NVIDIA": "NVDA",
+}
 
 class TextPreprocessor:
     """
@@ -517,23 +531,90 @@ class TextPreprocessor:
             logger.error(f"Failed to process item {item.get('url', 'unknown')}: {e}")
             return None
     
+    def resolve_company_to_ticker(self, company_name: str) -> Optional[str]:
+        """
+        Map a company name to its ticker using a static dictionary.
+        Replace with API calls (e.g., Yahoo Finance, Alpha Vantage, OpenFIGI) for real use.
+        """
+        company_name = company_name.upper().strip()
+        return COMPANY_TO_TICKER.get(company_name)
+
     def _extract_ticker(self, content: str, item: Dict[str, Any]) -> Optional[str]:
-        """Extract stock ticker from content or metadata."""
-        # Check if ticker is in metadata
-        if 'ticker' in item:
-            return item['ticker']
-        
-        # Look for ticker patterns in content (e.g., AAPL, TSLA, etc.)
-        ticker_pattern = re.compile(r'\b[A-Z]{1,5}\b')
+        """Extract stock ticker from content or metadata, falling back to company name -> ticker resolution."""
+        # 1. Check if ticker is explicitly provided in metadata
+        if "ticker" in item and item["ticker"]:
+            validation_result = validate_ticker(item["ticker"])
+            if validation_result["valid"]:
+                return validation_result["ticker"]
+            else:
+                logger.debug(
+                    f"Provided ticker '{item['ticker']}' in item metadata is invalid: {validation_result['reason']}"
+                )
+
+        # 2. Look for ticker patterns in content
+        ticker_pattern = re.compile(r"\b[A-Z]{1,5}\b")
         potential_tickers = ticker_pattern.findall(content[:500])  # First 500 chars
-        
-        # Filter out common words that might match pattern
-        common_words = {'THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HAD', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WHO', 'BOY', 'DID', 'HAS', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE'}
-        
-        for ticker in potential_tickers:
-            if ticker not in common_words and len(ticker) >= 2:
-                return ticker
-        
+
+        common_words = {
+            "THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", "ALL", "CAN", "HAD",
+            "HER", "WAS", "ONE", "OUR", "OUT", "DAY", "GET", "HAS", "HIM", "HOW",
+            "ITS", "MAY", "NEW", "NOW", "OLD", "SEE", "TWO", "WHO", "BOY", "DID",
+            "LET", "PUT", "SAY", "SHE", "TOO", "USE"
+        }
+        filtered_potential_tickers = [
+            t for t in potential_tickers if t not in common_words and len(t) >= 2
+        ]
+
+        high_confidence_ticker = None
+        medium_confidence_ticker = None
+
+        for ticker in filtered_potential_tickers:
+            validation_result = validate_ticker(ticker)
+            if validation_result["valid"]:
+                if validation_result["confidence"] == 1.0:
+                    high_confidence_ticker = validation_result["ticker"]
+                    break
+                elif (
+                    validation_result["confidence"] == 0.8
+                    and not medium_confidence_ticker
+                ):
+                    medium_confidence_ticker = validation_result["ticker"]
+
+        if high_confidence_ticker:
+            return high_confidence_ticker
+        elif medium_confidence_ticker:
+            return medium_confidence_ticker
+
+        # 3. Fallback: try to detect company name and resolve ticker
+        company_name = self.extract_company_name(content, item)
+        if company_name:
+            ticker = self.resolve_company_to_ticker(company_name)
+            if ticker:
+                validation_result = validate_ticker(ticker)
+                if validation_result["valid"]:
+                    return validation_result["ticker"]
+                else:
+                    logger.debug(
+                        f"Resolved ticker '{ticker}' from company '{company_name}' is invalid: {validation_result['reason']}"
+                    )
+
+        return None
+    
+    def extract_company_name(self, content: str, item: Dict[str, Any]) -> Optional[str]:
+        """
+        Try to detect a company name in the text content or metadata.
+        Uses a simple dictionary match for known companies.
+        """
+        # Check metadata first
+        if "company" in item and item["company"]:
+            return item["company"].upper().strip()
+
+        # Scan content for company mentions
+        content_upper = content.upper()
+        for company in COMPANY_TO_TICKER.keys():
+            if company in content_upper:
+                return company
+
         return None
     
     def _extract_topic(self, content: str, source_category: str) -> str:

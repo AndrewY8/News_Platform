@@ -153,7 +153,7 @@ class PlannerAgent:
                     await progress_callback(f"data: {json.dumps({'type': 'thinking', 'step': description})}\n\n")
 
             print(f"PROCESSING {retriever_name}")
-            ret_obj = retriever(task);
+            ret_obj = retriever(task)
             if asyncio.iscoroutinefunction(ret_obj.search):
                 result = await ret_obj.search()
             else:
@@ -396,8 +396,50 @@ class PlannerAgent:
             retriever_tasks.append((EDGARRetriever, query))
             all_results = await self._run_retrievers_batch(retriever_tasks)
 
-            return all_results
+            # Calculate summary statistics
+            total_retrievers = len(all_results)
+            successful_retrievers = sum(1 for res in all_results if res.get("status") == "success")
+            failed_retrievers = total_retrievers - successful_retrievers
+            total_articles = sum(len(res.get("results", [])) for res in all_results if res.get("status") == "success")
 
+            retriever_summary = {
+                "total_retrievers": total_retrievers,
+                "successful_retrievers": successful_retrievers,
+                "failed_retrievers": failed_retrievers,
+                "total_articles": total_articles
+            }
+
+            # Organize results by category for consistency with EnhancedPlannerAgent's expected input
+            organized_results = {
+                "breaking_news": [],
+                "financial_news": [],
+                "sec_filings": [],
+                "general_news": [],
+                "retriever_summary": retriever_summary,
+                "raw_retriever_results": all_results # Keep raw results for detailed inspection if needed
+            }
+
+            for res in all_results:
+                if res.get("status") == "success":
+                    for article in res.get("results", []):
+                        # Assuming each article has a 'source_type' or can be classified
+                        # For now, we'll put everything into 'general_news' or classify based on retriever name
+                        # A more robust solution would involve the preprocessor's classify_source_type
+                        source_type = "general_news"
+                        if "EDGAR" in res.get("retriever", ""):
+                            source_type = "sec_filings"
+                        elif "Tavily" in res.get("retriever", ""):
+                            source_type = "financial_news" # Tavily is often used for financial news
+                        elif "Reddit" in res.get("retriever", ""):
+                            source_type = "financial_news" # Wallstreetbets is financial
+                        
+                        if source_type in organized_results:
+                            organized_results[source_type].append(article)
+                        else:
+                            organized_results["general_news"].append(article) # Fallback
+
+            return organized_results
+            
         except Exception as e:
             logger.error(f"Planner agent failed: {str(e)}")
             return {

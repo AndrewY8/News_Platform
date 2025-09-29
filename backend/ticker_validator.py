@@ -41,7 +41,7 @@ def is_valid_ticker_format(ticker: str) -> bool:
         return False
     
     # Basic format check
-    pattern = r'^[A-Z]{1,4}(\.[A-Z])?$'
+    pattern = r'^[A-Z]{1,5}(\.[A-Z])?$' # Changed to allow 1-5 characters
     return bool(re.match(pattern, ticker.upper()))
 
 def is_known_valid_ticker(ticker: str) -> bool:
@@ -75,7 +75,7 @@ def validate_ticker(ticker: str) -> Dict[str, any]:
             'valid': False,
             'ticker': cleaned_ticker,
             'confidence': 0.0,
-            'reason': 'Invalid ticker format (must be 1-4 uppercase letters, optionally with .X)'
+            'reason': 'Invalid ticker format (must be 1-5 uppercase letters, optionally with .X)'
         }
     
     # Check against known valid tickers

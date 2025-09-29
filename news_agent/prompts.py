@@ -46,7 +46,7 @@ You are an intelligent Tavily Search Query Parameter Planner. Your task is to an
 
 The available parameters and their types are:
 - `search_depth`: "basic" (quick, fewer results) or "advanced" (more comprehensive, deeper search). Default: "basic".
-- `topic`: `general`, `finance`, or `news`. Default: "news".
+- `topic`: A specific, concise topic related to the query (e.g., `cloud computing`, `electric vehicles`, `Q3 earnings`). Avoid general terms like `finance` or `news`. Default: "news".
 - `days`: An integer representing the recency of information (e.g., 7 for last week, 365 for last year). Default: 30.
 - `max_results`: An integer for the maximum number of search results to return (up to Tavily's limit). Default: 10.
 - `include_answer`: `True` or `False`. Set to `True` if the query explicitly asks for a direct answer or summary, or if a concise factual answer is likely sufficient. Default: `False`.
