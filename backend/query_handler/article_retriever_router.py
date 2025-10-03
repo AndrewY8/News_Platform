@@ -21,12 +21,12 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 try:
-    from deep_research_agent.agents.orchestrator_agent import OrchestratorAgent
-    from deep_research_agent.agents.topic_agent import TopicAgent
-    from deep_research_agent.agents.search_agent import SearchAgent
-    from deep_research_agent.agents.ranking_agent import RankingAgent
-    from deep_research_agent.agents.interfaces import CompanyContext, PipelineConfig
-    from deep_research_agent.config.api_keys import get_api_keys
+    from deep_news_agent.agents.orchestrator_agent import OrchestratorAgent
+    from deep_news_agent.agents.topic_agent import TopicAgent
+    from deep_news_agent.agents.search_agent import SearchAgent
+    from deep_news_agent.agents.ranking_agent import RankingAgent
+    from deep_news_agent.agents.interfaces import CompanyContext, PipelineConfig
+    from deep_news_agent.config.api_keys import get_api_keys
     DEEP_RESEARCH_AVAILABLE = True
 except Exception as e:
     DEEP_RESEARCH_AVAILABLE = False
@@ -42,7 +42,7 @@ research_db_manager = None
 
 if DEEP_RESEARCH_AVAILABLE:
     try:
-        from deep_research_agent.db.research_db_manager import ResearchDBManager
+        from deep_news_agent.db.research_db_manager import ResearchDBManager
 
         # Initialize database manager for fetching pre-computed research
         supabase_url = os.getenv("SUPABASE_URL")

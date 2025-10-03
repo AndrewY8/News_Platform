@@ -12,13 +12,13 @@ from dotenv import load_dotenv
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from deep_research_agent.agents.orchestrator_agent import OrchestratorAgent
-from deep_research_agent.agents.topic_agent import TopicAgent
-from deep_research_agent.agents.search_agent import SearchAgent
-from deep_research_agent.agents.ranking_agent import RankingAgent
-from deep_research_agent.agents.interfaces import CompanyContext, PipelineConfig
-from deep_research_agent.db.research_db_manager import ResearchDBManager
-from deep_research_agent.config.api_keys import get_api_keys
+from deep_news_agent.agents.orchestrator_agent import OrchestratorAgent
+from deep_news_agent.agents.topic_agent import TopicAgent
+from deep_news_agent.agents.search_agent import SearchAgent
+from deep_news_agent.agents.ranking_agent import RankingAgent
+from deep_news_agent.agents.interfaces import CompanyContext, PipelineConfig
+from deep_news_agent.db.research_db_manager import ResearchDBManager
+from deep_news_agent.config.api_keys import get_api_keys
 
 # Load environment variables
 load_dotenv()
@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 # Companies to research (can be loaded from config/database)
 COMPANIES_TO_RESEARCH = [
-    {"ticker": "AAPL", "name": "Apple Inc.", "industry": "Technology"},
-    # {"ticker": "MSFT", "name": "Microsoft Corporation", "industry": "Technology"},
-    # {"ticker": "GOOGL", "name": "Alphabet Inc.", "industry": "Technology"},
+    # {"ticker": "AAPL", "name": "Apple Inc.", "industry": "Technology"},
+    {"ticker": "MSFT", "name": "Microsoft Corporation", "industry": "Technology"},
+    {"ticker": "GOOGL", "name": "Alphabet Inc.", "industry": "Technology"},
     # {"ticker": "AMZN", "name": "Amazon.com Inc.", "industry": "E-commerce"},
     # {"ticker": "NVDA", "name": "NVIDIA Corporation", "industry": "Technology"},
     # {"ticker": "TSLA", "name": "Tesla Inc.", "industry": "Automotive"},
