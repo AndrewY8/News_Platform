@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Enable standalone output for Docker
+  output: 'standalone',
   // Remove static export for dynamic website
   // output: 'export',
   // trailingSlash: true,
