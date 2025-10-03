@@ -1054,29 +1054,38 @@ const addTicker = async () => {
                     }`}
                   >
                     <div className="flex gap-4 w-full">
-                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-center tracking-wide">
+                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-start pt-0.5 tracking-wide">
                         {article.date.includes(':') && <span className="mr-1">🔥</span>}
                         {article.date}
                       </div>
 
-                      <div className="flex-1 flex flex-col justify-center">
-                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-xs lg:text-sm tracking-wide">
-                          <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      <div className="flex-1 flex flex-col">
+                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-sm lg:text-base tracking-wide">
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline hover:text-blue-600 transition-colors"
+                          >
                             {article.title}
                           </a>
                         </h3>
-                        <p className="text-gray-600 text-xs leading-tight tracking-wide">{article.preview}</p>
-                      </div>
+                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed tracking-wide mb-2">{article.preview}</p>
 
-                      <div className="flex-shrink-0 text-right flex items-center">
-                        {(article.tags || []).map((tag: any, index: number) => {
-                          const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
-                          return (
-                            <div key={index} className="text-xs text-gray-500 font-mono tracking-wide mx-0.5 sm:mx-1">
-                              {tagText}
-                            </div>
-                          )
-                        })}
+                        {/* Tags moved below content, smaller and wrapped */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(article.tags || []).slice(0, 3).map((tag: any, index: number) => {
+                            const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
+                            return (
+                              <span
+                                key={index}
+                                className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-mono tracking-wide"
+                              >
+                                {tagText}
+                              </span>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
