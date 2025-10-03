@@ -434,18 +434,20 @@ useEffect(() => {
     setEditingPrompt({ ...prompt })
   }
 
-  // Load articles when tab changes
+  // Load articles when tab changes (but not for portfolio - wait for user selection)
 useEffect(() => {
-  const defaultTickers = ["AAPL"]
-  loadArticles(defaultTickers)
-}, []) // empty dependency array = run once
+  if (activeTab !== 'portfolio') {
+    const defaultTickers = ["AAPL"]
+    loadArticles(defaultTickers)
+  }
+}, [activeTab])
 
   // Re-fetch articles when portfolio company changes
   useEffect(() => {
     if (activeTab === 'portfolio' && selectedPortfolioCompany) {
       loadArticles([selectedPortfolioCompany])
     }
-  }, [selectedPortfolioCompany, activeTab])
+  }, [selectedPortfolioCompany])
 
   const initializeApp = async () => {
     try {
@@ -513,12 +515,11 @@ const loadArticles = async (tickers?: string[]) => {
           console.log("Fetching portfolio news for company:", selectedPortfolioCompany)
           const data = await ApiService.getPersonalizedNews([selectedPortfolioCompany])
           fetchedArticles = data
-        } else if (cachedPersonalized.length === 0) {
-          const data = await ApiService.getPersonalizedNews()
-          setCachedPersonalized(data)
-          fetchedArticles = data
+          // Clear existing articles when switching companies
+          setArticles([])
         } else {
-          fetchedArticles = cachedPersonalized
+          // Don't load any articles if no company is selected
+          fetchedArticles = []
         }
         break
 

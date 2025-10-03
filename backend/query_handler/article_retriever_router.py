@@ -4,6 +4,8 @@ Contains all article retrieval endpoints using PlannerAgent.
 """
 
 import logging
+import hashlib
+import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import Request, Depends, HTTPException
@@ -84,8 +86,17 @@ def transform_single_result_to_article(item, source_retriever):
     """Transform a single retrieval result to article format"""
     try:
         if isinstance(item, dict):
+            # Generate unique ID using URL or content hash
+            if item.get('id'):
+                article_id = str(item['id'])
+            elif item.get('url'):
+                article_id = hashlib.md5(item['url'].encode()).hexdigest()[:16]
+            else:
+                # Use MD5 hash of the entire item for uniqueness
+                article_id = hashlib.md5(str(item).encode()).hexdigest()[:16]
+
             return {
-                "id": item.get('id') or f"{source_retriever}-{hash(str(item))}"[:16],
+                "id": article_id,
                 "date": format_article_date(item.get('published_date') or item.get('date') or item.get('timestamp')),
                 "title": item.get('title') or item.get('headline') or 'Untitled Article',
                 "source": item.get('source') or source_retriever,
@@ -97,8 +108,10 @@ def transform_single_result_to_article(item, source_retriever):
                 "category": item.get('category') or 'General'
             }
         elif isinstance(item, str):
+            # Generate unique ID for string items
+            article_id = hashlib.md5(item.encode()).hexdigest()[:16]
             return {
-                "id": f"{source_retriever}-{hash(item)}"[:16],
+                "id": article_id,
                 "date": "Today",
                 "title": item[:100] + "..." if len(item) > 100 else item,
                 "source": source_retriever,
@@ -200,13 +213,22 @@ def get_fallback_articles():
     ]
 
 # Article Route Functions
-async def get_personalized_articles_handler(db: Session, Article):
+async def get_personalized_articles_handler(db: Session, Article, tickers: Optional[str] = None):
     """Get personalized articles using news agent system"""
     try:
-        default_query = "latest financial news market updates"
+        # Build query based on tickers if provided
+        if tickers:
+            ticker_list = [t.strip().upper() for t in tickers.split(',') if t.strip()]
+            if ticker_list:
+                query = f"latest news and financial updates about {', '.join(ticker_list)}"
+                logger.info(f"Personalized query with tickers: {query}")
+            else:
+                query = "latest financial news market updates"
+        else:
+            query = "latest financial news market updates"
 
         if NEWS_AGENT_AVAILABLE and news_agent:
-            agent_results = await news_agent.run_async(default_query)
+            agent_results = await news_agent.run_async(query)
             articles = transform_agent_results_to_articles(agent_results)
         else:
             articles = get_fallback_articles()
@@ -255,8 +277,8 @@ def add_article_retrieval_routes(app, shared_limiter, get_db, Article):
 
     @app.get("/api/articles")
     @shared_limiter.limit("30/minute")
-    async def get_personalized_articles(request: Request, db: Session = Depends(get_db)):
-        return await get_personalized_articles_handler(db, Article)
+    async def get_personalized_articles(request: Request, tickers: Optional[str] = None, db: Session = Depends(get_db)):
+        return await get_personalized_articles_handler(db, Article, tickers)
 
     @app.get("/api/articles/top")
     @shared_limiter.limit("30/minute")
