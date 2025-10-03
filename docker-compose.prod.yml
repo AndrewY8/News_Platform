@@ -9,10 +9,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      # Browser needs to connect to localhost, not container name
-      # NEXT_PUBLIC_ variables are exposed to the browser
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=production
+      # For production, use the server's public IP or domain
+      # Override this with: export NEXT_PUBLIC_API_URL=http://your-server-ip:8000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     depends_on:
       - backend
     restart: unless-stopped
@@ -27,9 +27,9 @@ services:
     environment:
       - PYTHONPATH=/app
       - PORT=8000
-      # Frontend URL for CORS (when accessed from host machine)
-      - FRONTEND_URL=http://localhost:3000
+      # Set this to your actual production frontend URL
+      # Override this with: export FRONTEND_URL=http://your-server-ip:3000
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     env_file:
       - .env
     restart: unless-stopped
-

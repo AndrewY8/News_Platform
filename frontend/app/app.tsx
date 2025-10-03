@@ -51,6 +51,10 @@ export default function HavenNewsApp() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("1mo")
   const [tickerData, setTickerData] = useState<StockData[]>([])
 
+  // Portfolio company selector state
+  const [selectedPortfolioCompany, setSelectedPortfolioCompany] = useState<string>("")
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
+
   const tabs = [
     { id: "personalized", label: "Personalized feed", icon: User, href: "/personalized-news" },
     { id: "business-news", label: "Business News", icon: Building, href: "#", hasDropdown: true },
@@ -60,6 +64,29 @@ export default function HavenNewsApp() {
   ]
 
   const timePeriods = ["1D", "1W", "1M", "3M", "1Y"]
+
+  const COMPANIES = [
+    { ticker: "AAPL", name: "Apple Inc." },
+    { ticker: "MSFT", name: "Microsoft Corporation" },
+    { ticker: "GOOGL", name: "Alphabet Inc." },
+    { ticker: "AMZN", name: "Amazon.com Inc." },
+    { ticker: "NVDA", name: "NVIDIA Corporation" },
+    { ticker: "TSLA", name: "Tesla Inc." },
+    { ticker: "META", name: "Meta Platforms Inc." },
+    { ticker: "JPM", name: "JPMorgan Chase & Co." },
+    { ticker: "V", name: "Visa Inc." },
+    { ticker: "WMT", name: "Walmart Inc." },
+    { ticker: "JNJ", name: "Johnson & Johnson" },
+    { ticker: "PG", name: "Procter & Gamble Co." },
+    { ticker: "XOM", name: "Exxon Mobil Corporation" },
+    { ticker: "BAC", name: "Bank of America Corp." },
+    { ticker: "DIS", name: "The Walt Disney Company" },
+    { ticker: "NFLX", name: "Netflix Inc." },
+    { ticker: "INTC", name: "Intel Corporation" },
+    { ticker: "AMD", name: "Advanced Micro Devices Inc." },
+    { ticker: "PYPL", name: "PayPal Holdings Inc." },
+    { ticker: "ADBE", name: "Adobe Inc." },
+  ].sort((a, b) => a.name.localeCompare(b.name))
 
   // Fake news data for testing
   const fakeNewsData: NewsArticle[] = [
@@ -413,6 +440,13 @@ useEffect(() => {
   loadArticles(defaultTickers)
 }, []) // empty dependency array = run once
 
+  // Re-fetch articles when portfolio company changes
+  useEffect(() => {
+    if (activeTab === 'portfolio' && selectedPortfolioCompany) {
+      loadArticles([selectedPortfolioCompany])
+    }
+  }, [selectedPortfolioCompany, activeTab])
+
   const initializeApp = async () => {
     try {
       // Set default tickers
@@ -475,10 +509,14 @@ const loadArticles = async (tickers?: string[]) => {
         break
 
       case 'portfolio':
-        if (cachedPersonalized.length === 0) {
+        if (selectedPortfolioCompany) {
+          console.log("Fetching portfolio news for company:", selectedPortfolioCompany)
+          const data = await ApiService.getPersonalizedNews([selectedPortfolioCompany])
+          fetchedArticles = data
+        } else if (cachedPersonalized.length === 0) {
           const data = await ApiService.getPersonalizedNews()
           setCachedPersonalized(data)
-          fetchedArticles = data // ✅ assign here
+          fetchedArticles = data
         } else {
           fetchedArticles = cachedPersonalized
         }
@@ -1065,8 +1103,8 @@ const addTicker = async () => {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Current Section</span>
                     <span className="text-sm font-semibold text-gray-900 capitalize">
-                      {activeTab === 'personalized' ? 'Personalized Feed' : 
-                       activeTab === 'portfolio' ? 'Portfolio News' :
+                      {activeTab === 'personalized' ? 'Personalized Feed' :
+                       activeTab === 'portfolio' ? (selectedPortfolioCompany ? COMPANIES.find(c => c.ticker === selectedPortfolioCompany)?.ticker || 'Portfolio News' : 'Portfolio News') :
                        activeTab === 'saved' ? 'Saved Articles' : 'SEC Documents'}
                     </span>
                   </div>
@@ -1091,6 +1129,46 @@ const addTicker = async () => {
                 </div>
               </div>
             </div>
+
+            {/* Portfolio Company Selector - Only show on portfolio page */}
+            {activeTab === 'portfolio' && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Select Company</h4>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-left flex items-center justify-between hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <span className={selectedPortfolioCompany ? "text-gray-900" : "text-gray-500"}>
+                      {selectedPortfolioCompany
+                        ? `${COMPANIES.find(c => c.ticker === selectedPortfolioCompany)?.name} (${selectedPortfolioCompany})`
+                        : "Choose a company..."}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showCompanyDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showCompanyDropdown && (
+                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                      {COMPANIES.map((company) => (
+                        <button
+                          key={company.ticker}
+                          onClick={() => {
+                            setSelectedPortfolioCompany(company.ticker)
+                            setShowCompanyDropdown(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors text-xs ${
+                            selectedPortfolioCompany === company.ticker ? 'bg-blue-100' : ''
+                          }`}
+                        >
+                          <div className="font-medium text-gray-900">{company.name}</div>
+                          <div className="text-xs text-gray-500">{company.ticker}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Interests List */}
             <div className="space-y-2">
@@ -1122,7 +1200,7 @@ const addTicker = async () => {
                   </button>
                 )}
               </div>
-              
+
               {/* Add New Interest */}
               <div className="space-y-2">
                 <Input

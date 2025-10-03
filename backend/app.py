@@ -257,7 +257,19 @@ app.add_middleware(
 )
 
 # Enhanced CORS with environment-based origins
-cors_origins = ["http://localhost:3000", "http://localhost:3001", "http://3.92.79.88:3000"]
+cors_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+]
+
+# Add production origins from environment if specified
+production_origin = os.getenv("FRONTEND_URL")
+if production_origin:
+    cors_origins.append(production_origin)
+    # Also add without port if it's specified
+    if ":3000" in production_origin:
+        cors_origins.append(production_origin.replace(":3000", ""))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -1089,4 +1101,6 @@ Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004)
+    # Use environment variable for port, default to 8000
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
