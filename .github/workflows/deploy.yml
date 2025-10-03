@@ -1,0 +1,60 @@
+name: Deploy Backend to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install backend dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Create deployment package (backend only)
+      run: |
+        # Remove development files and directories
+        rm -rf .git .github frontend
+        rm -rf __pycache__ **/__pycache__ .pytest_cache
+        rm -rf *.log **/*.log test_* debug_* *_test_*
+
+        # Create deployment zip (backend only)
+        zip -r news-platform-backend-${{ github.sha }}.zip . \
+          -x "*.git*" \
+          -x "frontend/*" \
+          -x "*__pycache__*" \
+          -x "*.pyc" \
+          -x "test_*" \
+          -x "debug_*" \
+          -x "*_test_*" \
+          -x "*.log"
+
+    - name: Deploy Backend to Elastic Beanstalk
+      uses: einaregilsson/beanstalk-deploy@v22
+      with:
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        application_name: news-platform-backend
+        environment_name: news-platform-backend-env
+        version_label: backend-${{ github.sha }}
+        region: us-east-1
+        deployment_package: news-platform-backend-${{ github.sha }}.zip
+        wait_for_deployment: true
+        wait_for_environment_recovery: 60
+
+    - name: Clean up
+      if: always()
+      run: |
+        rm -f news-platform-backend-${{ github.sha }}.zip

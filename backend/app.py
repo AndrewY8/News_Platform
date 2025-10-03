@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer
+from fastapi.staticfiles import StaticFiles
 import requests
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -277,6 +278,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept", "Accept-Language", "Content-Language"],
 )
+
+# Note: For dynamic Next.js app, frontend runs separately on port 3000
+# Static file serving removed - frontend and backend are separate services
 
 
 # Middleware for logging

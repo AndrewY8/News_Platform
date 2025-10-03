@@ -1,0 +1,53 @@
+# Development files
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+
+# Test files
+test_*
+*_test_*
+debug_*
+*_test.py
+*test*.json
+integration_test_results.json
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Frontend development
+frontend/node_modules
+frontend/.next
+frontend/.git
+frontend/npm-debug.log*
+
+# Log files
+*.log
+logs/
+
+# Environment files (use EB environment variables instead)
+.env
+.env.local
+.env.production
+.env.test
+
+# Database files (will be created on deployment)
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation and temporary files
+*.md
+README*
+*.tmp
+*.temp
