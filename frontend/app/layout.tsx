@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Karma } from 'next/font/google'
+import './globals.css'
 
 const karma = Karma({ 
   subsets: ['latin'],
@@ -20,9 +21,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${karma.className}`}>
-      <head>
-        <link rel="stylesheet" href="/styles.css" />
-      </head>
       <body className={`${karma.className} antialiased`}>
         {children}
       </body>

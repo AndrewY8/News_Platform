@@ -1185,21 +1185,29 @@ const addTicker = async () => {
               <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
               <div className="grid grid-cols-2 gap-1">
                 {tickerData.slice(0, 6).map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => handleTickerSelect(ticker.symbol)}
-                    className={`p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => handleTickerSelect(ticker.symbol)}
+                      className={`w-full p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => router.push(`/companies/${ticker.symbol}`)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-1 py-0.5 text-[8px] hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
                 {tickerData.length > 6 && (
                   <button
@@ -1277,24 +1285,35 @@ const addTicker = async () => {
               <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
               <div className="grid grid-cols-2 gap-1">
                 {tickerData.slice(0, 6).map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => {
-                      handleTickerSelect(ticker.symbol)
-                      setShowMobileSidebar(false)
-                    }}
-                    className={`p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => {
+                        handleTickerSelect(ticker.symbol)
+                        setShowMobileSidebar(false)
+                      }}
+                      className={`w-full p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileSidebar(false)
+                        router.push(`/companies/${ticker.symbol}`)
+                      }}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-1 py-0.5 text-[8px] hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
                 {tickerData.length > 6 && (
                   <button
@@ -1347,24 +1366,35 @@ const addTicker = async () => {
             <div className="overflow-y-auto max-h-96">
               <div className="grid grid-cols-3 gap-2">
                 {tickerData.map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => {
-                      handleTickerSelect(ticker.symbol)
-                      setShowAllTickers(false)
-                    }}
-                    className={`p-2 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-sm ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-semibold text-gray-900 mb-1">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-1">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium text-sm ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.change.toFixed(2)} ({ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%)
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => {
+                        handleTickerSelect(ticker.symbol)
+                        setShowAllTickers(false)
+                      }}
+                      className={`w-full p-2 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-sm ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-900 mb-1">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-1">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium text-sm ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.change.toFixed(2)} ({ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%)
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAllTickers(false)
+                        router.push(`/companies/${ticker.symbol}`)
+                      }}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-2 py-1 text-xs hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

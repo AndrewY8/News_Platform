@@ -136,20 +136,13 @@ class ResearchDBManager:
                     "embedding": embedding
                 }
 
-                # Handle potential duplicates by URL - update existing or insert new
+                # Handle potential duplicates by URL
                 existing = self.supabase.table("articles").select("id").eq("url", article_data["url"]).execute()
 
                 if existing.data:
-                    # Article already exists - update it with latest data
+                    # Article already exists, return existing record
                     article_id = existing.data[0]["id"]
-                    update_fields = {
-                        "published_date": article_data["published_date"],
-                        "relevance_score": article_data["relevance_score"],
-                        "pipeline_iteration": article_data["pipeline_iteration"],
-                        "embedding": article_data["embedding"]
-                    }
-                    self.supabase.table("articles").update(update_fields).eq("id", article_id).execute()
-                    self.logger.debug(f"Updated existing article: {article_data['title'][:50]}... (ID: {article_id})")
+                    self.logger.debug(f"Article already exists: {article_data['title'][:50]}... (ID: {article_id})")
                 else:
                     # Insert new article
                     result = self.supabase.table("articles").insert(article_data).execute()
@@ -197,28 +190,9 @@ class ResearchDBManager:
                     "subtopics": self._serialize_subtopics(topic.subtopics)  # Store as JSON array
                 }
 
-                # Check for existing topic by name and company_id
-                existing = self.supabase.table("topics").select("id").eq("company_id", company_id).eq("name", topic.name).execute()
-
-                if existing.data:
-                    # Topic already exists - update it
-                    topic_id = existing.data[0]["id"]
-                    update_fields = {
-                        "description": topic_data["description"],
-                        "business_impact": topic_data["business_impact"],
-                        "confidence": topic_data["confidence"],
-                        "urgency": topic_data["urgency"],
-                        "extraction_date": topic_data["extraction_date"],
-                        "pipeline_iteration": topic_data["pipeline_iteration"],
-                        "subtopics": topic_data["subtopics"]
-                    }
-                    self.supabase.table("topics").update(update_fields).eq("id", topic_id).execute()
-                    self.logger.debug(f"Updated existing topic: {topic.name} (ID: {topic_id})")
-                else:
-                    # Insert new topic
-                    result = self.supabase.table("topics").insert(topic_data).execute()
-                    topic_id = result.data[0]["id"]
-                    self.logger.debug(f"Inserted new topic: {topic.name} (ID: {topic_id})")
+                # Insert topic
+                result = self.supabase.table("topics").insert(topic_data).execute()
+                topic_id = result.data[0]["id"]
 
                 # Create article-topic relationships
                 # For now, link all source articles to this topic with equal contribution
@@ -290,10 +264,8 @@ class ResearchDBManager:
                 })
 
             if relationships:
-                # Use upsert to handle duplicates (update if exists, insert if new)
-                # Note: Supabase requires a unique constraint on (article_id, topic_id) for this to work
-                self.supabase.table("article_topics").upsert(relationships, on_conflict="article_id,topic_id").execute()
-                self.logger.debug(f"Upserted {len(relationships)} article-topic relationships")
+                self.supabase.table("article_topics").insert(relationships).execute()
+                self.logger.debug(f"Created {len(relationships)} article-topic relationships")
 
         except Exception as e:
             self.logger.error(f"Error creating article-topic relationships: {e}")
@@ -389,70 +361,6 @@ class ResearchDBManager:
             self.logger.error(f"Error getting articles for topic {topic_id}: {e}")
             return []
 
-    def get_company_articles(self, company_name: str, limit: Optional[int] = 20) -> List[Dict[str, Any]]:
-        """
-        Get all articles for a company (from all topics) with topic context
-        Returns articles with their associated topic information
-        """
-        try:
-            # First get company ID
-            company_result = self.supabase.table("companies").select("id, name").eq("name", company_name).execute()
-
-            if not company_result.data:
-                company_result = self.supabase.table("companies").select("id, name").eq("ticker", company_name).execute()
-
-            if not company_result.data:
-                self.logger.warning(f"Company not found: {company_name}")
-                return []
-
-            company_id = company_result.data[0]["id"]
-
-            # Get all topics for this company with their articles
-            topics_query = self.supabase.table("topics").select("""
-                id, name, description, final_score, urgency,
-                article_topics(
-                    contribution_strength,
-                    articles(id, title, url, content, source, published_date, relevance_score)
-                )
-            """).eq("company_id", company_id).order("final_score", desc=True)
-
-            if limit:
-                topics_query = topics_query.limit(10)  # Limit topics, not articles
-
-            result = topics_query.execute()
-
-            # Flatten articles from all topics with topic context
-            articles_with_context = []
-            seen_article_ids = set()
-
-            for topic in result.data:
-                topic_name = topic.get('name', 'Unknown Topic')
-                topic_score = topic.get('final_score', 0.5)
-
-                for article_topic in topic.get('article_topics', []):
-                    article_data = article_topic.get('articles')
-                    if article_data and article_data['id'] not in seen_article_ids:
-                        # Add topic context to article
-                        article_data['topic_name'] = topic_name
-                        article_data['topic_description'] = topic.get('description', '')
-                        article_data['topic_score'] = topic_score
-                        article_data['contribution_strength'] = article_topic.get('contribution_strength', 0.5)
-
-                        articles_with_context.append(article_data)
-                        seen_article_ids.add(article_data['id'])
-
-            # Sort by relevance score and contribution strength
-            articles_with_context.sort(
-                key=lambda x: (x.get('relevance_score', 0) * x.get('contribution_strength', 0.5)),
-                reverse=True
-            )
-
-            return articles_with_context[:limit] if limit else articles_with_context
-
-        except Exception as e:
-            self.logger.error(f"Error getting articles for company {company_name}: {e}")
-            return []
-
     def get_company_research_summary(self, company_name: str) -> Dict[str, Any]:
         """
         Get a summary of all research data for a company
@@ -476,43 +384,19 @@ class ResearchDBManager:
 
     def get_topics_with_subtopics(self, company_name: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """
-        Get topics that have subtopics for a company using direct table queries
+        Get topics that have subtopics for a company using the enhanced view
         """
         try:
-            # First, get the company ID - try by name first, then by ticker
-            company_result = self.supabase.table("companies").select("id, name").eq("name", company_name).execute()
-
-            # If not found by name, try by ticker (common case when passing AAPL instead of Apple Inc.)
-            if not company_result.data:
-                company_result = self.supabase.table("companies").select("id, name").eq("ticker", company_name).execute()
-
-            if not company_result.data:
-                self.logger.warning(f"Company not found by name or ticker: {company_name}")
-                return []
-
-            company_id = company_result.data[0]["id"]
-            self.logger.info(f"Found company: {company_result.data[0]['name']} (ID: {company_id})")
-
-            # Now query topics for this company with subtopics
-            query = self.supabase.table("topics").select("""
-                id, name, description, business_impact, confidence, urgency,
-                final_score, rank_position, subtopics, extraction_date, created_at
-            """).eq("company_id", company_id).order("final_score", desc=True)
+            query = self.supabase.table("topic_with_subtopics").select("""
+                topic_id, topic_name, company_id, urgency, confidence, final_score,
+                extraction_date, subtopic_count, subtopics
+            """).eq("companies.name", company_name).gt("subtopic_count", 0).order("final_score", desc=True)
 
             if limit:
                 query = query.limit(limit)
 
             result = query.execute()
-
-            # Parse subtopics JSON if present
-            topics_data = result.data
-            for topic in topics_data:
-                if topic.get('subtopics'):
-                    import json
-                    if isinstance(topic['subtopics'], str):
-                        topic['subtopics'] = json.loads(topic['subtopics'])
-
-            return topics_data
+            return result.data
 
         except Exception as e:
             self.logger.error(f"Error getting topics with subtopics for {company_name}: {e}")

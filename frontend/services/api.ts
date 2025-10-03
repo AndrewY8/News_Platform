@@ -36,6 +36,46 @@ export interface SearchQuery {
   response?: string
 }
 
+export interface CompanySubtopic {
+  name: string
+  confidence: number
+  sources: string[]
+  article_indices: number[]
+  extraction_method: string
+}
+
+export interface CompanyArticle {
+  id: number
+  title: string
+  url: string
+  content?: string
+  source: string
+  source_domain?: string
+  published_date?: string
+  relevance_score: number
+  contribution_strength: number
+}
+
+export interface CompanyTopic {
+  id: number
+  name: string
+  description: string
+  business_impact: string
+  confidence: number
+  urgency: 'high' | 'medium' | 'low'
+  final_score?: number
+  rank_position?: number
+  subtopics: CompanySubtopic[]
+  extraction_date: string
+  articles: CompanyArticle[]
+}
+
+export interface CompanyData {
+  ticker: string
+  name: string
+  topics: CompanyTopic[]
+}
+
 export interface SecDocument {
   id: string
   title: string
@@ -619,6 +659,30 @@ export class ApiService {
     } catch (error) {
       console.error('Error getting company filings:', error)
       return []
+    }
+  }
+
+  // Company data endpoints
+  static async getCompanyTopics(ticker: string): Promise<CompanyData> {
+    try {
+      const timeoutPromise = this.createTimeoutPromise(10000, null)
+      const fetchPromise = fetch(`${API_BASE_URL}/api/companies/${ticker}/topics`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch company topics: ${response.status}`)
+          }
+          return response.json()
+        })
+
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      if (result === null) {
+        throw new Error('Request timed out')
+      }
+
+      return result
+    } catch (error) {
+      console.error('Error fetching company topics:', error)
+      throw error
     }
   }
 

@@ -7,15 +7,16 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
-
-
 
 # Import the specialized retrievers
 from ..retrievers.tavily.general_retriever import GeneralRetriever
 from ..retrievers.tavily.trusted_news_retriever import TrustedNewsRetriever
 import re
+# Import the actual TavilyRetriever and transcript
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from retrievers.EDGAR_retriever import EDGARRetriever
 
 
 @dataclass
@@ -97,7 +98,7 @@ class SearchAgent:
         self.logger = logging.getLogger(__name__)
 
         # Initialize retrievers
-        self.earnings_client = None  # TODO: Initialize earnings transcript client
+        self.earnings_client = EDGARRetriever()
 
         if openai_api_key:
             from openai import OpenAI
@@ -230,28 +231,26 @@ class SearchAgent:
                     self.logger.error("TAVILY_API_KEY environment variable is not set")
                     continue
 
-                # Search with Trusted News Retriever - use "news" topic to get published_date
+                # Search with Trusted News Retriever
                 trusted_news_retriever = TrustedNewsRetriever(
                     query=query,
-                    topic="news"  # Changed from "general" to get published_date
+                    topic="general"
                 )
                 trusted_news_response = trusted_news_retriever.search(
                     search_depth="advanced",
                     max_results=5,  # Limit trusted news results
-                    days=30,
-                    topic="news"  # Explicitly set topic to "news"
+                    days=30
                 )
 
                 # Search with General Retriever (excludes trusted news domains)
                 general_retriever = GeneralRetriever(
                     query=query,
-                    topic="news"  # Changed from "general" to get published_date
+                    topic="general"
                 )
                 general_response = general_retriever.search(
                     search_depth="advanced",
                     max_results=5,  # More general results to diversify sources
-                    days=30,
-                    topic="news"  # Explicitly set topic to "news"
+                    days=30
                 )
 
                 # Combine both responses
@@ -259,27 +258,13 @@ class SearchAgent:
 
                 # Convert response to TavilySearchResult objects
                 for item in combined_response:
-                    # Parse timestamp if available - try multiple formats
-                    timestamp = None
-                    published_date = item.get("published_date")
-
-                    if published_date:
+                    # Parse timestamp if available
+                    timestamp = datetime.now()  # Default to now
+                    if item.get("published_date"):
                         try:
-                            # Try RFC 2822 format (Thu, 04 Sep 2025 16:03:27 GMT)
-                            timestamp = parsedate_to_datetime(published_date)
-
-                            # Normalize to UTC and drop any ambiguous tzinfo differences
-                            if timestamp.tzinfo is not None:
-                                timestamp = timestamp.astimezone(timezone.utc)
-                        except Exception:
-                            self.logger.warning(f"Could not parse published_date: {published_date}")
-
-                    now = datetime.now(timezone.utc)
-                    if not timestamp or timestamp > now:
-                        timestamp = now
-                        if published_date:
-                            self.logger.debug(f"Using current time for article: {item.get('title', '')[:50]}")
-
+                            timestamp = datetime.fromisoformat(item["published_date"].replace('Z', '+00:00'))
+                        except:
+                            pass  # Use default timestamp
 
                     # Use retriever_type to determine source label
                     source_label = f"tavily_{item.get('retriever_type', 'unknown')}"
@@ -324,6 +309,24 @@ class SearchAgent:
                 timestamp=datetime.now(),
                 source="earnings_transcript"
             )
+            self.logger.info(f"Processing earnings transcript for: {company_context.name}")
+            self.earnings_client.setQuery(company_context.name)
+
+            # Use LLM to extract key information from the Apple earnings transcript
+            if company_context.name.lower() in ["apple", "apple inc"]:
+                # Process transcript in batches to avoid token limits
+                extracted_contents = await self._process_transcript_in_batches(self.earnings_client.transcript(), self.earnings_client.systemPrompt())
+
+                # Create earnings search result with combined extracted content
+                earnings_result = EarningsSearchResult(
+                    company_name="Apple Inc",
+                    quarter="Q2",
+                    fiscal_year="2025",
+                    transcript_type="earnings_call",
+                    content=extracted_contents,
+                    timestamp=datetime.now(),
+                    source="earnings_transcript"
+                )
 
             # TODO: Parse actual earnings response into EarningsSearchResult objects
             # results = []

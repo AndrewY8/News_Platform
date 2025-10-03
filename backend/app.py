@@ -1096,6 +1096,163 @@ def transform_aggregated_results_to_articles(aggregated_output):
 
     return articles
 
+# Company data endpoints
+@app.get("/api/companies/{ticker}/topics")
+@limiter.limit("20/minute")
+async def get_company_topics(ticker: str, request: Request):
+    """Get topics and articles for a specific company"""
+    try:
+        # Check if we have supabase connection
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not supabase_key:
+            logger.warning("Supabase not configured, returning mock data")
+            return get_mock_company_data(ticker)
+
+        # Import the research db manager
+        try:
+            import sys
+            sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+            from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+            # Create database manager
+            db_manager = ResearchDBManager(supabase_url, supabase_key)
+
+            # Get company data by name (since ticker field is None, companies are stored by name)
+            companies_result = db_manager.supabase.table("companies").select("*").eq("name", ticker.upper()).execute()
+
+            if not companies_result.data:
+                logger.warning(f"Company with ticker/name {ticker} not found in database, falling back to mock data")
+                return get_mock_company_data(ticker)
+
+            company = companies_result.data[0]
+
+            # Get topics with their articles
+            topics_result = db_manager.supabase.table("topics").select("""
+                id, name, description, business_impact, confidence, urgency,
+                final_score, rank_position, subtopics, extraction_date,
+                article_topics(
+                    contribution_strength,
+                    articles(id, title, url, content, source, source_domain, published_date, relevance_score)
+                )
+            """).eq("company_id", company["id"]).order("rank_position", desc=False).execute()
+
+            # Transform the data to match our interface
+            topics = []
+            for topic_data in topics_result.data:
+                # Parse subtopics from JSONB
+                subtopics = topic_data.get("subtopics", [])
+                if isinstance(subtopics, str):
+                    import json
+                    try:
+                        subtopics = json.loads(subtopics)
+                    except:
+                        subtopics = []
+
+                # Extract articles from the nested structure
+                articles = []
+                if topic_data.get("article_topics"):
+                    for article_topic in topic_data["article_topics"]:
+                        if article_topic.get("articles"):
+                            article = article_topic["articles"]
+                            articles.append({
+                                "id": article["id"],
+                                "title": article["title"],
+                                "url": article["url"],
+                                "content": article.get("content", ""),
+                                "source": article["source"],
+                                "source_domain": article.get("source_domain", ""),
+                                "published_date": article.get("published_date", ""),
+                                "relevance_score": article.get("relevance_score", 0.0),
+                                "contribution_strength": article_topic["contribution_strength"]
+                            })
+
+                topics.append({
+                    "id": topic_data["id"],
+                    "name": topic_data["name"],
+                    "description": topic_data["description"],
+                    "business_impact": topic_data["business_impact"],
+                    "confidence": topic_data["confidence"],
+                    "urgency": topic_data["urgency"],
+                    "final_score": topic_data.get("final_score"),
+                    "rank_position": topic_data.get("rank_position"),
+                    "subtopics": subtopics,
+                    "extraction_date": topic_data["extraction_date"],
+                    "articles": articles
+                })
+
+            return {
+                "ticker": company.get("ticker") or company["name"],
+                "name": company["name"],
+                "topics": topics
+            }
+
+        except ImportError as e:
+            logger.warning(f"ResearchDBManager not available: {e}")
+            return get_mock_company_data(ticker)
+        except Exception as e:
+            logger.error(f"Error fetching company data: {e}")
+            raise HTTPException(status_code=500, detail=f"Error fetching company data: {str(e)}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in get_company_topics: {e}")
+        return get_mock_company_data(ticker)
+
+def get_mock_company_data(ticker: str):
+    """Return mock company data for testing"""
+    company_names = {
+        "AAPL": "Apple Inc.",
+        "MSFT": "Microsoft Corporation",
+        "GOOGL": "Alphabet Inc.",
+        "AMZN": "Amazon.com Inc.",
+        "NVDA": "NVIDIA Corporation",
+        "TSLA": "Tesla Inc.",
+        "META": "Meta Platforms Inc."
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "name": company_names.get(ticker.upper(), f"{ticker.upper()} Corporation"),
+        "topics": [
+            {
+                "id": 1,
+                "name": "AI Infrastructure Development",
+                "description": "The company is heavily investing in artificial intelligence infrastructure to support future growth initiatives.",
+                "business_impact": "This investment is expected to drive significant revenue growth and operational efficiency improvements over the next 3-5 years.",
+                "confidence": 0.85,
+                "urgency": "high",
+                "final_score": 0.92,
+                "rank_position": 1,
+                "subtopics": [
+                    {
+                        "name": "Machine Learning Platforms",
+                        "confidence": 0.8,
+                        "sources": ["earnings-call", "tech-blog"],
+                        "article_indices": [0, 1],
+                        "extraction_method": "automated"
+                    }
+                ],
+                "extraction_date": "2024-01-15T10:00:00Z",
+                "articles": [
+                    {
+                        "id": 101,
+                        "title": f"{company_names.get(ticker.upper(), ticker)} Announces Major AI Infrastructure Investment",
+                        "url": "https://example.com/ai-investment",
+                        "content": "The company announced a $10 billion investment in AI infrastructure over the next two years...",
+                        "source": "TechCrunch",
+                        "source_domain": "techcrunch.com",
+                        "published_date": "2024-01-10T08:00:00Z",
+                        "relevance_score": 0.95,
+                        "contribution_strength": 0.9
+                    }
+                ]
+            }
+        ]
+    }
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 

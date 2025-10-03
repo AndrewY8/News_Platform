@@ -10,21 +10,18 @@ from enum import Enum
 
 # ============ SHARED DATA MODELS ============
 
-@dataclass(frozen=True)
+@dataclass
 class Subtopic:
     """Subtopic with dedicated source tracking"""
     name: str
-    sources: tuple = ()  # Changed from List to tuple for hashability
-    article_indices: tuple = ()  # Changed from List to tuple for hashability
-    confidence: float = 0.5
+    sources: List[str]
+    article_indices: List[int]
+    confidence: float
     extraction_method: str = "llm_subtopic"
 
     def __post_init__(self):
-        # Convert lists to tuples if needed for frozen dataclass
-        if isinstance(self.sources, list):
-            object.__setattr__(self, 'sources', tuple(self.sources))
-        if isinstance(self.article_indices, list):
-            object.__setattr__(self, 'article_indices', tuple(self.article_indices))
+        if self.article_indices is None:
+            self.article_indices = []
 
 @dataclass
 class CompanyContext:
