@@ -1,22 +1,24 @@
-# Use Node.js 18 as base
-FROM node:18-alpine AS builder
+# Use Node.js 18
+FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm install --frozen-lockfile
-RUN npm install -D tailwindcss@3
 
-# Copy rest of the project
+# Install dependencies
+RUN npm install
+
+# Copy source code
 COPY . .
 
-# Set NODE_ENV to production
+# Pre-compile Tailwind CSS to public folder (avoids PostCSS/Next.js conflict in Docker)
+RUN npx tailwindcss -i ./app/globals.css -o ./public/styles.css --minify
+
 ENV NODE_ENV=development
 ENV PORT=3000
 
 EXPOSE 3000
 
-# Start Next.js app
+# Start dev server
 CMD ["npm", "run", "dev"]
