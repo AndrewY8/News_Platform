@@ -7,6 +7,10 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+
+
 
 # Import the specialized retrievers
 from ..retrievers.tavily.general_retriever import GeneralRetriever
@@ -226,26 +230,28 @@ class SearchAgent:
                     self.logger.error("TAVILY_API_KEY environment variable is not set")
                     continue
 
-                # Search with Trusted News Retriever
+                # Search with Trusted News Retriever - use "news" topic to get published_date
                 trusted_news_retriever = TrustedNewsRetriever(
                     query=query,
-                    topic="general"
+                    topic="news"  # Changed from "general" to get published_date
                 )
                 trusted_news_response = trusted_news_retriever.search(
                     search_depth="advanced",
                     max_results=5,  # Limit trusted news results
-                    days=30
+                    days=30,
+                    topic="news"  # Explicitly set topic to "news"
                 )
 
                 # Search with General Retriever (excludes trusted news domains)
                 general_retriever = GeneralRetriever(
                     query=query,
-                    topic="general"
+                    topic="news"  # Changed from "general" to get published_date
                 )
                 general_response = general_retriever.search(
                     search_depth="advanced",
                     max_results=5,  # More general results to diversify sources
-                    days=30
+                    days=30,
+                    topic="news"  # Explicitly set topic to "news"
                 )
 
                 # Combine both responses
@@ -253,13 +259,27 @@ class SearchAgent:
 
                 # Convert response to TavilySearchResult objects
                 for item in combined_response:
-                    # Parse timestamp if available
-                    timestamp = datetime.now()  # Default to now
-                    if item.get("published_date"):
+                    # Parse timestamp if available - try multiple formats
+                    timestamp = None
+                    published_date = item.get("published_date")
+
+                    if published_date:
                         try:
-                            timestamp = datetime.fromisoformat(item["published_date"].replace('Z', '+00:00'))
-                        except:
-                            pass  # Use default timestamp
+                            # Try RFC 2822 format (Thu, 04 Sep 2025 16:03:27 GMT)
+                            timestamp = parsedate_to_datetime(published_date)
+
+                            # Normalize to UTC and drop any ambiguous tzinfo differences
+                            if timestamp.tzinfo is not None:
+                                timestamp = timestamp.astimezone(timezone.utc)
+                        except Exception:
+                            self.logger.warning(f"Could not parse published_date: {published_date}")
+
+                    now = datetime.now(timezone.utc)
+                    if not timestamp or timestamp > now:
+                        timestamp = now
+                        if published_date:
+                            self.logger.debug(f"Using current time for article: {item.get('title', '')[:50]}")
+
 
                     # Use retriever_type to determine source label
                     source_label = f"tavily_{item.get('retriever_type', 'unknown')}"

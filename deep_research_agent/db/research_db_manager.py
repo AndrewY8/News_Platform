@@ -136,13 +136,20 @@ class ResearchDBManager:
                     "embedding": embedding
                 }
 
-                # Handle potential duplicates by URL
+                # Handle potential duplicates by URL - update existing or insert new
                 existing = self.supabase.table("articles").select("id").eq("url", article_data["url"]).execute()
 
                 if existing.data:
-                    # Article already exists, return existing record
+                    # Article already exists - update it with latest data
                     article_id = existing.data[0]["id"]
-                    self.logger.debug(f"Article already exists: {article_data['title'][:50]}... (ID: {article_id})")
+                    update_fields = {
+                        "published_date": article_data["published_date"],
+                        "relevance_score": article_data["relevance_score"],
+                        "pipeline_iteration": article_data["pipeline_iteration"],
+                        "embedding": article_data["embedding"]
+                    }
+                    self.supabase.table("articles").update(update_fields).eq("id", article_id).execute()
+                    self.logger.debug(f"Updated existing article: {article_data['title'][:50]}... (ID: {article_id})")
                 else:
                     # Insert new article
                     result = self.supabase.table("articles").insert(article_data).execute()
@@ -190,9 +197,28 @@ class ResearchDBManager:
                     "subtopics": self._serialize_subtopics(topic.subtopics)  # Store as JSON array
                 }
 
-                # Insert topic
-                result = self.supabase.table("topics").insert(topic_data).execute()
-                topic_id = result.data[0]["id"]
+                # Check for existing topic by name and company_id
+                existing = self.supabase.table("topics").select("id").eq("company_id", company_id).eq("name", topic.name).execute()
+
+                if existing.data:
+                    # Topic already exists - update it
+                    topic_id = existing.data[0]["id"]
+                    update_fields = {
+                        "description": topic_data["description"],
+                        "business_impact": topic_data["business_impact"],
+                        "confidence": topic_data["confidence"],
+                        "urgency": topic_data["urgency"],
+                        "extraction_date": topic_data["extraction_date"],
+                        "pipeline_iteration": topic_data["pipeline_iteration"],
+                        "subtopics": topic_data["subtopics"]
+                    }
+                    self.supabase.table("topics").update(update_fields).eq("id", topic_id).execute()
+                    self.logger.debug(f"Updated existing topic: {topic.name} (ID: {topic_id})")
+                else:
+                    # Insert new topic
+                    result = self.supabase.table("topics").insert(topic_data).execute()
+                    topic_id = result.data[0]["id"]
+                    self.logger.debug(f"Inserted new topic: {topic.name} (ID: {topic_id})")
 
                 # Create article-topic relationships
                 # For now, link all source articles to this topic with equal contribution
@@ -264,8 +290,10 @@ class ResearchDBManager:
                 })
 
             if relationships:
-                self.supabase.table("article_topics").insert(relationships).execute()
-                self.logger.debug(f"Created {len(relationships)} article-topic relationships")
+                # Use upsert to handle duplicates (update if exists, insert if new)
+                # Note: Supabase requires a unique constraint on (article_id, topic_id) for this to work
+                self.supabase.table("article_topics").upsert(relationships, on_conflict="article_id,topic_id").execute()
+                self.logger.debug(f"Upserted {len(relationships)} article-topic relationships")
 
         except Exception as e:
             self.logger.error(f"Error creating article-topic relationships: {e}")
