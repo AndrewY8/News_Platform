@@ -18,6 +18,15 @@ httpx
 python-multipart
 cryptography
 google-generativeai
+itsdangerous
+langchain-core
+langchain-google-genai
+langdetect
+fuzzywuzzy
+sentence-transformers
+python-Levenshtein
+supabase
+openai
 
 # Development tools
 pytest

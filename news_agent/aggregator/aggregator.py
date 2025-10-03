@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 import time
+import os
 
 from .models import ContentChunk, ContentCluster, AggregatorOutput
 from .config import AggregatorConfig
@@ -22,6 +23,7 @@ from .clustering import ClusteringEngine
 from .scoring import ClusterScorer
 from .summarizer import GeminiSummarizer
 from .supabase_manager import SupabaseManager
+from langchain_google_genai import ChatGoogleGenerativeAI # Assuming LLM is Gemini
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -105,11 +107,23 @@ class AggregatorAgent:
             )
 
             logger.debug("DeduplicationEngine initialized")
-            
+
+            # Initialize LLM for clustering
+            api_key = self.config.summarizer.api_key or os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY is required for clustering engine")
+
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash",
+                google_api_key=api_key,
+                temperature=0.3
+            )
+
             # Clustering
             self.clustering_engine = ClusteringEngine(
                 self.config.clustering,
-                self.embedding_manager
+                self.embedding_manager,
+                llm
             )
 
             logger.debug("ClusteringEngine initialized")
@@ -121,7 +135,7 @@ class AggregatorAgent:
             # Summarization
             self.summarizer = GeminiSummarizer(
                 self.config.summarizer,
-                getattr(self.config.summarizer, 'api_key', None)
+                api_key=api_key 
             )
             
             logger.debug("GeminiSummarizer initialized")

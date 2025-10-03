@@ -30,19 +30,13 @@ export interface ChartData {
 }
 
 export class YahooFinanceService {
-  // Base URL for Yahoo Finance API (using RapidAPI as it's more reliable)
-  private static readonly BASE_URL = 'https://yh-finance.p.rapidapi.com'
-  private static readonly API_KEY = process.env.NEXT_PUBLIC_RAPIDAPI_KEY || 'demo-key'
+  // Use backend proxy to avoid CORS issues
+  private static readonly API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
   // Get real-time stock quote
   static async getStockQuote(symbol: string): Promise<StockData | null> {
     try {
-      const response = await fetch(`${this.BASE_URL}/stock/v2/get-summary?symbol=${symbol}`, {
-        headers: {
-          'X-RapidAPI-Key': this.API_KEY,
-          'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
-        }
-      })
+      const response = await fetch(`${this.API_URL}/api/finance/quote/${symbol}`)
 
       if (!response.ok) {
         console.warn(`Failed to fetch quote for ${symbol}: ${response.status}`)
@@ -50,25 +44,26 @@ export class YahooFinanceService {
       }
 
       const data = await response.json()
-      
-      if (data.price) {
-        return {
-          symbol: symbol.toUpperCase(),
-          price: data.price.regularMarketPrice?.raw || 0,
-          change: data.price.regularMarketChange?.raw || 0,
-          changePercent: data.price.regularMarketChangePercent?.raw || 0,
-          volume: data.price.regularMarketVolume?.raw || 0,
-          marketCap: data.summaryDetail?.marketCap?.raw,
-          pe: data.summaryDetail?.trailingPE?.raw,
-          dividend: data.summaryDetail?.dividendRate?.raw,
-          high: data.price.regularMarketDayHigh?.raw || 0,
-          low: data.price.regularMarketDayLow?.raw || 0,
-          open: data.price.regularMarketOpen?.raw || 0,
-          previousClose: data.price.regularMarketPreviousClose?.raw || 0
-        }
+
+      if (data.error) {
+        console.warn(`API error for ${symbol}: ${data.error}`)
+        return this.getMockStockData(symbol)
       }
 
-      return this.getMockStockData(symbol)
+      return {
+        symbol: data.symbol,
+        price: data.price,
+        change: data.change,
+        changePercent: data.changePercent,
+        volume: data.volume,
+        marketCap: data.marketCap,
+        pe: data.pe,
+        dividend: data.dividend,
+        high: data.high,
+        low: data.low,
+        open: data.open,
+        previousClose: data.previousClose
+      }
     } catch (error) {
       console.error(`Error fetching stock quote for ${symbol}:`, error)
       return this.getMockStockData(symbol)
@@ -78,12 +73,7 @@ export class YahooFinanceService {
   // Get chart data for a stock
   static async getChartData(symbol: string, interval: string = '1d', range: string = '1mo'): Promise<ChartData | null> {
     try {
-      const response = await fetch(`${this.BASE_URL}/stock/v3/get-chart?interval=${interval}&symbol=${symbol}&range=${range}`, {
-        headers: {
-          'X-RapidAPI-Key': this.API_KEY,
-          'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
-        }
-      })
+      const response = await fetch(`${this.API_URL}/api/finance/chart/${symbol}?interval=${interval}&range=${range}`)
 
       if (!response.ok) {
         console.warn(`Failed to fetch chart data for ${symbol}: ${response.status}`)
@@ -91,28 +81,17 @@ export class YahooFinanceService {
       }
 
       const data = await response.json()
-      
-      if (data.chart?.result?.[0]?.timestamp) {
-        const timestamps = data.chart.result[0].timestamp
-        const quotes = data.chart.result[0].indicators.quote[0]
-        
-        const chartData: ChartDataPoint[] = timestamps.map((timestamp: number, index: number) => ({
-          timestamp: timestamp * 1000, // Convert to milliseconds
-          open: quotes.open?.[index] || 0,
-          high: quotes.high?.[index] || 0,
-          low: quotes.low?.[index] || 0,
-          close: quotes.close?.[index] || 0,
-          volume: quotes.volume?.[index] || 0
-        }))
 
-        return {
-          symbol: symbol.toUpperCase(),
-          interval,
-          data: chartData
-        }
+      if (data.error) {
+        console.warn(`API error for ${symbol}: ${data.error}`)
+        return this.getMockChartData(symbol, interval)
       }
 
-      return this.getMockChartData(symbol, interval)
+      return {
+        symbol: data.symbol,
+        interval: data.interval,
+        data: data.data
+      }
     } catch (error) {
       console.error(`Error fetching chart data for ${symbol}:`, error)
       return this.getMockChartData(symbol, interval)

@@ -1,2 +1,0 @@
-AAPL "earnings report" "analyst coverage" "market impact" news
-AAPL "global strategy" OR "international sales" OR "technology analysis" OR "innovation trends"

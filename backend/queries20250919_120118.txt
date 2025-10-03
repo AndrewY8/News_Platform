@@ -1,2 +1,0 @@
-AAPL "earnings report" OR "analyst coverage" OR "market impact" latest
-AAPL "global market trends" OR "international strategy" OR "supply chain" analysis

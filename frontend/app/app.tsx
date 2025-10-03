@@ -4,11 +4,10 @@ import { useState, useEffect, useRef} from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ThumbsUp, ThumbsDown, Search, Bookmark, Rss, User, X, Trash2, History, Menu, BarChart3, MessageCircle, Send, Minimize2, Maximize2, Settings, Plus, Edit, ChevronDown, Building } from "lucide-react"
+import { Search, Bookmark, Rss, User, X, Trash2, BarChart3, MessageCircle, Send, Minimize2, Maximize2, Settings, Plus, Edit, ChevronDown, Building } from "lucide-react"
 import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/api"
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
-import { de } from "date-fns/locale"
 
 export default function HavenNewsApp() {
   const router = useRouter()
@@ -31,12 +30,16 @@ export default function HavenNewsApp() {
   const [showAllTickers, setShowAllTickers] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [newArticles, setNewArticles] = useState<Set<string>>(new Set())
-  
+
   // Gemini chat response state
   const [chatResponse, setChatResponse] = useState<string>("")
   const [showChatResponse, setShowChatResponse] = useState(false)
   const [showExpandedResponse, setShowExpandedResponse] = useState(false)
   const [isChatResponseLoading, setIsChatResponseLoading] = useState(false)
+
+  // Thinking steps state
+  const [thinkingSteps, setThinkingSteps] = useState<Array<{id: string, text: string, timestamp: number}>>([])
+  const [showThinkingSteps, setShowThinkingSteps] = useState(false)
   const [showSystemPromptsModal, setShowSystemPromptsModal] = useState(false)
   const [systemPrompts, setSystemPrompts] = useState<Array<{id: string, name: string, content: string}>>([])
   const [editingPrompt, setEditingPrompt] = useState<{id: string, name: string, content: string} | null>(null)
@@ -48,6 +51,10 @@ export default function HavenNewsApp() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("1mo")
   const [tickerData, setTickerData] = useState<StockData[]>([])
 
+  // Portfolio company selector state
+  const [selectedPortfolioCompany, setSelectedPortfolioCompany] = useState<string>("")
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
+
   const tabs = [
     { id: "personalized", label: "Personalized feed", icon: User, href: "/personalized-news" },
     { id: "business-news", label: "Business News", icon: Building, href: "#", hasDropdown: true },
@@ -57,6 +64,29 @@ export default function HavenNewsApp() {
   ]
 
   const timePeriods = ["1D", "1W", "1M", "3M", "1Y"]
+
+  const COMPANIES = [
+    { ticker: "AAPL", name: "Apple Inc." },
+    { ticker: "MSFT", name: "Microsoft Corporation" },
+    { ticker: "GOOGL", name: "Alphabet Inc." },
+    { ticker: "AMZN", name: "Amazon.com Inc." },
+    { ticker: "NVDA", name: "NVIDIA Corporation" },
+    { ticker: "TSLA", name: "Tesla Inc." },
+    { ticker: "META", name: "Meta Platforms Inc." },
+    { ticker: "JPM", name: "JPMorgan Chase & Co." },
+    { ticker: "V", name: "Visa Inc." },
+    { ticker: "WMT", name: "Walmart Inc." },
+    { ticker: "JNJ", name: "Johnson & Johnson" },
+    { ticker: "PG", name: "Procter & Gamble Co." },
+    { ticker: "XOM", name: "Exxon Mobil Corporation" },
+    { ticker: "BAC", name: "Bank of America Corp." },
+    { ticker: "DIS", name: "The Walt Disney Company" },
+    { ticker: "NFLX", name: "Netflix Inc." },
+    { ticker: "INTC", name: "Intel Corporation" },
+    { ticker: "AMD", name: "Advanced Micro Devices Inc." },
+    { ticker: "PYPL", name: "PayPal Holdings Inc." },
+    { ticker: "ADBE", name: "Adobe Inc." },
+  ].sort((a, b) => a.name.localeCompare(b.name))
 
   // Fake news data for testing
   const fakeNewsData: NewsArticle[] = [
@@ -404,11 +434,20 @@ useEffect(() => {
     setEditingPrompt({ ...prompt })
   }
 
-  // Load articles when tab changes
+  // Load articles when tab changes (but not for portfolio - wait for user selection)
 useEffect(() => {
-  const defaultTickers = ["AAPL"]
-  loadArticles(defaultTickers)
-}, []) // empty dependency array = run once
+  if (activeTab !== 'portfolio') {
+    const defaultTickers = ["AAPL"]
+    loadArticles(defaultTickers)
+  }
+}, [activeTab])
+
+  // Re-fetch articles when portfolio company changes
+  useEffect(() => {
+    if (activeTab === 'portfolio' && selectedPortfolioCompany) {
+      loadArticles([selectedPortfolioCompany])
+    }
+  }, [selectedPortfolioCompany])
 
   const initializeApp = async () => {
     try {
@@ -463,7 +502,6 @@ const loadArticles = async (tickers?: string[]) => {
   try {
     let fetchedArticles: NewsArticle[] = []
 
-    // console.log("Active tab:", activeTab)
     switch (activeTab) {
       case 'personalized':
         console.log("Fetching personalized news for tickers:", tickers)
@@ -473,12 +511,15 @@ const loadArticles = async (tickers?: string[]) => {
         break
 
       case 'portfolio':
-        if (cachedPersonalized.length === 0) {
-          const data = await ApiService.getPersonalizedNews()
-          setCachedPersonalized(data)
-          fetchedArticles = data // ✅ assign here
+        if (selectedPortfolioCompany) {
+          console.log("Fetching portfolio news for company:", selectedPortfolioCompany)
+          const data = await ApiService.getPersonalizedNews([selectedPortfolioCompany])
+          fetchedArticles = data
+          // Clear existing articles when switching companies
+          setArticles([])
         } else {
-          fetchedArticles = cachedPersonalized
+          // Don't load any articles if no company is selected
+          fetchedArticles = []
         }
         break
 
@@ -603,7 +644,6 @@ const getEmoji = (article: NewsArticle) => {
   return "💡"
 }
 
-
 const addTicker = async () => {
   if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
     const newTickerSymbol = newTicker.toUpperCase()
@@ -671,47 +711,107 @@ const addTicker = async () => {
     }, delay)
   }
 
+  const addThinkingStep = (step: string) => {
+    console.log('🎯 MAIN APP - addThinkingStep called with:', step)
+    console.log('🎯 MAIN APP - Current showThinkingSteps:', showThinkingSteps)
+    console.log('🎯 MAIN APP - Current thinking steps count:', thinkingSteps.length)
+
+    const newStep = {
+      id: Date.now().toString(),
+      text: step,
+      timestamp: Date.now()
+    }
+
+    setThinkingSteps(prev => {
+      const updated = [newStep, ...prev]
+      console.log('🎯 MAIN APP - Updated thinking steps:', updated.map(s => s.text))
+      // Keep only the last 4 steps for the stacking effect
+      return updated.slice(0, 4)
+    })
+
+    // Don't auto-remove individual steps - let the container control visibility
+    // Individual step removal was causing the container to disappear prematurely
+  }
+
+  // Debug the thinking steps rendering
+  useEffect(() => {
+    console.log('🎭 MAIN APP - Render state changed:', {
+      showThinkingSteps,
+      stepsLength: thinkingSteps.length,
+      steps: thinkingSteps.map(s => s.text)
+    })
+  }, [showThinkingSteps, thinkingSteps])
+
   const handleChatSubmit = async () => {
     if (!chatInput.trim() || isChatResponseLoading) return
 
     // Store the query
     const query = chatInput
     setChatInput("")
-    
-    // Show loading state
+
+    // Show loading state and thinking steps
     setIsChatResponseLoading(true)
-    setShowChatResponse(true)
-    setChatResponse("Thinking...")
+    setShowThinkingSteps(true)
+    setShowChatResponse(false)
+    setThinkingSteps([])
 
     try {
-      // Call the Gemini API
-      const chatMessage = await ApiService.sendChatMessage(query)
-      
-      // Set the response (ensure it's a string)
-      const responseContent = typeof chatMessage.content === 'string' 
-        ? chatMessage.content 
-        : JSON.stringify(chatMessage.content)
-      setChatResponse(responseContent)
-      
-      // Save to history
-      await ApiService.saveQueryHistory(query, responseContent)
-      
-      // If there are suggested articles, insert them into the feed
-      if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
-        setIsAnimating(true)
-        chatMessage.suggested_articles.forEach((article, index) => {
-          insertArticleAtPosition(article, index, index * 800)
-        })
-        
-        // End animation after all articles are done
-        setTimeout(() => {
-          setIsAnimating(false)
-        }, chatMessage.suggested_articles.length * 800 + 1500)
-      }
+      await ApiService.sendChatMessageStreaming(
+        query,
+        // onThinkingStep
+        (step: string) => {
+          addThinkingStep(step)
+        },
+        // onResponse
+        async (chatMessage: ChatMessage) => {
+          // Keep thinking steps visible for a moment, then show response
+          setShowChatResponse(true)
+
+          // Hide thinking steps after a delay to let user see final step
+          setTimeout(() => {
+            setShowThinkingSteps(false)
+            // Clear the thinking steps array when hiding to reset for next query
+            setThinkingSteps([])
+          }, 2000)
+
+          const responseContent = typeof chatMessage.content === 'string'
+            ? chatMessage.content
+            : JSON.stringify(chatMessage.content)
+          setChatResponse(responseContent)
+
+          // Save to history
+          await ApiService.saveQueryHistory(query, responseContent)
+
+          // If there are suggested articles, insert them into the feed
+          if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
+            setIsAnimating(true)
+            chatMessage.suggested_articles.forEach((article, index) => {
+              insertArticleAtPosition(article, index, index * 800)
+            })
+
+            // End animation after all articles are done
+            setTimeout(() => {
+              setIsAnimating(false)
+            }, chatMessage.suggested_articles.length * 800 + 1500)
+          }
+
+          setIsChatResponseLoading(false)
+        },
+        // onError
+        (error: string) => {
+          setShowThinkingSteps(false)
+          setThinkingSteps([]) // Clear thinking steps on error
+          setShowChatResponse(true)
+          setChatResponse(error)
+          setIsChatResponseLoading(false)
+        }
+      )
     } catch (error) {
       console.error('Chat error:', error)
+      setShowThinkingSteps(false)
+      setThinkingSteps([]) // Clear thinking steps on error
+      setShowChatResponse(true)
       setChatResponse("I apologize, but I'm experiencing technical difficulties. Please try again.")
-    } finally {
       setIsChatResponseLoading(false)
     }
   }
@@ -954,29 +1054,38 @@ const addTicker = async () => {
                     }`}
                   >
                     <div className="flex gap-4 w-full">
-                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-center tracking-wide">
+                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-start pt-0.5 tracking-wide">
                         {article.date.includes(':') && <span className="mr-1">🔥</span>}
                         {article.date}
                       </div>
 
-                      <div className="flex-1 flex flex-col justify-center">
-                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-xs lg:text-sm tracking-wide">
-                          <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      <div className="flex-1 flex flex-col">
+                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-sm lg:text-base tracking-wide">
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline hover:text-blue-600 transition-colors"
+                          >
                             {article.title}
                           </a>
                         </h3>
-                        <p className="text-gray-600 text-xs leading-tight tracking-wide">{article.preview}</p>
-                      </div>
+                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed tracking-wide mb-2">{article.preview}</p>
 
-                      <div className="flex-shrink-0 text-right flex items-center">
-                        {(article.tags || []).map((tag: any, index: number) => {
-                          const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
-                          return (
-                            <div key={index} className="text-xs text-gray-500 font-mono tracking-wide mx-0.5 sm:mx-1">
-                              {tagText}
-                            </div>
-                          )
-                        })}
+                        {/* Tags moved below content, smaller and wrapped */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(article.tags || []).slice(0, 3).map((tag: any, index: number) => {
+                            const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
+                            return (
+                              <span
+                                key={index}
+                                className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-mono tracking-wide"
+                              >
+                                {tagText}
+                              </span>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1004,8 +1113,8 @@ const addTicker = async () => {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Current Section</span>
                     <span className="text-sm font-semibold text-gray-900 capitalize">
-                      {activeTab === 'personalized' ? 'Personalized Feed' : 
-                       activeTab === 'portfolio' ? 'Portfolio News' :
+                      {activeTab === 'personalized' ? 'Personalized Feed' :
+                       activeTab === 'portfolio' ? (selectedPortfolioCompany ? COMPANIES.find(c => c.ticker === selectedPortfolioCompany)?.ticker || 'Portfolio News' : 'Portfolio News') :
                        activeTab === 'saved' ? 'Saved Articles' : 'SEC Documents'}
                     </span>
                   </div>
@@ -1031,26 +1140,74 @@ const addTicker = async () => {
               </div>
             </div>
 
+            {/* Portfolio Company Selector - Only show on portfolio page */}
+            {activeTab === 'portfolio' && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Select Company</h4>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-left flex items-center justify-between hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <span className={selectedPortfolioCompany ? "text-gray-900" : "text-gray-500"}>
+                      {selectedPortfolioCompany
+                        ? `${COMPANIES.find(c => c.ticker === selectedPortfolioCompany)?.name} (${selectedPortfolioCompany})`
+                        : "Choose a company..."}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showCompanyDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showCompanyDropdown && (
+                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                      {COMPANIES.map((company) => (
+                        <button
+                          key={company.ticker}
+                          onClick={() => {
+                            setSelectedPortfolioCompany(company.ticker)
+                            setShowCompanyDropdown(false)
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors text-xs ${
+                            selectedPortfolioCompany === company.ticker ? 'bg-blue-100' : ''
+                          }`}
+                        >
+                          <div className="font-medium text-gray-900">{company.name}</div>
+                          <div className="text-xs text-gray-500">{company.ticker}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Interests List */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
               <div className="grid grid-cols-2 gap-1">
                 {tickerData.slice(0, 6).map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => handleTickerSelect(ticker.symbol)}
-                    className={`p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => handleTickerSelect(ticker.symbol)}
+                      className={`w-full p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => router.push(`/companies/${ticker.symbol}`)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-1 py-0.5 text-[8px] hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
                 {tickerData.length > 6 && (
                   <button
@@ -1061,7 +1218,7 @@ const addTicker = async () => {
                   </button>
                 )}
               </div>
-              
+
               {/* Add New Interest */}
               <div className="space-y-2">
                 <Input
@@ -1128,24 +1285,35 @@ const addTicker = async () => {
               <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
               <div className="grid grid-cols-2 gap-1">
                 {tickerData.slice(0, 6).map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => {
-                      handleTickerSelect(ticker.symbol)
-                      setShowMobileSidebar(false)
-                    }}
-                    className={`p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => {
+                        handleTickerSelect(ticker.symbol)
+                        setShowMobileSidebar(false)
+                      }}
+                      className={`w-full p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.changePercent.toFixed(1)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMobileSidebar(false)
+                        router.push(`/companies/${ticker.symbol}`)
+                      }}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-1 py-0.5 text-[8px] hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
                 {tickerData.length > 6 && (
                   <button
@@ -1198,24 +1366,35 @@ const addTicker = async () => {
             <div className="overflow-y-auto max-h-96">
               <div className="grid grid-cols-3 gap-2">
                 {tickerData.map((ticker) => (
-                  <button
-                    key={ticker.symbol}
-                    onClick={() => {
-                      handleTickerSelect(ticker.symbol)
-                      setShowAllTickers(false)
-                    }}
-                    className={`p-2 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-sm ${
-                      selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="font-semibold text-gray-900 mb-1">{ticker.symbol}</div>
-                    <div className="text-gray-600 mb-1">${ticker.price.toFixed(2)}</div>
-                    <div className={`font-medium text-sm ${
-                      ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {ticker.change >= 0 ? '+' : ''}{ticker.change.toFixed(2)} ({ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%)
-                    </div>
-                  </button>
+                  <div key={ticker.symbol} className="relative group">
+                    <button
+                      onClick={() => {
+                        handleTickerSelect(ticker.symbol)
+                        setShowAllTickers(false)
+                      }}
+                      className={`w-full p-2 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-sm ${
+                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-900 mb-1">{ticker.symbol}</div>
+                      <div className="text-gray-600 mb-1">${ticker.price.toFixed(2)}</div>
+                      <div className={`font-medium text-sm ${
+                        ticker.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {ticker.change >= 0 ? '+' : ''}{ticker.change.toFixed(2)} ({ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%)
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAllTickers(false)
+                        router.push(`/companies/${ticker.symbol}`)
+                      }}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white rounded px-2 py-1 text-xs hover:bg-blue-700"
+                      title={`View ${ticker.symbol} company page`}
+                    >
+                      VIEW
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1303,6 +1482,51 @@ const addTicker = async () => {
               >
                 Close
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Thinking Steps Display */}
+      {showThinkingSteps && thinkingSteps.length > 0 && (
+        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+          <div className="relative">
+            {thinkingSteps.map((step, index) => {
+              const opacity = index === 0 ? 'opacity-100' :
+                            index === 1 ? 'opacity-70' :
+                            index === 2 ? 'opacity-40' : 'opacity-20'
+
+              const scale = index === 0 ? 'scale-100' :
+                           index === 1 ? 'scale-95' :
+                           index === 2 ? 'scale-90' : 'scale-85'
+
+              const blur = index === 0 ? '' :
+                          index === 1 ? 'backdrop-blur-sm' : 'backdrop-blur-xs'
+
+              return (
+                <div
+                  key={step.id}
+                  className={`absolute inset-0 bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transition-all duration-500 ${opacity} ${scale} ${blur}`}
+                  style={{
+                    transform: `translateY(${index * -8}px) ${scale}`,
+                    zIndex: 40 - index
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {index === 0 && (
+                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
+                    )}
+                    <span className="text-sm text-gray-700 line-clamp-2">{step.text}</span>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Spacer to maintain height */}
+            <div className="invisible bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full h-3 w-3"></div>
+                <span className="text-sm">Placeholder</span>
+              </div>
             </div>
           </div>
         </div>

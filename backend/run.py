@@ -62,16 +62,19 @@ def main():
         print("  python database_utils.py init")
         print("\nContinuing anyway...")
     
-    print("\n🌐 Starting server on http://localhost:8004")
+    # Get port from environment or use default
+    port = int(os.getenv("PORT", "8000"))
+
+    print(f"\n🌐 Starting server on http://localhost:{port}")
     print("📱 Frontend should be running on http://localhost:3000")
     print("🛑 Press Ctrl+C to stop the server")
     print("=" * 50)
-    
+
     # Run the FastAPI app
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=8004,
+        port=port,
         reload=True,  # Enable auto-reload during development
         log_level="info"
     )

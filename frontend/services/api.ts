@@ -1,5 +1,5 @@
-// API service for backend communication  
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8004'
+// API service for backend communication
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export interface NewsArticle {
   id: string
@@ -34,6 +34,46 @@ export interface SearchQuery {
   query: string
   timestamp: Date
   response?: string
+}
+
+export interface CompanySubtopic {
+  name: string
+  confidence: number
+  sources: string[]
+  article_indices: number[]
+  extraction_method: string
+}
+
+export interface CompanyArticle {
+  id: number
+  title: string
+  url: string
+  content?: string
+  source: string
+  source_domain?: string
+  published_date?: string
+  relevance_score: number
+  contribution_strength: number
+}
+
+export interface CompanyTopic {
+  id: number
+  name: string
+  description: string
+  business_impact: string
+  confidence: number
+  urgency: 'high' | 'medium' | 'low'
+  final_score?: number
+  rank_position?: number
+  subtopics: CompanySubtopic[]
+  extraction_date: string
+  articles: CompanyArticle[]
+}
+
+export interface CompanyData {
+  ticker: string
+  name: string
+  topics: CompanyTopic[]
 }
 
 export interface SecDocument {
@@ -257,9 +297,9 @@ export class ApiService {
           conversation_history: []
         })
       })
-      
+
       if (!response.ok) throw new Error(`Failed to send chat message: ${response.status}`)
-      
+
       const data = await response.json()
       return {
         role: 'assistant',
@@ -276,6 +316,73 @@ export class ApiService {
         timestamp: new Date(),
         suggested_articles: []
       }
+    }
+  }
+
+  // Streaming chat with thinking steps
+  static async sendChatMessageStreaming(
+    message: string,
+    onThinkingStep: (step: string) => void,
+    onResponse: (response: ChatMessage) => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          user_id: 1,
+          conversation_history: []
+        })
+      })
+
+      if (!response.ok) throw new Error(`Failed to send streaming chat message: ${response.status}`)
+
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('No response body reader')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              console.log('🔍 Raw line received:', line)
+              const data = JSON.parse(line.slice(6))
+              console.log('📦 Parsed data:', data)
+
+              if (data.type === 'thinking') {
+                console.log('🤔 THINKING STEP RECEIVED:', data.step)
+                onThinkingStep(data.step)
+              } else if (data.type === 'response') {
+                console.log('✅ RESPONSE RECEIVED:', data)
+                onResponse({
+                  role: 'assistant',
+                  content: data.response,
+                  timestamp: new Date(),
+                  suggested_articles: data.suggested_articles ? this.transformArticles(data.suggested_articles) : []
+                })
+              } else if (data.type === 'error') {
+                onError(data.message)
+              }
+            } catch (e) {
+              console.error('Error parsing stream data:', e)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Streaming chat error:', error)
+      onError('I apologize, but I\'m experiencing technical difficulties right now. Please try again in a moment.')
     }
   }
 
@@ -552,6 +659,30 @@ export class ApiService {
     } catch (error) {
       console.error('Error getting company filings:', error)
       return []
+    }
+  }
+
+  // Company data endpoints
+  static async getCompanyTopics(ticker: string): Promise<CompanyData> {
+    try {
+      const timeoutPromise = this.createTimeoutPromise(10000, null)
+      const fetchPromise = fetch(`${API_BASE_URL}/api/companies/${ticker}/topics`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch company topics: ${response.status}`)
+          }
+          return response.json()
+        })
+
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      if (result === null) {
+        throw new Error('Request timed out')
+      }
+
+      return result
+    } catch (error) {
+      console.error('Error fetching company topics:', error)
+      throw error
     }
   }
 

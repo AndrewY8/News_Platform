@@ -564,26 +564,54 @@ class TextPreprocessor:
             logger.error(f"Expected planner_results to be a dictionary, but got {type(planner_results)}. Skipping processing.")
             return []
 
-        # Process each category
+        # Check if this is a PlannerAgent retriever result format
+        if 'retriever' in planner_results and 'results' in planner_results:
+            logger.info(f"Processing PlannerAgent retriever format: {planner_results.get('retriever')}")
+            if planner_results.get('status') == 'success':
+                retriever_name = planner_results.get('retriever', '').lower()
+                results = planner_results.get('results', [])
+
+                # Map retriever to category
+                if 'edgar' in retriever_name:
+                    category = 'sec_filings'
+                elif 'tavily' in retriever_name or 'financial' in retriever_name:
+                    category = 'financial_news'
+                elif 'breaking' in retriever_name or 'urgent' in retriever_name:
+                    category = 'breaking_news'
+                else:
+                    category = 'general_news'
+
+                logger.info(f"Processing {len(results)} items from {retriever_name} as {category}")
+
+                for item in results:
+                    if isinstance(item, dict) and ('content' in item or 'body' in item or 'title' in item):
+                        chunk = self.process_planner_result_item(item, category)
+                        if chunk:
+                            chunks.append(chunk)
+
+            logger.info(f"Successfully processed {len(chunks)} content chunks from retriever format")
+            return chunks
+
+        # Original category-based format
         categories = ['breaking_news', 'financial_news', 'sec_filings', 'general_news']
-        
+
         for category in categories:
             if category not in planner_results:
                 continue
-            
+
             items = planner_results[category]
-            
+
             # Ensure items is a list before iterating
             if not isinstance(items, list):
                 logger.warning(f"Expected items for category '{category}' to be a list, but got {type(items)}. Skipping.")
                 continue
 
             logger.info(f"Processing {len(items)} items from {category}")
-            
+
             for item in items:
                 chunk = self.process_planner_result_item(item, category)
                 if chunk:
                     chunks.append(chunk)
-        
+
         logger.info(f"Successfully processed {len(chunks)} content chunks")
         return chunks

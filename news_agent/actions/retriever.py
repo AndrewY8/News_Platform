@@ -8,7 +8,6 @@ from ..retrievers.custom.custom import CustomRetriever
 from ..retrievers.duckduckgo.duckduckgo import DuckDuckGoRetriever
 from ..retrievers.exa.exa import ExaRetriever
 from ..retrievers.google.google import GoogleRetriever
-# from ..retrievers.mcp.retriever import MCPRetriever
 from ..retrievers.searchapi.searchapi import SearchAPIRetriever
 from ..retrievers.searx.searx import SearxRetriever
 from ..retrievers.serpapi.serpapi import SerpAPIRetriever
@@ -28,6 +27,7 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     Returns:
         List[Tuple[Any, str]]: List of (retriever_instance, specialized_task) tuples
     """
+
     retriever_classes = [
         TavilyRetriever,
         EDGARRetriever,
@@ -39,9 +39,7 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
     ]
     
     tasks = []
-  
-    # ['TavilyRetriever', 'SerperSearch', 'GoogleSearch', 'SerpApiSearch', 'ExaSearch', 'SearchApiSearch']
-    
+
     for query in queries:
         model = client.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(pick_retriever(query, ['TavilyRetriever']))
@@ -49,7 +47,4 @@ def get_retriever_tasks(queries: str, client) -> List[Tuple[Any, str]]:
         print(response.text)
         index = int(response.text)
         tasks.append((retriever_classes[index], query))
-
-    
     return tasks
-    

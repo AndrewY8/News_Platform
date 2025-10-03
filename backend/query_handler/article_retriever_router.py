@@ -1,9 +1,11 @@
 """
-Article Retriever Router Module - Updated to use News Agent System
-Contains all article retrieval endpoints using PlannerAgent.
+Article Retriever Router Module - Updated to use Deep Research Agent System
+Contains all article retrieval endpoints using OrchestratorAgent.
 """
 
 import logging
+import hashlib
+import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import Request, Depends, HTTPException
@@ -15,35 +17,49 @@ from slowapi.util import get_remote_address
 import os
 import sys
 
-# Add parent directory to path for news_agent imports
+# Add parent directory to path for deep_research_agent imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 try:
-    from news_agent.agent import PlannerAgent
-    from news_agent.aggregator.aggregator import AggregatorAgent
-    NEWS_AGENT_AVAILABLE = True
+    from deep_news_agent.agents.orchestrator_agent import OrchestratorAgent
+    from deep_news_agent.agents.topic_agent import TopicAgent
+    from deep_news_agent.agents.search_agent import SearchAgent
+    from deep_news_agent.agents.ranking_agent import RankingAgent
+    from deep_news_agent.agents.interfaces import CompanyContext, PipelineConfig
+    from deep_news_agent.config.api_keys import get_api_keys
+    DEEP_RESEARCH_AVAILABLE = True
 except Exception as e:
-    NEWS_AGENT_AVAILABLE = False
-    print(f"Warning: News Agent System not available in article retriever router: {e}")
+    DEEP_RESEARCH_AVAILABLE = False
+    print(f"Warning: Deep Research Agent System not available in article retriever router: {e}")
 
 logger = logging.getLogger(__name__)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize news agent system
-news_agent = None
-aggregator_agent = None
+# Initialize deep research database manager (for reading pre-computed results)
+research_db_manager = None
 
-if NEWS_AGENT_AVAILABLE:
+if DEEP_RESEARCH_AVAILABLE:
     try:
-        news_agent = PlannerAgent(max_concurrent_retrievers=3)
-        aggregator_agent = AggregatorAgent()
-        logger.info("Article retriever router: News Agent System initialized")
+        from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+        # Initialize database manager for fetching pre-computed research
+        supabase_url = os.getenv("SUPABASE_URL")
+        # For read-only operations, anon key is fine. Service key can bypass RLS if needed.
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if supabase_url and supabase_key:
+            research_db_manager = ResearchDBManager(supabase_url, supabase_key)
+            logger.info("✅ Article retriever router: Deep Research Database Manager initialized")
+        else:
+            logger.warning("⚠️ Supabase credentials not found - Deep Research database disabled")
+            research_db_manager = None
     except Exception as e:
-        logger.error(f"Article retriever router: Failed to initialize News Agent System: {e}")
-        news_agent = None
-        aggregator_agent = None
+        logger.error(f"❌ Article retriever router: Failed to initialize Deep Research Database Manager: {e}", exc_info=True)
+        research_db_manager = None
+else:
+    research_db_manager = None
 
 # Pydantic Models for Articles
 class ArticleModel(BaseModel):
@@ -59,33 +75,73 @@ class ArticleModel(BaseModel):
     tags: Optional[str] = None
 
 # Result transformation functions
-def transform_agent_results_to_articles(agent_results):
-    """Transform news agent results to frontend-compatible article format"""
+def transform_db_articles_to_frontend(articles_data: List[Dict], company_name: str):
+    """Transform database articles to frontend-compatible format"""
     articles = []
 
-    if not agent_results or not isinstance(agent_results, list):
+    if not articles_data:
         return articles
 
-    for result in agent_results:
-        if result.get('status') != 'success' or not result.get('results'):
+    for article_data in articles_data:
+        try:
+            # Use article ID from database
+            article_id = str(article_data.get('id', hashlib.md5(str(article_data).encode()).hexdigest()[:16]))
+
+            # Build tags from company and topic
+            tags = [company_name]
+            if article_data.get('topic_name'):
+                tags.append(article_data['topic_name'])
+
+            # Extract content preview
+            content = article_data.get('content', '')
+            title = article_data.get('title', 'Untitled Article')
+            preview = content[:200] + "..." if len(content) > 200 else content
+
+            article = {
+                "id": article_id,
+                "date": format_article_date(article_data.get('published_date')),
+                "title": title,
+                "source": article_data.get('source', 'Unknown'),
+                "preview": preview,
+                "sentiment": determine_sentiment_from_score(article_data.get('relevance_score')),
+                "tags": tags,
+                "url": article_data.get('url'),  # Actual article URL!
+                "relevance_score": article_data.get('relevance_score', 0.5),
+                "category": "News"
+            }
+            articles.append(article)
+
+        except Exception as e:
+            logger.error(f"Error transforming database article: {e}", exc_info=True)
             continue
 
-        retriever_name = result.get('retriever', 'Unknown')
-        results = result.get('results', [])
-
-        for item in results:
-            article = transform_single_result_to_article(item, retriever_name)
-            if article:
-                articles.append(article)
-
     return articles
+
+def determine_sentiment_from_score(score):
+    """Determine sentiment from relevance score"""
+    if not score:
+        return 'neutral'
+    if score >= 0.7:
+        return 'positive'
+    elif score <= 0.3:
+        return 'negative'
+    return 'neutral'
 
 def transform_single_result_to_article(item, source_retriever):
     """Transform a single retrieval result to article format"""
     try:
         if isinstance(item, dict):
+            # Generate unique ID using URL or content hash
+            if item.get('id'):
+                article_id = str(item['id'])
+            elif item.get('url'):
+                article_id = hashlib.md5(item['url'].encode()).hexdigest()[:16]
+            else:
+                # Use MD5 hash of the entire item for uniqueness
+                article_id = hashlib.md5(str(item).encode()).hexdigest()[:16]
+
             return {
-                "id": item.get('id') or f"{source_retriever}-{hash(str(item))}"[:16],
+                "id": article_id,
                 "date": format_article_date(item.get('published_date') or item.get('date') or item.get('timestamp')),
                 "title": item.get('title') or item.get('headline') or 'Untitled Article',
                 "source": item.get('source') or source_retriever,
@@ -97,8 +153,10 @@ def transform_single_result_to_article(item, source_retriever):
                 "category": item.get('category') or 'General'
             }
         elif isinstance(item, str):
+            # Generate unique ID for string items
+            article_id = hashlib.md5(item.encode()).hexdigest()[:16]
             return {
-                "id": f"{source_retriever}-{hash(item)}"[:16],
+                "id": article_id,
                 "date": "Today",
                 "title": item[:100] + "..." if len(item) > 100 else item,
                 "source": source_retriever,
@@ -200,50 +258,63 @@ def get_fallback_articles():
     ]
 
 # Article Route Functions
-async def get_personalized_articles_handler(db: Session, Article):
-    """Get personalized articles using news agent system"""
+async def get_personalized_articles_handler(db: Session, Article, tickers: Optional[str] = None):
+    """Get personalized articles from pre-computed deep research database"""
     try:
-        default_query = "latest financial news market updates"
+        # Build company context based on tickers if provided
+        if tickers:
+            ticker_list = [t.strip().upper() for t in tickers.split(',') if t.strip()]
+            if not ticker_list:
+                return JSONResponse(content=get_fallback_articles())
 
-        if NEWS_AGENT_AVAILABLE and news_agent:
-            agent_results = await news_agent.run_async(default_query)
-            articles = transform_agent_results_to_articles(agent_results)
+            # Use first ticker as primary company
+            primary_ticker = ticker_list[0]
+            logger.info(f"Fetching pre-computed research for ticker: {primary_ticker}")
+
+            if research_db_manager:
+                # Fetch actual articles from database (not just topics)
+                articles_data = research_db_manager.get_company_articles(
+                    company_name=primary_ticker,
+                    limit=20
+                )
+
+                if articles_data:
+                    # Transform database articles to frontend format
+                    articles = transform_db_articles_to_frontend(articles_data, primary_ticker)
+                    logger.info(f"Retrieved {len(articles)} pre-computed articles for {primary_ticker}")
+                    return JSONResponse(content=articles)
+                else:
+                    logger.info(f"No pre-computed research found for {primary_ticker}, returning fallback")
+                    return JSONResponse(content=get_fallback_articles())
+            else:
+                logger.warning("Research database manager not available, using fallback")
+                return JSONResponse(content=get_fallback_articles())
         else:
-            articles = get_fallback_articles()
-
-        return JSONResponse(content=articles[:10])
+            return JSONResponse(content=get_fallback_articles())
 
     except Exception as e:
-        logger.error(f"Error getting personalized articles: {e}")
+        logger.error(f"Error getting personalized articles: {e}", exc_info=True)
         return JSONResponse(content=get_fallback_articles())
 
 async def get_top_articles_handler(db: Session, Article):
-    """Get top articles using news agent system"""
+    """Get top articles - returns fallback for now"""
     try:
-        top_query = "breaking news financial markets today"
-
-        if NEWS_AGENT_AVAILABLE and news_agent:
-            agent_results = await news_agent.run_async(top_query)
-            articles = transform_agent_results_to_articles(agent_results)
-        else:
-            articles = get_fallback_articles()
-
-        return JSONResponse(content=articles[:15])
+        # For top articles, we can return fallback or implement a general market research
+        # Deep research agent is designed for company-specific research
+        logger.info("Top articles requested - returning fallback")
+        return JSONResponse(content=get_fallback_articles())
 
     except Exception as e:
         logger.error(f"Error getting top articles: {e}")
         return JSONResponse(content=get_fallback_articles())
 
 async def search_articles_handler(query: str, db: Session, Article):
-    """Search articles using news agent system"""
+    """Search articles - returns fallback for now"""
     try:
-        if NEWS_AGENT_AVAILABLE and news_agent:
-            agent_results = await news_agent.run_async(query)
-            articles = transform_agent_results_to_articles(agent_results)
-        else:
-            articles = get_fallback_articles()
-
-        return JSONResponse(content=articles[:20])
+        # For search, we can return fallback or implement query-based research
+        # Deep research agent is optimized for company-specific research
+        logger.info(f"Article search requested for: {query} - returning fallback")
+        return JSONResponse(content=get_fallback_articles())
 
     except Exception as e:
         logger.error(f"Error searching articles: {e}")
@@ -255,8 +326,8 @@ def add_article_retrieval_routes(app, shared_limiter, get_db, Article):
 
     @app.get("/api/articles")
     @shared_limiter.limit("30/minute")
-    async def get_personalized_articles(request: Request, db: Session = Depends(get_db)):
-        return await get_personalized_articles_handler(db, Article)
+    async def get_personalized_articles(request: Request, tickers: Optional[str] = None, db: Session = Depends(get_db)):
+        return await get_personalized_articles_handler(db, Article, tickers)
 
     @app.get("/api/articles/top")
     @shared_limiter.limit("30/minute")

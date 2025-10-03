@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from news_agent.aggregator.models import ContentChunk, ContentCluster, ClusterMetadata
 from news_agent.aggregator.embeddings import EmbeddingManager
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 logger = logging.getLogger(__name__)
 

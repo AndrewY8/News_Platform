@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # For production, use the server's public IP or domain
+      # Override this with: export NEXT_PUBLIC_API_URL=http://your-server-ip:8000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: backend
+    ports:
+      - "8000:8000"  # Backend always runs on port 8000
+    environment:
+      - PYTHONPATH=/app
+      - PORT=8000
+      # Set this to your actual production frontend URL
+      # Override this with: export FRONTEND_URL=http://your-server-ip:3000
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    env_file:
+      - .env
+    restart: unless-stopped

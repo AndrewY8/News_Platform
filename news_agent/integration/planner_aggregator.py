@@ -21,7 +21,6 @@ from ..aggregator.models import AggregatorOutput
 
 logger = logging.getLogger(__name__)
 
-
 class EnhancedPlannerAgent:
     """
     Enhanced PlannerAgent that combines content retrieval with aggregation.
@@ -161,12 +160,6 @@ class EnhancedPlannerAgent:
         except Exception as e:
             logger.error(f"Enhanced PlannerAgent failed: {e}")
             return [self._create_error_response(str(e))]
-            # Fallback to original planner results
-            # try:
-            #     return await self.planner_agent.run_async(query)
-            # except Exception as fallback_error:
-            #     logger.error(f"Fallback also failed: {fallback_error}")
-            #     return self._create_error_response(str(e))
     
     def run(self, query: str, 
             user_preferences: Optional[Dict[str, Any]] = None,
@@ -440,7 +433,7 @@ async def example_enhanced_usage():
     
     # Create enhanced planner
     planner = create_enhanced_planner(
-        gemini_api_key="your-api-key-here",
+        gemini_api_key="",
         database_url="postgresql://user:pass@localhost/db"
     )
     

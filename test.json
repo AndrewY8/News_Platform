@@ -1,9 +1,0 @@
-curl --request POST \
-  --url https://api.tavily.com/search \
-  --header 'Authorization: Bearer ' \
-  --header 'Content-Type: application/json' \
-  --data '{
-  "query": "AAPL",
-  "auto_parameters": true,
-  "topic": "news",
-}'
