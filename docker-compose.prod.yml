@@ -28,7 +28,7 @@ services:
       - PYTHONPATH=/app
       - PORT=8000
       # Frontend URL for CORS (when accessed from host machine)
-      - FRONTEND_URL=http://3.92.79.99:3000
+      - FRONTEND_URL=http://3.92.79.88:3000
     env_file:
       - .env
     restart: unless-stopped
