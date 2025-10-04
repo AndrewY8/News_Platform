@@ -361,6 +361,70 @@ class ResearchDBManager:
             self.logger.error(f"Error getting articles for topic {topic_id}: {e}")
             return []
 
+    def get_company_articles(self, company_name: str, limit: Optional[int] = 20) -> List[Dict[str, Any]]:
+        """
+        Get all articles for a company (from all topics) with topic context
+        Returns articles with their associated topic information
+        """
+        try:
+            # First get company ID
+            company_result = self.supabase.table("companies").select("id, name").eq("name", company_name).execute()
+
+            if not company_result.data:
+                company_result = self.supabase.table("companies").select("id, name").eq("ticker", company_name).execute()
+
+            if not company_result.data:
+                self.logger.warning(f"Company not found: {company_name}")
+                return []
+
+            company_id = company_result.data[0]["id"]
+
+            # Get all topics for this company with their articles
+            topics_query = self.supabase.table("topics").select("""
+                id, name, description, final_score, urgency,
+                article_topics(
+                    contribution_strength,
+                    articles(id, title, url, content, source, published_date, relevance_score)
+                )
+            """).eq("company_id", company_id).order("final_score", desc=True)
+
+            if limit:
+                topics_query = topics_query.limit(10)  # Limit topics, not articles
+
+            result = topics_query.execute()
+
+            # Flatten articles from all topics with topic context
+            articles_with_context = []
+            seen_article_ids = set()
+
+            for topic in result.data:
+                topic_name = topic.get('name', 'Unknown Topic')
+                topic_score = topic.get('final_score', 0.5)
+
+                for article_topic in topic.get('article_topics', []):
+                    article_data = article_topic.get('articles')
+                    if article_data and article_data['id'] not in seen_article_ids:
+                        # Add topic context to article
+                        article_data['topic_name'] = topic_name
+                        article_data['topic_description'] = topic.get('description', '')
+                        article_data['topic_score'] = topic_score
+                        article_data['contribution_strength'] = article_topic.get('contribution_strength', 0.5)
+
+                        articles_with_context.append(article_data)
+                        seen_article_ids.add(article_data['id'])
+
+            # Sort by relevance score and contribution strength
+            articles_with_context.sort(
+                key=lambda x: (x.get('relevance_score', 0) * x.get('contribution_strength', 0.5)),
+                reverse=True
+            )
+
+            return articles_with_context[:limit] if limit else articles_with_context
+
+        except Exception as e:
+            self.logger.error(f"Error getting articles for company {company_name}: {e}")
+            return []
+
     def get_company_research_summary(self, company_name: str) -> Dict[str, Any]:
         """
         Get a summary of all research data for a company

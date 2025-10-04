@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer
+from fastapi.staticfiles import StaticFiles
 import requests
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -277,6 +278,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept", "Accept-Language", "Content-Language"],
 )
+
+# Note: For dynamic Next.js app, frontend runs separately on port 3000
+# Static file serving removed - frontend and backend are separate services
 
 
 # Middleware for logging
@@ -1252,6 +1256,84 @@ def get_mock_company_data(ticker: str):
             }
         ]
     }
+
+# Yahoo Finance proxy endpoints
+@app.get("/api/finance/quote/{symbol}")
+@limiter.limit("60/minute")
+async def get_stock_quote(symbol: str, request: Request):
+    """Proxy endpoint for Yahoo Finance stock quotes"""
+    try:
+        if not YFINANCE_AVAILABLE:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Yahoo Finance service not available"}
+            )
+
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+
+        return JSONResponse(content={
+            "symbol": symbol.upper(),
+            "price": info.get("currentPrice") or info.get("regularMarketPrice", 0),
+            "change": info.get("regularMarketChange", 0),
+            "changePercent": info.get("regularMarketChangePercent", 0),
+            "volume": info.get("volume") or info.get("regularMarketVolume", 0),
+            "marketCap": info.get("marketCap"),
+            "pe": info.get("trailingPE"),
+            "dividend": info.get("dividendRate"),
+            "high": info.get("dayHigh") or info.get("regularMarketDayHigh", 0),
+            "low": info.get("dayLow") or info.get("regularMarketDayLow", 0),
+            "open": info.get("open") or info.get("regularMarketOpen", 0),
+            "previousClose": info.get("previousClose") or info.get("regularMarketPreviousClose", 0)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching quote for {symbol}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+@app.get("/api/finance/chart/{symbol}")
+@limiter.limit("60/minute")
+async def get_stock_chart(
+    symbol: str,
+    request: Request,
+    interval: str = "1d",
+    range: str = "1mo"
+):
+    """Proxy endpoint for Yahoo Finance chart data"""
+    try:
+        if not YFINANCE_AVAILABLE:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Yahoo Finance service not available"}
+            )
+
+        ticker = yf.Ticker(symbol)
+        hist = ticker.history(period=range, interval=interval)
+
+        chart_data = []
+        for index, row in hist.iterrows():
+            chart_data.append({
+                "timestamp": int(index.timestamp() * 1000),
+                "open": float(row["Open"]),
+                "high": float(row["High"]),
+                "low": float(row["Low"]),
+                "close": float(row["Close"]),
+                "volume": int(row["Volume"])
+            })
+
+        return JSONResponse(content={
+            "symbol": symbol.upper(),
+            "interval": interval,
+            "data": chart_data
+        })
+    except Exception as e:
+        logger.error(f"Error fetching chart for {symbol}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
