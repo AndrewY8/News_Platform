@@ -280,7 +280,7 @@ class IntelligentQueryRouter:
                     matched_topic = self.topic_matcher.match_query_to_topics(
                         query_topics=search_terms,
                         existing_topics=company_topics,  # Already filtered by company
-                        threshold=0.60  # Lowered threshold for keyword matching
+                        threshold=0.30  # Lower threshold for broader matching
                     )
 
                     if matched_topic:

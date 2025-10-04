@@ -51,6 +51,9 @@ export default function HavenNewsApp() {
   const [macroTopics, setMacroTopics] = useState<any[]>([])
   const [politicalTopics, setPoliticalTopics] = useState<any[]>([])
 
+  // Rainbow glow state for highlighted topics
+  const [highlightedTopics, setHighlightedTopics] = useState<{[key: string]: number}>({})
+
   // Yahoo Finance state
   const [stockData, setStockData] = useState<StockData | null>(null)
   const [chartData, setChartData] = useState<ChartData | null>(null)
@@ -554,8 +557,71 @@ const addTicker = async () => {
           // Save to history
           await ApiService.saveQueryHistory(query, responseContent)
 
+          // Check if this is a company-specific response
+          if (chatMessage.company_topic_data) {
+            const { company_ticker, company_name, topic, highlight_topic_id } = chatMessage.company_topic_data
+            console.log('🏢 Company-specific response detected:', company_ticker, topic.name)
+
+            // Find if company already exists in companiesData
+            const existingCompanyIndex = companiesData.findIndex(c => c.ticker === company_ticker)
+
+            if (existingCompanyIndex >= 0) {
+              // Company exists - inject topic
+              setCompaniesData(prev => {
+                const updated = [...prev]
+                const company = updated[existingCompanyIndex]
+
+                // Check if topic already exists
+                const topicExists = company.topics.some((t: any) => t.id === topic.id)
+                if (!topicExists) {
+                  // Add topic to beginning of array
+                  company.topics = [topic, ...company.topics]
+                }
+
+                return updated
+              })
+            } else {
+              // Company doesn't exist - fetch or create company data
+              const newCompany = {
+                ticker: company_ticker,
+                company_name: company_name,
+                topics: [topic]
+              }
+              setCompaniesData(prev => [newCompany, ...prev])
+            }
+
+            // Set rainbow glow highlight for 20 seconds
+            const topicKey = `${company_ticker}-${highlight_topic_id}`
+            setHighlightedTopics(prev => ({
+              ...prev,
+              [topicKey]: Date.now() + 20000 // 20 seconds from now
+            }))
+
+            // Auto-expand this topic
+            setExpandedTopics(prev => ({
+              ...prev,
+              [topicKey]: true
+            }))
+
+            // Remove highlight after 20 seconds
+            setTimeout(() => {
+              setHighlightedTopics(prev => {
+                const updated = { ...prev }
+                delete updated[topicKey]
+                return updated
+              })
+            }, 20000)
+
+            // Scroll to company section after a brief delay
+            setTimeout(() => {
+              const companyElement = document.getElementById(`company-${company_ticker}`)
+              if (companyElement) {
+                companyElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            }, 500)
+          }
           // If there are suggested articles, insert them into the feed
-          if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
+          else if (chatMessage.suggested_articles && chatMessage.suggested_articles.length > 0) {
             setIsAnimating(true)
             chatMessage.suggested_articles.forEach((article, index) => {
               insertArticleAtPosition(article, index, index * 800)
@@ -927,11 +993,11 @@ const addTicker = async () => {
                 {/* Render based on active tab */}
                 {activeTab === 'personalized' ? (
                   <>
-                    {/* Market Overview and Interests Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                      {/* Market Indices Card - 2/3 width */}
+                    {/* Market Overview and Headlines Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      {/* Market Indices Card - 1/2 width */}
                       {marketIndices.length > 0 && (
-                        <div className="lg:col-span-2 border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
+                        <div className="border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold text-gray-900">Market Overview</h3>
 
@@ -995,27 +1061,121 @@ const addTicker = async () => {
                         </div>
                       )}
 
-                      {/* Your Interests Card - 1/3 width */}
+                      {/* Market Headlines Card - 1/2 width */}
+                      {(macroTopics.length > 0 || politicalTopics.length > 0) && (
+                        <div className="border rounded-lg p-4 shadow-lg overflow-auto" style={{ backgroundColor: '#FFFFFF', maxHeight: '600px' }}>
+                          <h3 className="text-lg font-bold text-gray-900 mb-4">Market Headlines</h3>
+
+                          {/* Macro Topics */}
+                          {macroTopics.length > 0 && (
+                            <div className="mb-4">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Macro & Economic</h4>
+                              <div className="space-y-2">
+                                {macroTopics.slice(0, 3).map((topic: any) => {
+                                  const urgency = topic.urgency || 'medium'
+                                  const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                     urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                     'bg-green-100 text-green-700'
+                                  const topicKey = `macro-${topic.id}`
+                                  const isExpanded = expandedTopics[topicKey] || false
+                                  return (
+                                    <div key={topic.id} className="border rounded-lg p-2 shadow-sm bg-white">
+                                      <div className="cursor-pointer" onClick={() => setExpandedTopics(prev => ({...prev, [topicKey]: !prev[topicKey]}))}>
+                                        <div className="flex items-start justify-between mb-1">
+                                          <div className="flex items-center gap-1 flex-1">
+                                            <h5 className="text-[11px] font-bold text-gray-900">{topic.name}</h5>
+                                            <ChevronDown className={`h-2.5 w-2.5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                          </div>
+                                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${urgencyColor}`}>{urgency.toUpperCase()}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9px] text-gray-500">
+                                          <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
+                                        </div>
+                                      </div>
+                                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-64 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                                        {topic.articles && topic.articles.length > 0 && (
+                                          <div className="space-y-1 border-t pt-2">
+                                            {topic.articles.map((article: any) => (
+                                              <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-1 rounded hover:bg-gray-50 transition-colors">
+                                                <h6 className="text-[10px] font-medium text-gray-900 mb-0.5 line-clamp-2">{article.title}</h6>
+                                                <p className="text-[9px] text-gray-500">{article.source}</p>
+                                              </a>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Political Topics */}
+                          {politicalTopics.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Political & Policy</h4>
+                              <div className="space-y-2">
+                                {politicalTopics.slice(0, 3).map((topic: any) => {
+                                  const urgency = topic.urgency || 'medium'
+                                  const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                     urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                     'bg-green-100 text-green-700'
+                                  const topicKey = `political-${topic.id}`
+                                  const isExpanded = expandedTopics[topicKey] || false
+                                  return (
+                                    <div key={topic.id} className="border rounded-lg p-2 shadow-sm bg-white">
+                                      <div className="cursor-pointer" onClick={() => setExpandedTopics(prev => ({...prev, [topicKey]: !prev[topicKey]}))}>
+                                        <div className="flex items-start justify-between mb-1">
+                                          <div className="flex items-center gap-1 flex-1">
+                                            <h5 className="text-[11px] font-bold text-gray-900">{topic.name}</h5>
+                                            <ChevronDown className={`h-2.5 w-2.5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                          </div>
+                                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${urgencyColor}`}>{urgency.toUpperCase()}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9px] text-gray-500">
+                                          <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
+                                        </div>
+                                      </div>
+                                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-64 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                                        {topic.articles && topic.articles.length > 0 && (
+                                          <div className="space-y-1 border-t pt-2">
+                                            {topic.articles.map((article: any) => (
+                                              <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer" className="block p-1 rounded hover:bg-gray-50 transition-colors">
+                                                <h6 className="text-[10px] font-medium text-gray-900 mb-0.5 line-clamp-2">{article.title}</h6>
+                                                <p className="text-[9px] text-gray-500">{article.source}</p>
+                                              </a>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Your Interests Section - Now Below */}
+                    <div className="mb-6">
                       <div className="border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Your Interests</h3>
-
-                        <div className="space-y-3 mb-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-4">
                           {tickerData.slice(0, 6).map((ticker) => (
                             <button
                               key={ticker.symbol}
                               onClick={() => handleTickerSelect(ticker.symbol)}
-                              className={`w-full p-2 bg-gray-50 border border-gray-200 rounded text-left hover:bg-gray-100 transition-colors ${
-                                selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                              }`}
+                              className={`p-2 bg-gray-50 border border-gray-200 rounded text-left hover:bg-gray-100 transition-colors ${selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''}`}
                             >
                               <div className="flex items-center gap-2 mb-1">
                                 <img
                                   src={`https://img.logokit.com/ticker/${ticker.symbol}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
                                   alt={`${ticker.symbol} logo`}
                                   className="w-6 h-6 rounded object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none'
-                                  }}
+                                  onError={(e) => { e.currentTarget.style.display = 'none' }}
                                 />
                                 <div className="font-medium text-gray-900">{ticker.symbol}</div>
                               </div>
@@ -1025,17 +1185,15 @@ const addTicker = async () => {
                             </button>
                           ))}
                         </div>
-
-                        {/* Add New Interest */}
-                        <div className="space-y-2">
+                        <div className="flex gap-2">
                           <Input
                             placeholder="Add ticker (e.g., AAPL)"
                             value={newTicker}
                             onChange={(e) => setNewTicker(e.target.value)}
-                            className="w-full h-9 text-sm"
+                            className="flex-1 h-9 text-sm"
                             onKeyPress={(e) => e.key === "Enter" && addTicker()}
                           />
-                          <Button onClick={addTicker} className="w-full h-9 text-sm">
+                          <Button onClick={addTicker} className="h-9 text-sm">
                             <Plus className="h-4 w-4 mr-1" />
                             Add Interest
                           </Button>
@@ -1043,8 +1201,8 @@ const addTicker = async () => {
                       </div>
                     </div>
 
-                    {/* Macro & Political Topics Section */}
-                    {(macroTopics.length > 0 || politicalTopics.length > 0) && (
+                    {/* Remove old macro section duplicate below */}
+                    {false && (macroTopics.length > 0 || politicalTopics.length > 0) && (
                       <div className="mb-8">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Market Overview</h2>
 
@@ -1239,7 +1397,7 @@ const addTicker = async () => {
                         const topTopics = company.topics.slice(0, 3)
 
                         return (
-                          <div key={company.ticker} className="border rounded-lg p-4 shadow-lg bg-white">
+                          <div key={company.ticker} id={`company-${company.ticker}`} className="border rounded-lg p-4 shadow-lg bg-white">
                             {/* Company Header */}
                             <div className="mb-4 pb-3 border-b border-gray-300">
                               <div className="flex items-center justify-between">
@@ -1284,9 +1442,13 @@ const addTicker = async () => {
 
                                 const topicKey = `${company.ticker}-${topic.id}`
                                 const isExpanded = expandedTopics[topicKey] || false
+                                const isHighlighted = highlightedTopics[topicKey] && highlightedTopics[topicKey] > Date.now()
 
                                 return (
-                                  <div key={topic.id} className="border rounded-lg p-3 bg-white">
+                                  <div
+                                    key={topic.id}
+                                    className={`border rounded-lg p-3 bg-white transition-all duration-300 ${isHighlighted ? 'rainbow-glow' : ''}`}
+                                  >
                                     {/* Topic Header - Clickable */}
                                     <div
                                       className="cursor-pointer"
@@ -1675,43 +1837,45 @@ const addTicker = async () => {
 
       {/* Thinking Steps Display */}
       {showThinkingSteps && thinkingSteps.length > 0 && (
-        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
-          <div className="relative">
-            {thinkingSteps.map((step, index) => {
-              const opacity = index === 0 ? 'opacity-100' :
-                            index === 1 ? 'opacity-70' :
-                            index === 2 ? 'opacity-40' : 'opacity-20'
+        <div className="fixed bottom-28 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="relative">
+              {thinkingSteps.map((step, index) => {
+                const opacity = index === 0 ? 'opacity-100' :
+                              index === 1 ? 'opacity-70' :
+                              index === 2 ? 'opacity-40' : 'opacity-20'
 
-              const scale = index === 0 ? 'scale-100' :
-                           index === 1 ? 'scale-95' :
-                           index === 2 ? 'scale-90' : 'scale-85'
+                const scale = index === 0 ? 'scale-100' :
+                             index === 1 ? 'scale-95' :
+                             index === 2 ? 'scale-90' : 'scale-85'
 
-              const blur = index === 0 ? '' :
-                          index === 1 ? 'backdrop-blur-sm' : 'backdrop-blur-xs'
+                const blur = index === 0 ? '' :
+                            index === 1 ? 'backdrop-blur-sm' : 'backdrop-blur-xs'
 
-              return (
-                <div
-                  key={step.id}
-                  className={`absolute inset-0 bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transition-all duration-500 ${opacity} ${scale} ${blur}`}
-                  style={{
-                    transform: `translateY(${index * -8}px) ${scale}`,
-                    zIndex: 40 - index
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    {index === 0 && (
-                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
-                    )}
-                    <span className="text-sm text-gray-700 line-clamp-2">{step.text}</span>
+                return (
+                  <div
+                    key={step.id}
+                    className={`absolute inset-0 bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transition-all duration-500 ${opacity} ${scale} ${blur}`}
+                    style={{
+                      transform: `translateY(${index * -8}px) ${scale}`,
+                      zIndex: 40 - index
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {index === 0 && (
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
+                      )}
+                      <span className="text-sm text-gray-700 line-clamp-2">{step.text}</span>
+                    </div>
                   </div>
+                )
+              })}
+              {/* Spacer to maintain height */}
+              <div className="invisible bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-full h-3 w-3"></div>
+                  <span className="text-sm">Placeholder</span>
                 </div>
-              )
-            })}
-            {/* Spacer to maintain height */}
-            <div className="invisible bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
-              <div className="flex items-center gap-2">
-                <div className="rounded-full h-3 w-3"></div>
-                <span className="text-sm">Placeholder</span>
               </div>
             </div>
           </div>
@@ -1720,101 +1884,105 @@ const addTicker = async () => {
 
       {/* Gemini Response Box */}
       {showChatResponse && (
-        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
-          <div className="bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <div className="text-sm text-gray-700 line-clamp-3">
-                  {isChatResponseLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                      <span>Thinking...</span>
-                    </div>
-                  ) : (
-                    chatResponse
-                  )}
+        <div className="fixed bottom-28 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-700 line-clamp-3">
+                    {isChatResponseLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                        <span>Thinking...</span>
+                      </div>
+                    ) : (
+                      chatResponse
+                    )}
+                  </div>
                 </div>
+                {!isChatResponseLoading && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowExpandedResponse(true)}
+                      className="h-6 w-6 p-0 hover:bg-gray-200/50"
+                      title="Expand response"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowChatResponse(false)}
+                      className="h-6 w-6 p-0 hover:bg-gray-200/50"
+                      title="Close response"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
-              {!isChatResponseLoading && (
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowExpandedResponse(true)}
-                    className="h-6 w-6 p-0 hover:bg-gray-200/50"
-                    title="Expand response"
-                  >
-                    <Maximize2 className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowChatResponse(false)}
-                    className="h-6 w-6 p-0 hover:bg-gray-200/50"
-                    title="Close response"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Floating Chat Box */}
+      {/* Floating Chat Box - Same width as Your Interests */}
       {showChat ? (
-        <div className="fixed bottom-6 z-50" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
-          <div className={`bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transform transition-all duration-200 ease-out origin-bottom-right ${
-            isClosingChat
-              ? 'translate-y-4 translate-x-4 opacity-0 scale-75'
-              : 'translate-y-0 translate-x-0 opacity-100 scale-100'
-          }`}>
-            <div className="flex gap-2">
-              <textarea
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask me anything about the news..."
-                className="flex-1 resize-none rounded-lg border border-gray-300/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent bg-white/10 backdrop-blur-sm placeholder-gray-600"
-                rows={2}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
+        <div className="fixed bottom-6 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className={`bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transform transition-all duration-200 ease-out origin-bottom-right ${
+              isClosingChat
+                ? 'translate-y-4 translate-x-4 opacity-0 scale-75'
+                : 'translate-y-0 translate-x-0 opacity-100 scale-100'
+            }`}>
+              <div className="flex gap-2">
+                <textarea
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask me anything about the news..."
+                  className="flex-1 resize-none rounded-lg border border-gray-300/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent bg-white/10 backdrop-blur-sm placeholder-gray-600"
+                  rows={2}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      if (chatInput.trim()) {
+                        setSearchQuery(chatInput)
+                        handleChatSubmit()
+                        setChatInput("")
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
                     if (chatInput.trim()) {
                       setSearchQuery(chatInput)
                       handleChatSubmit()
                       setChatInput("")
                     }
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (chatInput.trim()) {
-                    setSearchQuery(chatInput)
-                    handleChatSubmit()
-                    setChatInput("")
-                  }
-                }}
-                disabled={!chatInput.trim()}
-                className="h-auto px-3 bg-blue-600 hover:bg-blue-700"
-              >
-                <Send className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseChat}
-                className="h-auto px-2 hover:bg-gray-200/50"
-              >
-                <Minimize2 className="h-3 w-3" />
-              </Button>
+                  }}
+                  disabled={!chatInput.trim()}
+                  className="h-auto px-3 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCloseChat}
+                  className="h-auto px-2 hover:bg-gray-200/50"
+                >
+                  <Minimize2 className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="fixed bottom-6 z-50" style={{ right: 'calc(320px + 12.5% + 2rem)' }}>
+        <div className="fixed bottom-6 z-50" style={{ right: 'calc(16.67% + 2rem)' }}>
           <Button
             onClick={() => setShowChat(true)}
             className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white rounded-full h-12 w-12 shadow-lg border border-blue-500/20 transition-all duration-200 hover:scale-105"

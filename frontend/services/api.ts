@@ -23,11 +23,26 @@ export interface Ticker {
   changePercent?: number
 }
 
+export interface CompanyTopicData {
+  company_ticker: string
+  company_name: string
+  topic: {
+    id: number
+    name: string
+    description: string
+    urgency: 'high' | 'medium' | 'low'
+    articles: any[]
+    article_count: number
+  }
+  highlight_topic_id: number
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
   suggested_articles?: NewsArticle[]
+  company_topic_data?: CompanyTopicData
 }
 
 export interface SearchQuery {
@@ -379,7 +394,8 @@ export class ApiService {
                   role: 'assistant',
                   content: data.response,
                   timestamp: new Date(),
-                  suggested_articles: data.suggested_articles ? this.transformArticles(data.suggested_articles) : []
+                  suggested_articles: data.suggested_articles ? this.transformArticles(data.suggested_articles) : [],
+                  company_topic_data: data.company_topic_data || undefined
                 })
               } else if (data.type === 'error') {
                 onError(data.message)

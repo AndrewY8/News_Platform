@@ -1642,6 +1642,26 @@ async def get_macro_topics(
         # Transform to frontend format
         topics_data = []
         for topic in macro_topics:
+            # Fetch articles for this topic
+            articles_result = db_manager.supabase.table('article_topics')\
+                .select('articles(*)')\
+                .eq('topic_id', topic['id'])\
+                .execute()
+
+            # Extract article data
+            articles = []
+            if articles_result.data:
+                for item in articles_result.data:
+                    if item.get('articles'):
+                        article = item['articles']
+                        articles.append({
+                            "id": article["id"],
+                            "title": article["title"],
+                            "url": article["url"],
+                            "source": article["source"],
+                            "published_date": article.get("published_date")
+                        })
+
             topics_data.append({
                 "id": topic["id"],
                 "name": topic["name"],
@@ -1653,7 +1673,8 @@ async def get_macro_topics(
                 "confidence": float(topic["confidence"]) if topic["confidence"] else 0.0,
                 "final_score": float(topic["final_score"]) if topic["final_score"] else 0.0,
                 "extraction_date": topic["extraction_date"],
-                "article_count": topic.get("article_count", 0)
+                "article_count": len(articles),
+                "articles": articles
             })
 
         return JSONResponse(content={

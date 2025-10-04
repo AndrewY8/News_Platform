@@ -351,16 +351,44 @@ async def chat_about_news_streaming(request: ChatRequest, supabase_db):
                     suggested_articles = articles
 
                     topic_name = result.get('matched_topic', {}).get('name', 'this topic')
-                    company = result.get('matched_company', 'the company')
+                    company_ticker = result.get('matched_company', 'UNKNOWN')
+                    matched_topic = result.get('matched_topic', {})
 
                     yield f"data: {json.dumps({'type': 'thinking', 'step': f'Found {len(articles)} articles about {topic_name}'})}\n\n"
 
-                    response_text = f"I found {len(articles)} articles about **{topic_name}** for {company}. "
+                    # Get company name from database
+                    company_name = company_ticker
+                    try:
+                        company_data = router.research_db.supabase.table("companies").select("name, business_areas").eq("name", company_ticker).execute()
+                        if company_data.data:
+                            company_name = company_data.data[0].get('name', company_ticker)
+                    except:
+                        pass
+
+                    response_text = f"I found {len(articles)} articles about **{topic_name}** for {company_name}. "
                     response_text += f"Here's what I discovered:\n\n"
                     response_text += f"📊 **Topic**: {topic_name}\n"
-                    response_text += f"🏢 **Company**: {company}\n"
+                    response_text += f"🏢 **Company**: {company_name}\n"
                     response_text += f"📰 **Articles**: {len(articles)}\n\n"
                     response_text += f"The articles cover recent developments and insights. Check them out below!"
+
+                    # Prepare company-specific data for frontend injection
+                    company_topic_data = {
+                        'company_ticker': company_ticker,
+                        'company_name': company_name,
+                        'topic': {
+                            'id': matched_topic.get('id'),
+                            'name': matched_topic.get('name', topic_name),
+                            'description': matched_topic.get('description', ''),
+                            'urgency': matched_topic.get('urgency', 'medium'),
+                            'articles': articles,
+                            'article_count': len(articles)
+                        },
+                        'highlight_topic_id': matched_topic.get('id')
+                    }
+
+                    # Send final response with company/topic data
+                    yield f"data: {json.dumps({'type': 'response', 'response': response_text, 'suggested_articles': suggested_articles, 'company_topic_data': company_topic_data})}\n\n"
 
                 else:
                     # No results found
@@ -369,8 +397,8 @@ async def chat_about_news_streaming(request: ChatRequest, supabase_db):
                     response_text = f"I couldn't find any pre-researched articles about '{request.message}' in our database. "
                     response_text += f"This topic might not have been researched yet, or try rephrasing your query."
 
-                # Send final response
-                yield f"data: {json.dumps({'type': 'response', 'response': response_text, 'suggested_articles': suggested_articles})}\n\n"
+                    # Send final response without company data
+                    yield f"data: {json.dumps({'type': 'response', 'response': response_text, 'suggested_articles': suggested_articles})}\n\n"
 
             except Exception as e:
                 logger.error(f"Database search error: {e}", exc_info=True)
