@@ -844,8 +844,8 @@ const addTicker = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50">
+    <div className="min-h-screen font-sans" style={{ backgroundColor: '#f2e9e6' }}>
+      <div className="border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#f2e9e6' }}>
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
@@ -860,7 +860,7 @@ const addTicker = async () => {
           </div>
           
           {/* Horizontal Navigation */}
-          <div className="bg-gray-100 border-t border-b border-gray py-1">
+          <div className="bg-gray-100 border-t border-b border-gray py-1 overflow-x-hidden">
             <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-4 sm:px-6 lg:px-8">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -980,28 +980,14 @@ const addTicker = async () => {
           </div>
         </div>
 
-        {/* Scrolling Banner Section */}
-        <div className="bg-gray-900 text-white py-2 overflow-hidden">
-  <div className="flex animate-marquee whitespace-nowrap">
-    {articles.slice(0, 10).map((article) => (
-      <a
-        key={article.id}
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mx-8 text-sm font-medium hover:underline flex items-center gap-1"
-      >
-        {getEmoji(article)} {article.title}
-      </a>
-    ))}
-  </div>
-</div>
-
       </div>
 
-      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
+      <div className="flex justify-center min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
+        {/* Left margin spacer - 1/8 of page */}
+        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
+
         {/* Main Content - Articles */}
-        <div className="flex-1 lg:mr-6">
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 max-w-4xl relative">
           <div className="py-3 sm:py-4 lg:py-6">
             {loading ? (
               <div className="flex items-center justify-center h-64">
@@ -1045,13 +1031,16 @@ const addTicker = async () => {
                 
                 {/* Existing articles */}
                 {articles.map((article: NewsArticle, index: number) => (
-                  <div 
-                    key={article.id} 
-                    className={`border rounded-lg p-3 bg-white hover:bg-gray-50 transition-all duration-300 flex items-center w-full ${
+                  <div
+                    key={article.id}
+                    className={`border rounded-lg p-3 transition-all duration-300 flex items-center w-full ${
                       newArticles.has(article.id)
                         ? 'animate-slide-in-right border-blue-500'
                         : 'border-gray-200'
                     }`}
+                    style={{ backgroundColor: '#ffffff' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                   >
                     <div className="flex gap-4 w-full">
                       <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-start pt-0.5 tracking-wide">
@@ -1096,7 +1085,7 @@ const addTicker = async () => {
         </div>
 
         {/* Right Sidebar - News Summary and Tickers */}
-        <div className="hidden lg:flex w-80 bg-gray-50 border-l border-gray-200 flex-col sticky top-[80px] sm:top-[100px] lg:top-[160px] h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] lg:h-[calc(100vh-160px)] overflow-y-auto self-start">
+        <div className="hidden lg:flex w-80 border-l border-gray-200 flex-col sticky top-[80px] sm:top-[100px] lg:top-[160px] h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] lg:h-[calc(100vh-160px)] overflow-y-auto self-start" style={{ backgroundColor: '#f2e9e6' }}>
           <div className="p-3 lg:p-4 border-b border-gray-200 flex-shrink-0">
             <h3 className="font-semibold text-gray-900 mb-3">News Summary</h3>
             
@@ -1252,6 +1241,9 @@ const addTicker = async () => {
 
           </div>
         </div>
+
+        {/* Right margin spacer - 1/8 of page */}
+        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
       </div>
 
       {/* Mobile Sidebar Modal */}
@@ -1489,7 +1481,7 @@ const addTicker = async () => {
 
       {/* Thinking Steps Display */}
       {showThinkingSteps && thinkingSteps.length > 0 && (
-        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className="relative">
             {thinkingSteps.map((step, index) => {
               const opacity = index === 0 ? 'opacity-100' :
@@ -1534,7 +1526,7 @@ const addTicker = async () => {
 
       {/* Gemini Response Box */}
       {showChatResponse && (
-        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className="bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
             <div className="flex items-start gap-3">
               <div className="flex-1">
@@ -1577,11 +1569,11 @@ const addTicker = async () => {
       )}
 
       {/* Floating Chat Box */}
-      <div className="fixed bottom-6 left-48 right-48 lg:left-48 lg:right-[512px] z-50">
-        {showChat ? (
+      {showChat ? (
+        <div className="fixed bottom-6 z-50" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className={`bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transform transition-all duration-200 ease-out origin-bottom-right ${
-            isClosingChat 
-              ? 'translate-y-4 translate-x-4 opacity-0 scale-75' 
+            isClosingChat
+              ? 'translate-y-4 translate-x-4 opacity-0 scale-75'
               : 'translate-y-0 translate-x-0 opacity-100 scale-100'
           }`}>
             <div className="flex gap-2">
@@ -1626,18 +1618,18 @@ const addTicker = async () => {
               </Button>
             </div>
           </div>
-        ) : (
-          <div className="fixed bottom-6 right-48 lg:right-[512px] z-50">
-            <Button
-              onClick={() => setShowChat(true)}
-              className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white rounded-full h-12 w-12 shadow-lg border border-blue-500/20 transition-all duration-200 hover:scale-105"
-              size="sm"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="fixed bottom-6 z-50" style={{ right: 'calc(320px + 12.5% + 2rem)' }}>
+          <Button
+            onClick={() => setShowChat(true)}
+            className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white rounded-full h-12 w-12 shadow-lg border border-blue-500/20 transition-all duration-200 hover:scale-105"
+            size="sm"
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
 
       {/* Expanded Response Modal */}
       {showExpandedResponse && (
