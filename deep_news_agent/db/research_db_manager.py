@@ -629,3 +629,99 @@ class ResearchDBManager:
                     extraction_method=item.get("extraction_method", "unknown")
                 ))
         return subtopics
+
+    # ============================================================================
+    # MACRO TOPIC OPERATIONS
+    # ============================================================================
+
+    def store_macro_topic(self, topic: Topic, topic_type: str = 'macro',
+                         sector: str = None, iteration: int = 1) -> StoredTopic:
+        """
+        Store a macro/political topic (no company association)
+
+        Args:
+            topic: Topic object to store
+            topic_type: 'macro' or 'political'
+            sector: Market sector (e.g., "Monetary Policy", "Inflation")
+            iteration: Pipeline iteration number
+
+        Returns:
+            StoredTopic with database ID
+        """
+        try:
+            topic_data = {
+                "company_id": None,  # NULL for macro topics
+                "topic_type": topic_type,
+                "sector": sector,
+                "name": topic.name,
+                "description": topic.description,
+                "business_impact": topic.business_impact,  # For macro, this is "market impact"
+                "confidence": float(topic.confidence),
+                "urgency": topic.urgency.value if hasattr(topic.urgency, 'value') else topic.urgency,
+                "extraction_date": topic.extraction_date.isoformat() if hasattr(topic.extraction_date, 'isoformat') else topic.extraction_date,
+                "pipeline_iteration": iteration,
+                "subtopics": self._serialize_subtopics(topic.subtopics) if topic.subtopics else []
+            }
+
+            result = self.supabase.table("topics").insert(topic_data).execute()
+            topic_id = result.data[0]["id"]
+
+            self.logger.info(f"Stored {topic_type} topic: {topic.name} (ID: {topic_id})")
+
+            return StoredTopic(
+                id=topic_id,
+                company_id=None,
+                name=topic.name,
+                description=topic.description
+            )
+
+        except Exception as e:
+            self.logger.error(f"Error storing macro topic {topic.name}: {e}")
+            raise
+
+    def get_macro_topics(self, topic_type: str = 'macro', limit: int = 10,
+                        hours_back: int = 24) -> List[Dict[str, Any]]:
+        """
+        Retrieve recent macro/political topics
+
+        Args:
+            topic_type: 'macro' or 'political'
+            limit: Maximum number of topics to return
+            hours_back: How many hours back to search
+
+        Returns:
+            List of topic dictionaries with article counts
+        """
+        try:
+            # Use the database function we created in migration
+            result = self.supabase.rpc(
+                'get_topics_by_type',
+                {
+                    'topic_type_param': topic_type,
+                    'limit_count': limit,
+                    'hours_back': hours_back
+                }
+            ).execute()
+
+            self.logger.info(f"Retrieved {len(result.data)} {topic_type} topics")
+            return result.data
+
+        except Exception as e:
+            self.logger.error(f"Error retrieving macro topics: {e}")
+            return []
+
+    def get_front_page_topics(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        Get combined front page topics (macro + company)
+
+        Returns topics from the front_page_topics view
+        """
+        try:
+            result = self.supabase.table("front_page_topics").select("*").limit(limit).execute()
+
+            self.logger.info(f"Retrieved {len(result.data)} front page topics")
+            return result.data
+
+        except Exception as e:
+            self.logger.error(f"Error retrieving front page topics: {e}")
+            return []

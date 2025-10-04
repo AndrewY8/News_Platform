@@ -10,6 +10,52 @@ from enum import Enum
 
 # ============ SHARED DATA MODELS ============
 
+class ResearchType(str, Enum):
+    """Type of research being conducted"""
+    COMPANY = "company"
+    MACRO = "macro"
+    POLITICAL = "political"
+
+
+class ResearchContext(ABC):
+    """
+    Abstract base class for research contexts
+
+    Allows agents (SearchAgent, TopicAgent, OrchestratorAgent)
+    to work with BOTH company-specific and macro research
+    """
+
+    @abstractmethod
+    def get_research_type(self) -> ResearchType:
+        """Return the type of research"""
+        pass
+
+    @abstractmethod
+    def get_display_name(self) -> str:
+        """Get human-readable name"""
+        pass
+
+    @abstractmethod
+    def get_search_keywords(self) -> List[str]:
+        """Get keywords for searches"""
+        pass
+
+    @abstractmethod
+    def get_focus_areas(self) -> List[str]:
+        """Get focus areas for research"""
+        pass
+
+    @abstractmethod
+    def should_use_earnings(self) -> bool:
+        """Whether to search earnings transcripts"""
+        pass
+
+    @abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
+        pass
+
+
 @dataclass
 class Subtopic:
     """Subtopic with dedicated source tracking"""
@@ -23,14 +69,50 @@ class Subtopic:
         if self.article_indices is None:
             self.article_indices = []
 
+
 @dataclass
-class CompanyContext:
-    """Company information for research context"""
+class CompanyContext(ResearchContext):
+    """Company information for research context - implements ResearchContext"""
     name: str
     business_areas: List[str]
     current_status: Dict[str, Any]
     ticker: Optional[str] = None
     industry: Optional[str] = None
+
+    # Implement ResearchContext abstract methods
+    def get_research_type(self) -> ResearchType:
+        """Companies are always COMPANY type"""
+        return ResearchType.COMPANY
+
+    def get_display_name(self) -> str:
+        """Return company name"""
+        return self.name
+
+    def get_search_keywords(self) -> List[str]:
+        """Return company name and ticker as keywords"""
+        keywords = [self.name]
+        if self.ticker:
+            keywords.append(self.ticker)
+        return keywords
+
+    def get_focus_areas(self) -> List[str]:
+        """Return business areas as focus areas"""
+        return self.business_areas
+
+    def should_use_earnings(self) -> bool:
+        """Companies should use earnings transcripts"""
+        return True
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
+        return {
+            "name": self.name,
+            "business_areas": self.business_areas,
+            "current_status": self.current_status,
+            "ticker": self.ticker,
+            "industry": self.industry,
+            "research_type": self.get_research_type().value
+        }
 
 
 class urgency(str, Enum):

@@ -69,7 +69,7 @@ class RankingAgent(RankingInterface):
         if not topics:
             return []
 
-        self.logger.info(f"Ranking {len(topics)} topics for {company_context.name}")
+        self.logger.info(f"Ranking {len(topics)} topics for {company_context.get_display_name()}")
 
         ranked_topics = []
 
@@ -208,7 +208,7 @@ class RankingAgent(RankingInterface):
         """
         subtopic_names = [st.name for st in topic.subtopics] if topic.subtopics else []
         topic_text = f"{topic.name} {topic.description} {' '.join(subtopic_names)}".lower()
-        business_areas_text = ' '.join(company_context.business_areas).lower()
+        business_areas_text = ' '.join(company_context.get_focus_areas()).lower()
 
         # Simple keyword overlap scoring
         topic_words = set(topic_text.split())
@@ -272,9 +272,9 @@ class RankingAgent(RankingInterface):
 
         return IMPACT_ASSESSMENT_PROMPT.format(
             current_date=current_date,
-            company_name=company_context.name,
-            business_areas=', '.join(company_context.business_areas),
-            current_status=company_context.current_status,
+            company_name=company_context.get_display_name(),
+            business_areas=', '.join(company_context.get_focus_areas()),
+            current_status=getattr(company_context, 'current_status', 'N/A'),
             topic_name=topic.name,
             topic_description=topic.description,
             topic_business_impact=topic.business_impact,

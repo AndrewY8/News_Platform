@@ -9,7 +9,7 @@ import asyncio
 from .interfaces import (
     OrchestratorInterface, TopicExtractorInterface, SearchInterface, RankingInterface,
     CompanyContext, Topic, Question, RankedTopic, PipelineState, SearchResult,
-    PipelineEvent, PipelineEventData, PipelineConfig
+    PipelineEvent, PipelineEventData, PipelineConfig, ResearchContext, ResearchType
 )
 from ..prompts import (
     BUSINESS_AREA_QUESTION_TEMPLATE,
@@ -52,29 +52,31 @@ class OrchestratorAgent(OrchestratorInterface):
         self.event_handlers: List = []
         self.company_id: Optional[int] = None
 
-    async def run_pipeline(self, company_context: CompanyContext) -> List[RankedTopic]:
+    async def run_pipeline(self, context: ResearchContext) -> List[RankedTopic]:
         """
-        Run the complete research pipeline for a company
+        Run the complete research pipeline for a company or macro topic
 
         Pipeline Flow:
-        1. Generate initial questions from company context
+        1. Generate initial questions from context
         2. Run 5 search iterations:
-           - Iteration 1: Tavily + earnings search
+           - Iteration 1: Tavily search (+ earnings for companies only)
            - Iterations 2-5: Tavily only
            - Extract topics, update memory, generate new questions
         3. Final ranking of all discovered topics
         """
-        self.logger.info(f"Starting research pipeline for {company_context.name}")
+        self.logger.info(f"Starting research pipeline for {context.get_display_name()}")
 
-        # Initialize database if available
-        if self.db_manager:
-            self.company_id = self.db_manager.create_or_get_company(company_context)
+        # Initialize database if available (only for companies)
+        if self.db_manager and context.get_research_type() == ResearchType.COMPANY:
+            self.company_id = self.db_manager.create_or_get_company(context)
             self.logger.info(f"Database integration enabled - Company ID: {self.company_id}")
+        else:
+            self.company_id = None  # Macro topics don't have company_id
 
         # Initialize pipeline state
-        initial_questions = await self._generate_initial_questions(company_context)
+        initial_questions = await self._generate_initial_questions(context)
         self.current_state = PipelineState(
-            company_context=company_context,
+            company_context=context,  # Note: PipelineState still uses company_context field name
             current_iteration=0,
             max_iterations=self.config.max_iterations,
             topic_memory=[],
@@ -106,7 +108,7 @@ class OrchestratorAgent(OrchestratorInterface):
             self.logger.info("Running final topic ranking")
             ranked_topics = await self.ranking_agent.rank_topics(
                 self.current_state.topic_memory,
-                company_context
+                self.current_state.company_context  # Use context from state
             )
 
             # Store final rankings in database
@@ -192,18 +194,27 @@ class OrchestratorAgent(OrchestratorInterface):
 
         return state
 
-    async def _generate_initial_questions(self, company_context: CompanyContext) -> List[Question]:
+    async def _generate_initial_questions(self, context: ResearchContext) -> List[Question]:
         """
-        Generate initial research questions based on company context
+        Generate initial research questions based on context (company or macro)
         """
-        # Create basic initial questions based on business areas
-        initial_questions = []
+        research_type = context.get_research_type()
 
-        for i, business_area in enumerate(company_context.business_areas[:5]):
+        if research_type.value == "company":
+            return self._generate_company_questions(context)
+        else:
+            return self._generate_macro_questions(context)
+
+    def _generate_company_questions(self, context: ResearchContext) -> List[Question]:
+        """Generate initial questions for company research"""
+        initial_questions = []
+        context_name = context.get_display_name()
+
+        for i, business_area in enumerate(context.get_focus_areas()[:5]):
             question = Question(
                 text=BUSINESS_AREA_QUESTION_TEMPLATE.format(
                     business_area=business_area,
-                    company_name=company_context.name
+                    company_name=context_name
                 ),
                 priority=i + 1,
                 iteration_number=1,
@@ -214,7 +225,7 @@ class OrchestratorAgent(OrchestratorInterface):
 
         # Add general market question
         market_question = Question(
-            text=MARKET_QUESTION_TEMPLATE.format(company_name=company_context.name),
+            text=MARKET_QUESTION_TEMPLATE.format(company_name=context_name),
             priority=len(initial_questions) + 1,
             iteration_number=1,
             topic_source="company_context",
@@ -222,9 +233,9 @@ class OrchestratorAgent(OrchestratorInterface):
         )
         initial_questions.append(market_question)
 
-        # Add recent breaking news question (high priority)
+        # Add recent breaking news question
         recent_news_question = Question(
-            text=RECENT_NEWS_QUESTION.format(company_name=company_context.name),
+            text=RECENT_NEWS_QUESTION.format(company_name=context_name),
             priority=len(initial_questions) + 1,
             iteration_number=1,
             topic_source="company_context",
@@ -234,7 +245,7 @@ class OrchestratorAgent(OrchestratorInterface):
 
         # Add geopolitical context question
         context_question = Question(
-            text=CONTEXT_NEWS_QUESTION.format(company_name=company_context.name),
+            text=CONTEXT_NEWS_QUESTION.format(company_name=context_name),
             priority=len(initial_questions) + 1,
             iteration_number=1,
             topic_source="company_context",
@@ -242,9 +253,9 @@ class OrchestratorAgent(OrchestratorInterface):
         )
         initial_questions.append(context_question)
 
-        # Add business growth/corporate activities question
+        # Add business growth question
         growth_question = Question(
-            text=BUSINESS_GROWTH_TEMPLATE.format(company_name=company_context.name).strip(),
+            text=BUSINESS_GROWTH_TEMPLATE.format(company_name=context_name).strip(),
             priority=len(initial_questions) + 1,
             iteration_number=1,
             topic_source="company_context",
@@ -252,9 +263,9 @@ class OrchestratorAgent(OrchestratorInterface):
         )
         initial_questions.append(growth_question)
 
-        # Add leadership/personnel changes question
+        # Add leadership question
         leadership_question = Question(
-            text=LEADERSHIP_PERSONNEL_QUESTION.format(company_name=company_context.name).strip(),
+            text=LEADERSHIP_PERSONNEL_QUESTION.format(company_name=context_name).strip(),
             priority=len(initial_questions) + 1,
             iteration_number=1,
             topic_source="company_context",
@@ -262,7 +273,56 @@ class OrchestratorAgent(OrchestratorInterface):
         )
         initial_questions.append(leadership_question)
 
-        self.logger.info(f"Generated {len(initial_questions)} initial questions")
+        self.logger.info(f"Generated {len(initial_questions)} company research questions")
+        return initial_questions
+
+    def _generate_macro_questions(self, context: ResearchContext) -> List[Question]:
+        """Generate initial questions for macro/political research"""
+        initial_questions = []
+        category_name = context.get_display_name()
+
+        # Generate questions based on macro focus areas
+        for i, focus_area in enumerate(context.get_focus_areas()[:5]):
+            question = Question(
+                text=f"What are the latest developments in {focus_area} and their market implications?",
+                priority=i + 1,
+                iteration_number=1,
+                topic_source="macro_context",
+                confidence=0.8
+            )
+            initial_questions.append(question)
+
+        # Add market impact question
+        impact_question = Question(
+            text=f"How is {category_name} affecting investor sentiment and market positioning?",
+            priority=len(initial_questions) + 1,
+            iteration_number=1,
+            topic_source="macro_context",
+            confidence=0.9
+        )
+        initial_questions.append(impact_question)
+
+        # Add recent developments question
+        recent_question = Question(
+            text=f"What are the most recent policy changes or announcements related to {category_name}?",
+            priority=len(initial_questions) + 1,
+            iteration_number=1,
+            topic_source="macro_context",
+            confidence=0.95
+        )
+        initial_questions.append(recent_question)
+
+        # Add outlook question
+        outlook_question = Question(
+            text=f"What is the current market outlook and analyst consensus on {category_name}?",
+            priority=len(initial_questions) + 1,
+            iteration_number=1,
+            topic_source="macro_context",
+            confidence=0.85
+        )
+        initial_questions.append(outlook_question)
+
+        self.logger.info(f"Generated {len(initial_questions)} macro research questions")
         return initial_questions
 
     def get_pipeline_status(self) -> Dict[str, Any]:
@@ -272,7 +332,7 @@ class OrchestratorAgent(OrchestratorInterface):
 
         return {
             "status": "completed" if self.current_state.is_complete() else "running",
-            "company": self.current_state.company_context.name,
+            "research_target": self.current_state.company_context.get_display_name(),
             "current_iteration": self.current_state.current_iteration,
             "max_iterations": self.current_state.max_iterations,
             "topics_in_memory": len(self.current_state.topic_memory),

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from .interfaces import (
     TopicExtractorInterface, Topic, CompanyContext, SearchResult, Subtopic,
-    urgency
+    urgency, ResearchContext, ResearchType
 )
 from ..prompts import TOPIC_EXTRACTION_PROMPT, TOPIC_MERGE_PROMPT, TOPIC_COMBINATION_PROMPT
 
@@ -100,13 +100,6 @@ def enhanced_topic_from_model(topic_model: TopicModel) -> Topic:
     return topic
 
 
-@dataclass
-class CompanyContext:
-    name: str
-    business_areas: List[str]
-    current_status: Dict[str, Any]
-
-
 class TopicAgent:
     def __init__(self, openai_api_key: str, max_tokens: int = 200, db_manager = None):
         self.client = OpenAI(api_key=openai_api_key)
@@ -115,11 +108,11 @@ class TopicAgent:
         self.logger = logging.getLogger(__name__)
         self.memory_topics: List[Topic] = []
 
-    async def extract_topics(self, search_results: List[SearchResult], company_context: CompanyContext,
+    async def extract_topics(self, search_results: List[SearchResult], context: ResearchContext,
                            iteration: int = 1, company_id: Optional[int] = None) -> List[Topic]:
         """Extract important business topics from search results using GPT-4"""
         try:
-            prompt = self._build_extraction_prompt(search_results, company_context)
+            prompt = self._build_extraction_prompt(search_results, context)
 
             response = self.client.responses.create(
                 model="gpt-4.1",
@@ -169,7 +162,7 @@ class TopicAgent:
                 topics.append(topic)
 
             # Store topics in database if available
-            if self.db_manager and topics and company_id:
+            if self.db_manager and topics:
                 # Step 1: Store articles from search results first
                 primary_query = f"Research iteration {iteration}"
                 stored_articles = self.db_manager.store_search_results(search_results, primary_query, iteration)
@@ -178,8 +171,17 @@ class TopicAgent:
                 # Step 2: Store topics with deterministic article relationships
                 stored_topics = []
                 for topic in topics:
-                    # Store the topic
-                    stored_topic = self.db_manager.store_single_topic(topic, company_id, iteration)
+                    # Store the topic - handle both company and macro topics
+                    if company_id:
+                        # Company-specific topic
+                        stored_topic = self.db_manager.store_single_topic(topic, company_id, iteration)
+                    else:
+                        # Macro/political topic - need to determine topic_type and sector from context
+                        # For now, extract from context if available
+                        topic_type = getattr(context, 'topic_type', 'macro')
+                        sector = getattr(context, 'sector', None)
+                        stored_topic = self.db_manager.store_macro_topic(topic, topic_type=topic_type, sector=sector, iteration=iteration)
+
                     stored_topics.append(stored_topic)
 
                     # Step 3: Create article-topic relationships using indices
@@ -211,18 +213,61 @@ class TopicAgent:
             self.logger.error(f"Error extracting topics: {e}")
             return []
 
-    def _build_extraction_prompt(self, search_results: List[SearchResult], company_context: CompanyContext) -> str:
-        """Build the prompt for GPT-4 topic extraction"""
+    def _build_extraction_prompt(self, search_results: List[SearchResult], context: ResearchContext) -> str:
+        """Build the prompt for GPT-4 topic extraction - adapts based on research type"""
         formatted_results = self._format_search_results(search_results)
         current_date = datetime.now().strftime("%Y-%m-%d")
+        research_type = context.get_research_type()
 
-        return TOPIC_EXTRACTION_PROMPT.format(
-            current_date=current_date,
-            company_name=company_context.name,
-            business_areas=', '.join(company_context.business_areas),
-            current_status=json.dumps(company_context.current_status, indent=2),
-            formatted_results=formatted_results
-        )
+        # Use different prompts for company vs macro research
+        if research_type.value == "company":
+            # Company-specific extraction prompt
+            # Access CompanyContext-specific fields
+            company_context = context  # It's safe to use as CompanyContext here
+            return TOPIC_EXTRACTION_PROMPT.format(
+                current_date=current_date,
+                company_name=context.get_display_name(),
+                business_areas=', '.join(context.get_focus_areas()),
+                current_status=json.dumps(company_context.current_status, indent=2) if hasattr(company_context, 'current_status') else "{}",
+                formatted_results=formatted_results
+            )
+        else:
+            # Macro/political extraction prompt
+            return self._build_macro_extraction_prompt(search_results, context, current_date, formatted_results)
+
+    def _build_macro_extraction_prompt(self, search_results: List[SearchResult], context: ResearchContext,
+                                       current_date: str, formatted_results: str) -> str:
+        """Build macro/political topic extraction prompt"""
+        return f"""Current date: {current_date}
+
+Macro Research Category: {context.get_display_name()}
+Focus Areas: {', '.join(context.get_focus_areas())}
+
+Search Results:
+{formatted_results}
+
+Extract important MACRO/POLITICAL topics that could impact financial markets broadly.
+
+IMPORTANT - You must cite your sources using article indices:
+- For each topic, specify which articles support it using source_article_indices
+- Use the Article numbers (0, 1, 2, etc.) shown above
+- Only include articles that directly relate to and support the topic
+- At least one article index is required per topic
+
+Requirements:
+- Focus on MARKET-WIDE implications, not company-specific
+- For "business_impact", explain how this affects MARKETS BROADLY and investor strategy
+- For urgency, use: "high" (immediate market impact), "medium" (developing), "low" (background)
+- Confidence should be between 0.0 and 1.0
+- Sources should be URLs from the search results that support the topic
+- Subtopics should be related aspects of the main topic
+- source_article_indices: array of article numbers (e.g., [0, 2, 5]) that provide evidence
+
+Examples of good macro topics:
+- "Federal Reserve Rate Policy Shift" (not "Apple affected by Fed policy")
+- "Inflation Concerns Driving Market Volatility" (not "Inflation impacting specific retailers")
+- "2024 Election Market Implications" (not "Election effect on tech stocks")
+"""
 
     def _format_search_results(self, search_results: List[SearchResult]) -> str:
         """Format search results for prompt with 0-based indices for citation"""
@@ -238,7 +283,7 @@ class TopicAgent:
                                 """)
         return "\n".join(formatted)
 
-    async def update_memory(self, new_topics: List[Topic], company_context: CompanyContext) -> None:
+    async def update_memory(self, new_topics: List[Topic], context: ResearchContext) -> None:
         """Update topic memory with new topics, handling duplicates and relationships"""
         if not self.memory_topics:
             self.memory_topics.extend(new_topics)
@@ -246,7 +291,7 @@ class TopicAgent:
             return
 
         try:
-            merge_prompt = self._build_merge_prompt(self.memory_topics, new_topics, company_context)
+            merge_prompt = self._build_merge_prompt(self.memory_topics, new_topics, context)
 
             response = self.client.responses.create(
                 model="gpt-4.1",
@@ -294,16 +339,68 @@ class TopicAgent:
             # Fallback: just append new topics
             self.memory_topics.extend(new_topics)
 
-    def _build_merge_prompt(self, existing_topics: List[Topic], new_topics: List[Topic], company_context: CompanyContext) -> str:
-        """Build prompt for merging topics"""
+    def _build_merge_prompt(self, existing_topics: List[Topic], new_topics: List[Topic], context: ResearchContext) -> str:
+        """Build prompt for merging topics - adapts based on research type"""
         existing_formatted = self._format_topics_for_prompt(existing_topics)
         new_formatted = self._format_topics_for_prompt(new_topics)
 
-        return TOPIC_MERGE_PROMPT.format(
-            company_name=company_context.name,
-            existing_formatted=existing_formatted,
-            new_formatted=new_formatted
-        )
+        research_type = context.get_research_type()
+
+        if research_type.value in ["macro", "political"]:
+            # Use more aggressive merging for macro topics
+            return self._build_macro_merge_prompt(context, existing_formatted, new_formatted)
+        else:
+            # Use standard merge prompt for companies
+            return TOPIC_MERGE_PROMPT.format(
+                company_name=context.get_display_name(),
+                existing_formatted=existing_formatted,
+                new_formatted=new_formatted
+            )
+
+    def _build_macro_merge_prompt(self, context: ResearchContext, existing_formatted: str, new_formatted: str) -> str:
+        """Build macro-specific merge prompt with more aggressive merging criteria"""
+        return f"""Research Category: {context.get_display_name()}
+
+EXISTING TOPICS IN MEMORY:
+{existing_formatted}
+
+NEW TOPICS TO MERGE:
+{new_formatted}
+
+**MACRO TOPIC CONSOLIDATION PROTOCOL**
+
+For macro/political topics, we want to CONSOLIDATE aggressively to avoid topic proliferation.
+
+**MERGE CRITERIA** (action: "merge") - BE AGGRESSIVE:
+- Topics cover the SAME macro theme, even if from different angles
+- Topics discuss the same economic/political event or development
+- Topics would appear in the same section of a financial news summary
+- Semantic overlap > 40% (be liberal with merging)
+- Examples that SHOULD MERGE:
+  * "Fed Rate Cuts" + "Fed Forward Guidance" → MERGE (both Fed policy)
+  * "Inflation Concerns" + "CPI Data" → MERGE (both inflation)
+  * "Election Polls" + "Campaign Developments" → MERGE (both election)
+  * "China Tensions" + "Taiwan Strait Crisis" → MERGE (both China geopolitics)
+  * "Banking Stress" + "Regional Bank Failures" → MERGE (both banking sector)
+
+**ADD_SUBTOPIC CRITERIA** (action: "add_subtopic") - Use sparingly:
+- Only when new topic is a VERY SPECIFIC component of broader topic
+- Parent topic is a major theme (e.g., "2024 Election") and child is specific aspect (e.g., "Swing State Polling")
+
+**ADD CRITERIA** (action: "add") - Only for truly different domains:
+- Topics are in COMPLETELY DIFFERENT macro domains
+- Examples that should ADD:
+  * "Fed Policy" + "China Geopolitics" → ADD (different domains)
+  * "Election" + "Energy Markets" → ADD (different domains)
+  * "Banking Regulation" + "Trade Policy" → ADD (different domains)
+
+**SKIP CRITERIA** (action: "skip"):
+- Topic is essentially duplicate with no new information
+- Topic is too vague or speculative
+
+**KEY RULE**: When in doubt between MERGE and ADD → choose MERGE. We want 5-8 consolidated topics per category, not 20 fragmented ones.
+
+For each decision, explain the semantic relationship and why consolidation is/isn't appropriate."""
 
     def _format_topics_for_prompt(self, topics: List[Topic]) -> str:
         """Format topics for prompt display"""

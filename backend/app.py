@@ -1601,6 +1601,141 @@ async def get_stock_chart(
             content={"error": str(e)}
         )
 
+@app.get("/api/macro-topics")
+@limiter.limit("30/minute")
+async def get_macro_topics(
+    request: Request,
+    topic_type: str = "macro",
+    limit: int = 10,
+    hours_back: int = 24
+):
+    """
+    Get recent macro or political topics
+
+    Args:
+        topic_type: 'macro' or 'political'
+        limit: Number of topics to return (default 10)
+        hours_back: How many hours back to search (default 24)
+    """
+    try:
+        from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not supabase_key:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Supabase not configured"}
+            )
+
+        db_manager = ResearchDBManager(supabase_url, supabase_key)
+
+        # Get macro topics using the database function
+        macro_topics = db_manager.get_macro_topics(
+            topic_type=topic_type,
+            limit=limit,
+            hours_back=hours_back
+        )
+
+        # Transform to frontend format
+        topics_data = []
+        for topic in macro_topics:
+            topics_data.append({
+                "id": topic["id"],
+                "name": topic["name"],
+                "description": topic["description"],
+                "business_impact": topic["business_impact"],
+                "topic_type": topic["topic_type"],
+                "sector": topic.get("sector"),
+                "urgency": topic["urgency"],
+                "confidence": float(topic["confidence"]) if topic["confidence"] else 0.0,
+                "final_score": float(topic["final_score"]) if topic["final_score"] else 0.0,
+                "extraction_date": topic["extraction_date"],
+                "article_count": topic.get("article_count", 0)
+            })
+
+        return JSONResponse(content={
+            "topics": topics_data,
+            "topic_type": topic_type,
+            "count": len(topics_data)
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching macro topics: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
+@app.get("/api/front-page-topics")
+@limiter.limit("30/minute")
+async def get_front_page_topics(
+    request: Request,
+    limit: int = 20
+):
+    """
+    Get combined front page topics (macro + company)
+
+    Returns top macro/political topics and high-urgency company topics
+    """
+    try:
+        from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not supabase_key:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Supabase not configured"}
+            )
+
+        db_manager = ResearchDBManager(supabase_url, supabase_key)
+
+        # Get front page topics from view
+        front_page = db_manager.get_front_page_topics(limit=limit)
+
+        # Separate into macro and company topics
+        macro_topics = []
+        company_topics = []
+
+        for topic in front_page:
+            topic_data = {
+                "id": topic["id"],
+                "entity_name": topic["entity_name"],
+                "ticker": topic.get("ticker"),
+                "entity_type": topic["entity_type"],
+                "topic_name": topic["topic_name"],
+                "description": topic["description"],
+                "business_impact": topic["business_impact"],
+                "urgency": topic["urgency"],
+                "confidence": float(topic["confidence"]) if topic["confidence"] else 0.0,
+                "final_score": float(topic["final_score"]) if topic["final_score"] else 0.0,
+                "extraction_date": topic["extraction_date"],
+                "topic_type": topic["topic_type"]
+            }
+
+            if topic["entity_type"] == "company":
+                company_topics.append(topic_data)
+            else:
+                macro_topics.append(topic_data)
+
+        return JSONResponse(content={
+            "macro_topics": macro_topics,
+            "company_topics": company_topics,
+            "total_count": len(front_page)
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching front page topics: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 

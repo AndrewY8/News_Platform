@@ -4,7 +4,7 @@ Search Agent - Handles web searches using Tavily and earnings transcript retriev
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
@@ -17,6 +17,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from retrievers.EDGAR_retriever import EDGARRetriever
+
+# Import unified interfaces
+from .interfaces import ResearchContext, CompanyContext, Question as InterfaceQuestion
 
 
 @dataclass
@@ -66,19 +69,8 @@ class EarningsSearchResult(SearchResult):
         return None  # Earnings transcripts may not have URLs
 
 
-@dataclass
-class Question:
-    text: str
-    priority: int
-    iteration_number: int
-    topic_source: str  # Which topic generated this question
-
-
-@dataclass
-class CompanyContext:
-    name: str
-    business_areas: List[str]
-    current_status: Dict[str, Any]
+# Use Question from interfaces (imported as InterfaceQuestion to avoid conflicts)
+Question = InterfaceQuestion
 
 
 class SearchQueryModel(BaseModel):
@@ -104,54 +96,62 @@ class SearchAgent:
             from openai import OpenAI
             self.llm_client = OpenAI(api_key=openai_api_key)
 
-    async def initial_search(self, company_context: CompanyContext, questions: List[Question]) -> List[SearchResult]:
+    async def initial_search(self, context: ResearchContext, questions: List[Question]) -> List[SearchResult]:
         """
-        Perform initial search using both Tavily and earnings transcript retrievers
+        Perform initial search using Tavily and (optionally) earnings transcript retrievers
         This is used for iteration 1 of the search process
+
+        For companies: Uses both Tavily + earnings
+        For macro/political: Uses only Tavily (no earnings)
         """
-        self.logger.info(f"Starting initial search for {company_context.name} with {len(questions)} questions")
+        self.logger.info(f"Starting initial search for {context.get_display_name()} with {len(questions)} questions")
 
         # Generate search queries from questions
-        search_queries = await self.generate_search_queries(questions, company_context)
+        search_queries = await self.generate_search_queries(questions, context)
 
         # Search using Tavily retriever
-        tavily_results = await self.search_with_tavily(search_queries, company_context)
+        tavily_results = await self.search_with_tavily(search_queries, context)
 
-        # Search using earnings transcript retriever (initial search only)
-        earnings_results = await self.search_earnings_transcripts(company_context)
+        # Search using earnings transcript retriever ONLY if context supports it
+        earnings_results = []
+        if context.should_use_earnings():
+            self.logger.info("Searching earnings transcripts (company research)")
+            earnings_results = await self.search_earnings_transcripts(context)
+        else:
+            self.logger.info("Skipping earnings transcripts (macro/political research)")
 
         # Filter and rank only Tavily results (earnings always pass through)
-        filtered_tavily_results = self.filter_and_rank_results(tavily_results, company_context)
+        filtered_tavily_results = self.filter_and_rank_results(tavily_results, context)
 
-        # Combine filtered Tavily results with unfiltered earnings results
+        # Combine filtered Tavily results with earnings results (if any)
         all_results = filtered_tavily_results + earnings_results
 
         self.logger.info(f"Initial search completed. Found {len(filtered_tavily_results)} Tavily + {len(earnings_results)} earnings results")
         return all_results
 
-    async def subsequent_search(self, company_context: CompanyContext, questions: List[Question]) -> List[SearchResult]:
+    async def subsequent_search(self, context: ResearchContext, questions: List[Question]) -> List[SearchResult]:
         """
-        Perform subsequent search using only Tavily retriever
+        Perform subsequent search using only Tavily retriever (same for both company and macro)
         This is used for iterations 2-5 of the search process
         """
-        self.logger.info(f"Starting subsequent search for {company_context.name} with {len(questions)} questions")
+        self.logger.info(f"Starting subsequent search for {context.get_display_name()} with {len(questions)} questions")
 
         # Generate search queries from questions
-        search_queries = await self.generate_search_queries(questions, company_context)
+        search_queries = await self.generate_search_queries(questions, context)
 
         # Search using only Tavily retriever
-        tavily_results = await self.search_with_tavily(search_queries, company_context)
+        tavily_results = await self.search_with_tavily(search_queries, context)
 
         # Filter and rank results
-        filtered_results = self.filter_and_rank_results(tavily_results, company_context)
+        filtered_results = self.filter_and_rank_results(tavily_results, context)
 
         self.logger.info(f"Subsequent search completed. Found {len(filtered_results)} relevant results")
         return filtered_results
 
-    async def generate_search_queries(self, questions: List[Question], company_context: CompanyContext) -> List[str]:
+    async def generate_search_queries(self, questions: List[Question], context: ResearchContext) -> List[str]:
         """Generate effective search queries from questions using LLM"""
         try:
-            prompt = self._build_query_generation_prompt(questions, company_context)
+            prompt = self._build_query_generation_prompt(questions, context)
 
             response = self.llm_client.responses.create(
                 model="gpt-4.1",
@@ -217,7 +217,7 @@ class SearchAgent:
                 fallback_queries.append(query_text)
             return fallback_queries
 
-    async def search_with_tavily(self, queries: List[str], company_context: CompanyContext) -> List[TavilySearchResult]:
+    async def search_with_tavily(self, queries: List[str], context: ResearchContext) -> List[TavilySearchResult]:
         """Search using both General and Trusted News retrievers"""
         results = []
 
@@ -287,33 +287,36 @@ class SearchAgent:
 
         return results
 
-    async def search_earnings_transcripts(self, company_context: CompanyContext) -> List[EarningsSearchResult]:
+    async def search_earnings_transcripts(self, context: ResearchContext) -> List[EarningsSearchResult]:
         """Search earnings transcripts for the company"""
         try:
+            # Get company name from context
+            company_name = context.get_display_name()
+
             # TODO: Replace with actual earnings transcript API call
             # Example pseudo code:
             # earnings_response = self.earnings_client.get_latest_transcripts(
-            #     company_name=company_context.name,
+            #     company_name=company_name,
             #     limit=3
             # )
 
-            self.logger.info(f"[PSEUDO] Searching earnings transcripts for: {company_context.name}")
+            self.logger.info(f"[PSEUDO] Searching earnings transcripts for: {company_name}")
 
             # Mock results - replace with actual API response parsing
             mock_result = EarningsSearchResult(
-                company_name=company_context.name,
+                company_name=company_name,
                 quarter="Q3",
                 fiscal_year=str(datetime.now().year),
                 transcript_type="earnings_call",
-                content=f"Mock earnings transcript content for {company_context.name}",
+                content=f"Mock earnings transcript content for {company_name}",
                 timestamp=datetime.now(),
                 source="earnings_transcript"
             )
-            self.logger.info(f"Processing earnings transcript for: {company_context.name}")
-            self.earnings_client.setQuery(company_context.name)
+            self.logger.info(f"Processing earnings transcript for: {company_name}")
+            self.earnings_client.setQuery(company_name)
 
             # Use LLM to extract key information from the Apple earnings transcript
-            if company_context.name.lower() in ["apple", "apple inc"]:
+            if company_name.lower() in ["apple", "apple inc"]:
                 # Process transcript in batches to avoid token limits
                 extracted_contents = await self._process_transcript_in_batches(self.earnings_client.transcript(), self.earnings_client.systemPrompt())
 
@@ -332,7 +335,7 @@ class SearchAgent:
             # results = []
             # for transcript in earnings_response.transcripts:
             #     result = EarningsSearchResult(
-            #         company_name=company_context.name,
+            #         company_name=context.get_display_name(),
             #         quarter=transcript.quarter,
             #         fiscal_year=transcript.fiscal_year,
             #         transcript_type=transcript.type,
@@ -345,10 +348,10 @@ class SearchAgent:
             return [mock_result]
 
         except Exception as e:
-            self.logger.error(f"Error searching earnings transcripts for {company_context.name}: {e}")
+            self.logger.error(f"Error searching earnings transcripts for {context.get_display_name()}: {e}")
             return []
 
-    def filter_and_rank_results(self, results: List[TavilySearchResult], company_context: CompanyContext) -> List[TavilySearchResult]:
+    def filter_and_rank_results(self, results: List[TavilySearchResult], context: ResearchContext) -> List[TavilySearchResult]:
         """Filter and rank Tavily search results by relevance and quality"""
         if not results:
             return []
@@ -365,40 +368,73 @@ class SearchAgent:
         self.logger.info(f"Filtered {len(results)} Tavily results down to {len(top_results)} high-quality results")
         return top_results
 
-    def _build_query_generation_prompt(self, questions: List[Question], company_context: CompanyContext) -> str:
+    def _build_query_generation_prompt(self, questions: List[Question], context: ResearchContext) -> str:
         """Build prompt for generating search queries from questions"""
         questions_text = "\n".join([f"- {q.text}" for q in questions])
 
         # Get current year
         current_year = datetime.now().year
 
-        return f"""Company: {company_context.name}
-Business Areas: {', '.join(company_context.business_areas)}
+        # Build context-specific prompt
+        context_name = context.get_display_name()
+        focus_areas = ', '.join(context.get_focus_areas())
+        research_type = context.get_research_type()
+
+        # Different prompts for company vs macro research
+        if research_type.value == "company":
+            return f"""Company: {context_name}
+Business Areas: {focus_areas}
 
 Questions to research:
 {questions_text}
 
-Convert these questions into concise web search queries that will find the most relevant recent information.
+Convert these questions into concise web search queries for company-specific information.
 
 **CRITICAL CONSTRAINT: Each query must be under 400 characters (Tavily API limit).**
 
 Each query should be:
 - Concise but specific (50-150 characters ideal)
-- Include key company name + industry keywords
+- Include company name + relevant keywords
 - Target recent news/developments (use "{current_year}", "recent", "latest")
 - Use search-optimized language (avoid questions, use keywords)
-- Should not contain multiple ideas in one search (searching about executive leadership should not mean searching about earnings as well)
+- Focus on ONE specific aspect per query
 
 Examples:
-- Good: "{company_context.name} {current_year} earnings revenue growth"
-- Bad: "What are the latest developments regarding {company_context.name}'s financial performance and growth prospects?"
+- Good: "{context_name} {current_year} earnings revenue growth"
+- Bad: "What are the latest developments regarding {context_name}'s financial performance and growth prospects?"
 
 Generate 5-7 short, targeted search queries maximum."""
 
-    async def generate_questions_from_topics(self, topics: List[Dict], company_context: CompanyContext, iteration: int) -> List[Question]:
+        else:  # macro or political research
+            return f"""Macro Research Category: {context_name}
+Focus Areas: {focus_areas}
+
+Questions to research:
+{questions_text}
+
+Convert these questions into concise web search queries for MARKET-WIDE macro/political information.
+
+**CRITICAL CONSTRAINT: Each query must be under 400 characters (Tavily API limit).**
+
+Each query should be:
+- Concise but specific (50-150 characters ideal)
+- Focus on MARKET IMPLICATIONS and investor impact
+- Include time relevance: "{current_year}", "latest", "recent"
+- Use financial/economic terminology (Fed, rates, inflation, GDP, etc.)
+- NO company-specific focus - keep it market-wide
+- Target policy changes, economic data, analyst outlooks
+
+Examples:
+- Good: "Federal Reserve {current_year} interest rate policy market outlook"
+- Good: "inflation impact {current_year} equity markets investor strategy"
+- Bad: "What is the Federal Reserve doing about interest rates?"
+
+Generate 5-7 short, market-focused search queries maximum."""
+
+    async def generate_questions_from_topics(self, topics: List[Dict], context: ResearchContext, iteration: int) -> List[Question]:
         """Generate research questions from extracted topics"""
         try:
-            prompt = self._build_question_generation_prompt(topics, company_context, iteration)
+            prompt = self._build_question_generation_prompt(topics, context, iteration)
 
             response = self.llm_client.responses.create(
                 model="gpt-4.1",
@@ -460,7 +496,7 @@ Generate 5-7 short, targeted search queries maximum."""
             questions = []
             for i, topic in enumerate(topics[:5]):
                 question = Question(
-                    text=f"What recent developments in {topic.get('name', 'topic')} could impact {company_context.name}?",
+                    text=f"What recent developments in {topic.get('name', 'topic')} could impact {context.get_display_name()}?",
                     priority=i + 1,
                     iteration_number=iteration,
                     topic_source=topic.get('name', 'unknown')
@@ -468,7 +504,7 @@ Generate 5-7 short, targeted search queries maximum."""
                 questions.append(question)
             return questions
 
-    def _build_question_generation_prompt(self, topics: List[Dict], company_context: CompanyContext, iteration: int) -> str:
+    def _build_question_generation_prompt(self, topics: List[Dict], context: ResearchContext, iteration: int) -> str:
         """Build prompt for generating research questions from topics"""
         topics_text = "\n".join([
             f"- {topic.get('name', '')}: {topic.get('description', '')}\n  Business Impact: {topic.get('business_impact', 'Unknown')}\n  Sources Found: {', '.join(topic.get('sources', ['No sources'])[:3])}"
@@ -478,8 +514,12 @@ Generate 5-7 short, targeted search queries maximum."""
         # Get current year
         current_year = datetime.now().year
 
-        return f"""Company: {company_context.name}
-Business Areas: {', '.join(company_context.business_areas)}
+        # Build context-specific prompt
+        context_name = context.get_display_name()
+        focus_areas = ', '.join(context.get_focus_areas())
+
+        return f"""Research Target: {context_name}
+Focus Areas: {focus_areas}
 Search Iteration: {iteration}
 
 PREVIOUSLY DISCOVERED TOPICS (from iteration {iteration-1}):
@@ -512,4 +552,4 @@ You are generating research questions for iteration {iteration} that will be con
 - Management commentary and strategic direction updates
 - Industry expert analysis and third-party assessments
 
-Generate 5-7 precise, search-optimized questions that target new information sources and fill specific knowledge gaps about {company_context.name}."""
+Generate 5-7 precise, search-optimized questions that target new information sources and fill specific knowledge gaps about {context.get_display_name()}."""

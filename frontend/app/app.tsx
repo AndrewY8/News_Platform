@@ -47,6 +47,10 @@ export default function HavenNewsApp() {
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null)
   const [expandedTopics, setExpandedTopics] = useState<{[key: string]: boolean}>({})
 
+  // Macro topics state
+  const [macroTopics, setMacroTopics] = useState<any[]>([])
+  const [politicalTopics, setPoliticalTopics] = useState<any[]>([])
+
   // Yahoo Finance state
   const [stockData, setStockData] = useState<StockData | null>(null)
   const [chartData, setChartData] = useState<ChartData | null>(null)
@@ -143,6 +147,30 @@ useEffect(() => {
     }
   }
 
+  const loadMacroTopics = async () => {
+    try {
+      console.log("📈 Loading macro topics...")
+
+      // Fetch macro topics
+      const macroResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/macro-topics?topic_type=macro&limit=5`)
+      if (macroResponse.ok) {
+        const macroData = await macroResponse.json()
+        setMacroTopics(macroData.topics || [])
+        console.log("✅ Loaded macro topics:", macroData.topics?.length || 0)
+      }
+
+      // Fetch political topics
+      const politicalResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/macro-topics?topic_type=political&limit=5`)
+      if (politicalResponse.ok) {
+        const politicalData = await politicalResponse.json()
+        setPoliticalTopics(politicalData.topics || [])
+        console.log("✅ Loaded political topics:", politicalData.topics?.length || 0)
+      }
+    } catch (error) {
+      console.error('Failed to load macro topics:', error)
+    }
+  }
+
   const initializeApp = async () => {
     try {
       console.log("🚀 Initializing app...")
@@ -155,6 +183,9 @@ useEffect(() => {
 
       // Load market indices
       await loadMarketIndices()
+
+      // Load macro and political topics
+      await loadMacroTopics()
 
       //Load initial topics directly
       console.log("📊 Loading initial topics for tickers:", defaultTickers)
@@ -1011,6 +1042,187 @@ const addTicker = async () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Macro & Political Topics Section */}
+                    {(macroTopics.length > 0 || politicalTopics.length > 0) && (
+                      <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Market Overview</h2>
+
+                        {/* Macro Topics */}
+                        {macroTopics.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3">Macro & Economic</h3>
+                            <div className="space-y-3">
+                              {macroTopics.map((topic: any) => {
+                                const urgency = topic.urgency || 'medium'
+                                const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                   urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                   'bg-green-100 text-green-700'
+
+                                const topicKey = `macro-${topic.id}`
+                                const isExpanded = expandedTopics[topicKey] || false
+
+                                return (
+                                  <div key={topic.id} className="border rounded-lg p-4 shadow-lg bg-white">
+                                    <div
+                                      className="cursor-pointer"
+                                      onClick={() => setExpandedTopics(prev => ({...prev, [topicKey]: !prev[topicKey]}))}
+                                    >
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex items-center gap-2 flex-1">
+                                          <h4 className="text-sm font-bold text-gray-900">{topic.name}</h4>
+                                          <ChevronDown
+                                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {topic.sector && (
+                                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                              {topic.sector}
+                                            </span>
+                                          )}
+                                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor}`}>
+                                            {urgency.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {topic.description && (
+                                        <p className="text-xs text-gray-600 mb-1">{topic.description}</p>
+                                      )}
+                                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Expandable Articles Section */}
+                                    <div
+                                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                        isExpanded ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+                                      }`}
+                                    >
+                                      {topic.articles && topic.articles.length > 0 && (
+                                        <div className="space-y-2 border-t pt-3">
+                                          {topic.articles.map((article: any) => (
+                                            <a
+                                              key={article.id}
+                                              href={article.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="block p-2 rounded hover:bg-gray-50 transition-colors"
+                                            >
+                                              <div className="flex items-start justify-between gap-2">
+                                                <div className="flex-1">
+                                                  <h5 className="text-xs font-medium text-gray-900 mb-0.5">
+                                                    {article.title}
+                                                  </h5>
+                                                  <p className="text-xs text-gray-500">{article.source}</p>
+                                                </div>
+                                                {article.published_date && (
+                                                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                    {new Date(article.published_date).toLocaleDateString()}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Political Topics */}
+                        {politicalTopics.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3">Political & Policy</h3>
+                            <div className="space-y-3">
+                              {politicalTopics.map((topic: any) => {
+                                const urgency = topic.urgency || 'medium'
+                                const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                   urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                   'bg-green-100 text-green-700'
+
+                                const topicKey = `political-${topic.id}`
+                                const isExpanded = expandedTopics[topicKey] || false
+
+                                return (
+                                  <div key={topic.id} className="border rounded-lg p-4 shadow-lg bg-white">
+                                    <div
+                                      className="cursor-pointer"
+                                      onClick={() => setExpandedTopics(prev => ({...prev, [topicKey]: !prev[topicKey]}))}
+                                    >
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex items-center gap-2 flex-1">
+                                          <h4 className="text-sm font-bold text-gray-900">{topic.name}</h4>
+                                          <ChevronDown
+                                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {topic.sector && (
+                                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                              {topic.sector}
+                                            </span>
+                                          )}
+                                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor}`}>
+                                            {urgency.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {topic.description && (
+                                        <p className="text-xs text-gray-600 mb-1">{topic.description}</p>
+                                      )}
+                                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Expandable Articles Section */}
+                                    <div
+                                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                        isExpanded ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+                                      }`}
+                                    >
+                                      {topic.articles && topic.articles.length > 0 && (
+                                        <div className="space-y-2 border-t pt-3">
+                                          {topic.articles.map((article: any) => (
+                                            <a
+                                              key={article.id}
+                                              href={article.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="block p-2 rounded hover:bg-gray-50 transition-colors"
+                                            >
+                                              <div className="flex items-start justify-between gap-2">
+                                                <div className="flex-1">
+                                                  <h5 className="text-xs font-medium text-gray-900 mb-0.5">
+                                                    {article.title}
+                                                  </h5>
+                                                  <p className="text-xs text-gray-500">{article.source}</p>
+                                                </div>
+                                                {article.published_date && (
+                                                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                    {new Date(article.published_date).toLocaleDateString()}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Section Heading */}
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Companies</h2>
