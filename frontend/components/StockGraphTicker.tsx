@@ -125,27 +125,27 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200 py-2 flex items-center justify-center">
-        <div className="animate-pulse text-xs text-slate-600">Loading market data...</div>
+      <div className="bg-gray-900 text-white py-2 flex items-center justify-center">
+        <div className="animate-pulse text-xs">Loading market data...</div>
       </div>
     )
   }
 
   if (tickerDataWithCharts.length === 0) {
     return (
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200 py-2 flex items-center justify-center">
-        <div className="text-xs text-slate-500">Add tickers to see live market data</div>
+      <div className="bg-gray-900 text-white py-2 flex items-center justify-center">
+        <div className="text-xs text-gray-400">Add tickers to see live market data</div>
       </div>
     )
   }
 
   return (
     <>
-      <div className="bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-slate-200 relative group">
+      <div className="bg-gray-900 text-white relative group">
         {/* Left Scroll Button */}
         <button
           onClick={() => scroll('left')}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-slate-100 text-slate-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-md border border-slate-200"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 hover:bg-gray-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
         >
           <ChevronLeft className="w-3 h-3" />
         </button>
@@ -161,26 +161,26 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               <div
                 key={item.stock.symbol}
                 onClick={() => setSelectedStock(item)}
-                className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-xl p-3 hover:bg-white hover:shadow-lg transition-all cursor-pointer group/card relative border border-slate-200"
+                className="flex-shrink-0 bg-gray-800 rounded-lg p-2 hover:bg-gray-750 transition-colors cursor-pointer group/card relative shadow-lg"
                 style={{ width: '200px' }}
               >
                 {/* Magnify icon on hover */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                  <Maximize2 className="w-3 h-3 text-slate-400" />
+                <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  <Maximize2 className="w-3 h-3 text-gray-400" />
                 </div>
 
                 {/* Header: Symbol, Price, Change */}
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-bold text-sm text-slate-700">{item.stock.symbol}</div>
-                    <div className="text-lg font-semibold text-slate-900">
+                    <div className="font-bold text-sm">{item.stock.symbol}</div>
+                    <div className="text-lg font-semibold text-white">
                       ${item.stock.price.toFixed(2)}
                     </div>
                   </div>
-                  <div className={`flex items-center gap-0.5 text-xs font-medium px-2 py-1 rounded-lg ${
+                  <div className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded ${
                     item.stock.changePercent >= 0
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-rose-50 text-rose-600"
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-red-500/20 text-red-400"
                   }`}>
                     {item.stock.changePercent >= 0 ? (
                       <TrendingUp className="w-3 h-3" />
@@ -193,7 +193,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
                 {/* Daily Return Chart */}
                 {item.chartData && item.chartData.data.length > 0 && (
-                  <div className="h-12 w-full bg-slate-50/50 rounded-lg p-1 relative">
+                  <div className="h-12 w-full bg-gray-900 rounded p-1 relative">
                     <DailyReturnChart
                       data={item.chartData.data}
                       isPositive={item.stock.changePercent >= 0}
@@ -209,7 +209,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
         {/* Right Scroll Button */}
         <button
           onClick={() => scroll('right')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-slate-100 text-slate-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-md border border-slate-200"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 hover:bg-gray-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
         >
           <ChevronRight className="w-3 h-3" />
         </button>
@@ -225,33 +225,33 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
       {/* Magnified Modal View */}
       {selectedStock && (
         <div
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
           onClick={() => setSelectedStock(null)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200"
+            className="bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setSelectedStock(null)}
-              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors"
+              className="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-colors"
             >
-              <X className="w-5 h-5 text-slate-700" />
+              <X className="w-5 h-5 text-white" />
             </button>
 
             {/* Header: Symbol, Price, Change */}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <div className="font-bold text-3xl text-slate-800">{selectedStock.stock.symbol}</div>
-                <div className="text-5xl font-semibold text-slate-900 mt-2">
+                <div className="font-bold text-3xl text-white">{selectedStock.stock.symbol}</div>
+                <div className="text-5xl font-semibold text-white mt-2">
                   ${selectedStock.stock.price.toFixed(2)}
                 </div>
               </div>
-              <div className={`flex items-center gap-2 text-xl font-medium px-4 py-2 rounded-xl ${
+              <div className={`flex items-center gap-2 text-xl font-medium px-4 py-2 rounded-lg ${
                 (timeFramePriceChange?.changePercent ?? selectedStock.stock.changePercent) >= 0
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-rose-50 text-rose-700"
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-red-500/20 text-red-400"
               }`}>
                 {(timeFramePriceChange?.changePercent ?? selectedStock.stock.changePercent) >= 0 ? (
                   <TrendingUp className="w-6 h-6" />
@@ -277,8 +277,8 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                   onClick={() => setSelectedTimeFrame(tf)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedTimeFrame === tf
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
                   {tf}
@@ -288,11 +288,11 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
             {/* Large Chart with article markers */}
             {loadingTimeFrame ? (
-              <div className="bg-slate-50 rounded-xl p-4 mb-6 h-80 flex items-center justify-center border border-slate-200">
+              <div className="bg-gray-900 rounded-lg p-4 mb-6 h-80 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : timeFrameChartData && timeFrameChartData.data.length > 0 ? (
-              <div className="bg-slate-50/50 rounded-xl p-4 mb-6 border border-slate-200">
+              <div className="bg-gray-900 rounded-lg p-4 mb-6">
                 <InteractiveChart
                   data={timeFrameChartData.data}
                   isPositive={(timeFramePriceChange?.changePercent ?? 0) >= 0}
@@ -305,59 +305,59 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                 />
               </div>
             ) : (
-              <div className="bg-slate-50 rounded-xl p-4 mb-6 h-80 flex items-center justify-center text-slate-500 border border-slate-200">
+              <div className="bg-gray-900 rounded-lg p-4 mb-6 h-80 flex items-center justify-center text-gray-400">
                 No chart data available
               </div>
             )}
 
             {/* Detailed Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                <div className="text-slate-600 text-sm">Open</div>
-                <div className="text-xl font-semibold mt-1 text-slate-900">${selectedStock.stock.open.toFixed(2)}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white mb-6">
+              <div className="bg-gray-900 rounded-lg p-3">
+                <div className="text-gray-400 text-sm">Open</div>
+                <div className="text-xl font-semibold mt-1">${selectedStock.stock.open.toFixed(2)}</div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                <div className="text-slate-600 text-sm">High</div>
-                <div className="text-xl font-semibold mt-1 text-emerald-600">${selectedStock.stock.high.toFixed(2)}</div>
+              <div className="bg-gray-900 rounded-lg p-3">
+                <div className="text-gray-400 text-sm">High</div>
+                <div className="text-xl font-semibold mt-1 text-green-400">${selectedStock.stock.high.toFixed(2)}</div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                <div className="text-slate-600 text-sm">Low</div>
-                <div className="text-xl font-semibold mt-1 text-rose-600">${selectedStock.stock.low.toFixed(2)}</div>
+              <div className="bg-gray-900 rounded-lg p-3">
+                <div className="text-gray-400 text-sm">Low</div>
+                <div className="text-xl font-semibold mt-1 text-red-400">${selectedStock.stock.low.toFixed(2)}</div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                <div className="text-slate-600 text-sm">Prev Close</div>
-                <div className="text-xl font-semibold mt-1 text-slate-900">${selectedStock.stock.previousClose.toFixed(2)}</div>
+              <div className="bg-gray-900 rounded-lg p-3">
+                <div className="text-gray-400 text-sm">Prev Close</div>
+                <div className="text-xl font-semibold mt-1">${selectedStock.stock.previousClose.toFixed(2)}</div>
               </div>
               {selectedStock.stock.volume && (
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <div className="text-slate-600 text-sm">Volume</div>
-                  <div className="text-xl font-semibold mt-1 text-slate-900">{(selectedStock.stock.volume / 1000000).toFixed(2)}M</div>
+                <div className="bg-gray-900 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Volume</div>
+                  <div className="text-xl font-semibold mt-1">{(selectedStock.stock.volume / 1000000).toFixed(2)}M</div>
                 </div>
               )}
               {selectedStock.stock.marketCap && (
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <div className="text-slate-600 text-sm">Market Cap</div>
-                  <div className="text-xl font-semibold mt-1 text-slate-900">${(selectedStock.stock.marketCap / 1000000000).toFixed(2)}B</div>
+                <div className="bg-gray-900 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Market Cap</div>
+                  <div className="text-xl font-semibold mt-1">${(selectedStock.stock.marketCap / 1000000000).toFixed(2)}B</div>
                 </div>
               )}
               {selectedStock.stock.pe && (
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <div className="text-slate-600 text-sm">P/E Ratio</div>
-                  <div className="text-xl font-semibold mt-1 text-slate-900">{selectedStock.stock.pe.toFixed(2)}</div>
+                <div className="bg-gray-900 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">P/E Ratio</div>
+                  <div className="text-xl font-semibold mt-1">{selectedStock.stock.pe.toFixed(2)}</div>
                 </div>
               )}
               {selectedStock.stock.dividend && (
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <div className="text-slate-600 text-sm">Dividend</div>
-                  <div className="text-xl font-semibold mt-1 text-slate-900">${selectedStock.stock.dividend.toFixed(2)}</div>
+                <div className="bg-gray-900 rounded-lg p-3">
+                  <div className="text-gray-400 text-sm">Dividend</div>
+                  <div className="text-xl font-semibold mt-1">${selectedStock.stock.dividend.toFixed(2)}</div>
                 </div>
               )}
             </div>
 
             {/* Related Articles Section */}
             {selectedStock.articles.length > 0 && (
-              <div ref={articlesListRef} className="border-t border-slate-200 pt-6">
-                <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <div ref={articlesListRef} className="border-t border-gray-700 pt-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
                   Related Articles ({selectedStock.articles.length})
                 </h3>
@@ -368,31 +368,31 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block bg-slate-50 hover:bg-slate-100 rounded-lg p-4 transition-colors group border border-slate-200"
+                      className="block bg-gray-900 hover:bg-gray-750 rounded-lg p-4 transition-colors group"
                     >
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <h4 className="text-slate-900 font-medium mb-1 group-hover:text-blue-600 transition-colors">
+                          <h4 className="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">
                             {article.title}
                           </h4>
-                          <p className="text-slate-600 text-sm line-clamp-2 mb-2">
+                          <p className="text-gray-400 text-sm line-clamp-2 mb-2">
                             {article.preview}
                           </p>
                           <div className="flex items-center gap-3 text-xs">
-                            <span className="text-slate-500">{article.source}</span>
-                            <span className="text-slate-500">{article.date}</span>
+                            <span className="text-gray-500">{article.source}</span>
+                            <span className="text-gray-500">{article.date}</span>
                             {article.sentiment && (
                               <span className={`px-2 py-0.5 rounded-full ${
-                                article.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-600' :
-                                article.sentiment === 'negative' ? 'bg-rose-50 text-rose-600' :
-                                'bg-slate-100 text-slate-600'
+                                article.sentiment === 'positive' ? 'bg-green-500/20 text-green-400' :
+                                article.sentiment === 'negative' ? 'bg-red-500/20 text-red-400' :
+                                'bg-gray-500/20 text-gray-400'
                               }`}>
                                 {article.sentiment}
                               </span>
                             )}
                           </div>
                         </div>
-                        <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0 group-hover:text-blue-600 transition-colors" />
+                        <ExternalLink className="w-4 h-4 text-gray-500 flex-shrink-0 group-hover:text-blue-400 transition-colors" />
                       </div>
                     </a>
                   ))}
@@ -406,34 +406,34 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
       {/* Article Preview Popup */}
       {selectedArticle && (
         <div
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-md z-[110] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
           onClick={() => setSelectedArticle(null)}
         >
           <div
-            className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200"
+            className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-2xl font-bold text-slate-900 pr-8">{selectedArticle.title}</h3>
+              <h3 className="text-2xl font-bold text-white pr-8">{selectedArticle.title}</h3>
               <button
                 onClick={() => setSelectedArticle(null)}
-                className="bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors flex-shrink-0"
+                className="bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-colors flex-shrink-0"
               >
-                <X className="w-5 h-5 text-slate-700" />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
             <div className="flex items-center gap-3 text-sm mb-4">
-              <span className="text-slate-600">{selectedArticle.source}</span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-600">{selectedArticle.date}</span>
+              <span className="text-gray-400">{selectedArticle.source}</span>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-400">{selectedArticle.date}</span>
               {selectedArticle.sentiment && (
                 <>
-                  <span className="text-slate-400">•</span>
+                  <span className="text-gray-500">•</span>
                   <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedArticle.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-600' :
-                    selectedArticle.sentiment === 'negative' ? 'bg-rose-50 text-rose-600' :
-                    'bg-slate-100 text-slate-600'
+                    selectedArticle.sentiment === 'positive' ? 'bg-green-500/20 text-green-400' :
+                    selectedArticle.sentiment === 'negative' ? 'bg-red-500/20 text-red-400' :
+                    'bg-gray-500/20 text-gray-400'
                   }`}>
                     {selectedArticle.sentiment}
                   </span>
@@ -441,7 +441,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               )}
             </div>
 
-            <p className="text-slate-700 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               {selectedArticle.preview}
             </p>
 
@@ -449,7 +449,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               href={selectedArticle.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
             >
               Read Full Article
               <ExternalLink className="w-4 h-4" />
@@ -498,7 +498,7 @@ function DailyReturnChart({
 
   const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`
 
-  const color = isPositive ? "#059669" : "#dc2626"
+  const color = isPositive ? "#10b981" : "#ef4444"
   const gradientId = `gradient-${isPositive ? 'positive' : 'negative'}-${Math.random()}`
 
   // Calculate article markers positions
@@ -534,8 +534,8 @@ function DailyReturnChart({
     <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.05" />
         </linearGradient>
       </defs>
 
@@ -550,7 +550,7 @@ function DailyReturnChart({
         d={linePath}
         fill="none"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
       />
 
@@ -563,17 +563,17 @@ function DailyReturnChart({
             y1={marker.y}
             x2={marker.x}
             y2={height}
-            stroke="#60a5fa"
+            stroke="#3b82f6"
             strokeWidth="0.5"
             strokeDasharray="2,2"
-            opacity="0.5"
+            opacity="0.6"
           />
           {/* Circle marker */}
           <circle
             cx={marker.x}
             cy={marker.y}
             r={interactive ? "2" : "1.5"}
-            fill="#60a5fa"
+            fill="#3b82f6"
             stroke="white"
             strokeWidth="0.5"
           >
@@ -587,8 +587,8 @@ function DailyReturnChart({
               cx={marker.x}
               cy={marker.y}
               r="2"
-              fill="#60a5fa"
-              opacity="0.3"
+              fill="#3b82f6"
+              opacity="0.4"
             >
               <animate
                 attributeName="r"
@@ -599,7 +599,7 @@ function DailyReturnChart({
               />
               <animate
                 attributeName="opacity"
-                from="0.3"
+                from="0.4"
                 to="0"
                 dur="1.5s"
                 repeatCount="indefinite"
@@ -639,7 +639,7 @@ function InteractiveChart({
   const min = Math.min(...prices)
   const max = Math.max(...prices)
   const range = max - min || 1
-  const color = isPositive ? "#059669" : "#dc2626"
+  const color = isPositive ? "#10b981" : "#ef4444"
 
   // Format time labels based on timeframe
   const formatTimeLabel = (timestamp: number, tf: TimeFrame): string => {
@@ -748,8 +748,8 @@ function InteractiveChart({
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
               <linearGradient id={`gradient-interactive-${isPositive ? 'pos' : 'neg'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-                <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                <stop offset="100%" stopColor={color} stopOpacity="0.05" />
               </linearGradient>
             </defs>
             <path
@@ -760,7 +760,7 @@ function InteractiveChart({
               points={prices.map((price, i) => `${(i / (prices.length - 1)) * 100},${100 - ((price - min) / range) * 100}`).join(' ')}
               fill="none"
               stroke={color}
-              strokeWidth="2"
+              strokeWidth="1.5"
               vectorEffect="non-scaling-stroke"
             />
           </svg>
@@ -781,8 +781,8 @@ function InteractiveChart({
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             <linearGradient id={`gradient-interactive-${isPositive ? 'pos' : 'neg'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-              <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+              <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={color} stopOpacity="0.05" />
             </linearGradient>
           </defs>
 
@@ -795,7 +795,7 @@ function InteractiveChart({
             points={prices.map((price, i) => `${(i / (prices.length - 1)) * 100},${100 - ((price - min) / range) * 100}`).join(' ')}
             fill="none"
             stroke={color}
-            strokeWidth="2"
+            strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
 
@@ -840,26 +840,26 @@ function InteractiveChart({
 
                 {/* Hover tooltip */}
                 {hoveredMarker === marker && marker.articles && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white border border-slate-200 text-slate-900 text-xs px-3 py-2 rounded-lg shadow-xl max-w-sm z-10 pointer-events-none">
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs px-3 py-2 rounded shadow-lg max-w-sm z-10 pointer-events-none">
                     <div className="font-semibold mb-1">
                       {new Date(marker.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
-                    <div className="text-slate-600 mb-1">
+                    <div className="text-gray-300 mb-1">
                       {marker.articles.length} {marker.articles.length === 1 ? 'article' : 'articles'}
                     </div>
                     {marker.articles.slice(0, 3).map((article, i) => (
-                      <div key={i} className="text-[10px] text-slate-600 truncate">
+                      <div key={i} className="text-[10px] text-gray-400 truncate">
                         • {article.title}
                       </div>
                     ))}
                     {marker.articles.length > 3 && (
-                      <div className="text-[10px] text-slate-500 mt-1">
+                      <div className="text-[10px] text-gray-500 mt-1">
                         +{marker.articles.length - 3} more
                       </div>
                     )}
-                    <div className="text-slate-500 text-[10px] mt-1.5 border-t border-slate-200 pt-1">Click to view {marker.articles.length > 1 ? 'articles' : 'article'}</div>
+                    <div className="text-gray-400 text-[10px] mt-1.5 border-t border-gray-600 pt-1">Click to view {marker.articles.length > 1 ? 'articles' : 'article'}</div>
                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-                      <div className="border-4 border-transparent border-t-white" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.1))' }} />
+                      <div className="border-4 border-transparent border-t-gray-700" />
                     </div>
                   </div>
                 )}
