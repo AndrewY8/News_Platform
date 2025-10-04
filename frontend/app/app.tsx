@@ -75,8 +75,6 @@ export default function HavenNewsApp() {
   const tabs = [
     { id: "personalized", label: "Personalized feed", icon: User, href: "/personalized-news" },
     { id: "business-news", label: "Business News", icon: Building, href: "#", hasDropdown: true },
-    { id: "portfolio", label: "Portfolio", icon: Rss, href: "/portfolio" },
-    { id: "saved", label: "Saved News", icon: Bookmark, href: "/saved-news" },
     { id: "sec-docs", label: "SEC Doc Searcher", icon: Search, href: "/sec-docs" },
   ]
 
