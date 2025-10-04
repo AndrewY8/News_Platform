@@ -504,10 +504,36 @@ const loadArticles = async (tickers?: string[]) => {
 
     switch (activeTab) {
       case 'personalized':
-        console.log("Fetching personalized news for tickers:", tickers)
-        const data = await ApiService.getPersonalizedNews(tickers)
-        setCachedPersonalized(data)
-        fetchedArticles = data
+        console.log("Fetching topics from database...")
+        // Fetch topics from database instead of regular articles
+        const topicsData = await ApiService.getAllTopics(50)
+
+        // Transform topics into articles format
+        fetchedArticles = []
+        if (topicsData.topics && topicsData.topics.length > 0) {
+          topicsData.topics.forEach((topic: any) => {
+            if (topic.articles && topic.articles.length > 0) {
+              topic.articles.forEach((article: any) => {
+                fetchedArticles.push({
+                  id: article.id,
+                  date: article.published_date || topic.extraction_date || 'Recently',
+                  title: article.title,
+                  source: article.source,
+                  preview: topic.description || '',
+                  sentiment: 'neutral' as const,
+                  tags: [topic.name], // Use topic name as tag
+                  url: article.url,
+                  relevance_score: article.relevance_score,
+                  category: topic.company,
+                  urgency: topic.urgency,
+                  topic_description: topic.description
+                })
+              })
+            }
+          })
+        }
+
+        setCachedPersonalized(fetchedArticles)
         break
 
       case 'portfolio':
@@ -1027,58 +1053,80 @@ const addTicker = async () => {
                 )}
               </div>
             ) : (
-              <div className="w-full space-y-1 sm:space-y-2">
-                
-                {/* Existing articles */}
-                {articles.map((article: NewsArticle, index: number) => (
-                  <div
-                    key={article.id}
-                    className={`border rounded-lg p-3 transition-all duration-300 flex items-center w-full ${
-                      newArticles.has(article.id)
-                        ? 'animate-slide-in-right border-blue-500'
-                        : 'border-gray-200'
-                    }`}
-                    style={{ backgroundColor: '#ffffff' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
-                  >
-                    <div className="flex gap-4 w-full">
-                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-start pt-0.5 tracking-wide">
-                        {article.date.includes(':') && <span className="mr-1">🔥</span>}
-                        {article.date}
-                      </div>
+              <div className="w-full space-y-4">
+                {/* Group articles by topic */}
+                {(() => {
+                  // Group articles by their first tag (topic)
+                  const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
+                    const topic = article.tags && article.tags.length > 0
+                      ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
+                      : 'Uncategorized'
 
-                      <div className="flex-1 flex flex-col">
-                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-sm lg:text-base tracking-wide">
-                          <a
-                            href={article.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline hover:text-blue-600 transition-colors"
-                          >
-                            {article.title}
-                          </a>
-                        </h3>
-                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed tracking-wide mb-2">{article.preview}</p>
+                    if (!acc[topic]) {
+                      acc[topic] = []
+                    }
+                    acc[topic].push(article)
+                    return acc
+                  }, {})
 
-                        {/* Tags moved below content, smaller and wrapped */}
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {(article.tags || []).slice(0, 3).map((tag: any, index: number) => {
-                            const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
-                            return (
-                              <span
-                                key={index}
-                                className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-mono tracking-wide"
-                              >
-                                {tagText}
-                              </span>
-                            )
-                          })}
+                  return Object.entries(groupedArticles).map(([topic, topicArticles]: [string, any]) => {
+                    if (!topicArticles || topicArticles.length === 0) return null
+
+                    const firstArticle = topicArticles[0]
+                    const urgency = firstArticle?.urgency || 'medium'
+                    const description = firstArticle?.topic_description || firstArticle?.preview || ''
+                    const company = firstArticle?.category || ''
+
+                    // Urgency badge color
+                    const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                       urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                       'bg-green-100 text-green-700'
+
+                    return (
+                    <div key={topic} className="border rounded-lg p-4 bg-white">
+                      {/* Topic Header */}
+                      <div className="mb-3 pb-3 border-b border-gray-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-lg font-bold text-gray-900 flex-1">{topic}</h3>
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${urgencyColor}`}>
+                            {urgency.toUpperCase()}
+                          </span>
+                        </div>
+                        {description && (
+                          <p className="text-sm text-gray-600 mb-2">{description}</p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          {company && <span className="font-medium">{company}</span>}
+                          {company && <span>•</span>}
+                          <span>{topicArticles.length} article{topicArticles.length > 1 ? 's' : ''}</span>
+                          <span>•</span>
+                          <span>{firstArticle.date}</span>
                         </div>
                       </div>
+
+                      {/* Articles as bullets */}
+                      <ul className="space-y-2">
+                        {topicArticles.map((article: NewsArticle) => (
+                          <li key={article.id} className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">•</span>
+                            <div className="flex-1">
+                              <a
+                                href={article.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                              >
+                                {article.title}
+                              </a>
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{article.preview}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                ))}
+                    )
+                  })
+                })()}
               </div>
             )}
           </div>

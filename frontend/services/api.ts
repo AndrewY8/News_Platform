@@ -695,6 +695,25 @@ export class ApiService {
     }
   }
 
+  static async getAllTopics(limit: number = 50): Promise<any> {
+    try {
+      const timeoutPromise = this.createTimeoutPromise(10000, { topics: [] })
+      const fetchPromise = fetch(`${API_BASE_URL}/api/topics/all?limit=${limit}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch all topics: ${response.status}`)
+          }
+          return response.json()
+        })
+
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      return result
+    } catch (error) {
+      console.error('Error fetching all topics:', error)
+      return { topics: [] }
+    }
+  }
+
   // SEC RAG (Retrieval-Augmented Generation) methods for document-specific queries
   static async querySecDocumentRAG(documentId: string, query: string): Promise<{
     answer: string
