@@ -100,6 +100,7 @@ def transform_db_articles_to_frontend(articles_data: List[Dict], company_name: s
             article = {
                 "id": article_id,
                 "date": format_article_date(article_data.get('published_date')),
+                "published_date": article_data.get('published_date'),  # Raw timestamp for chart markers
                 "title": title,
                 "source": article_data.get('source', 'Unknown'),
                 "preview": preview,
@@ -258,7 +259,7 @@ def get_fallback_articles():
     ]
 
 # Article Route Functions
-async def get_personalized_articles_handler(db: Session, Article, tickers: Optional[str] = None):
+async def get_personalized_articles_handler(db: Session, Article, tickers: Optional[str] = None, limit: int = 20, offset: int = 0):
     """Get personalized articles from pre-computed deep research database"""
     try:
         # Build company context based on tickers if provided
@@ -269,20 +270,26 @@ async def get_personalized_articles_handler(db: Session, Article, tickers: Optio
 
             # Use first ticker as primary company
             primary_ticker = ticker_list[0]
-            logger.info(f"Fetching pre-computed research for ticker: {primary_ticker}")
+            logger.info(f"Fetching pre-computed research for ticker: {primary_ticker}, limit: {limit}, offset: {offset}")
 
             if research_db_manager:
-                # Fetch actual articles from database (not just topics)
+                # Fetch all articles from database (we'll paginate manually)
+                # Note: ResearchDBManager doesn't support offset, so fetch more and slice
+                total_needed = limit + offset
                 articles_data = research_db_manager.get_company_articles(
                     company_name=primary_ticker,
-                    limit=20
+                    limit=total_needed + 20  # Fetch extra to ensure we have enough
                 )
 
                 if articles_data:
                     # Transform database articles to frontend format
-                    articles = transform_db_articles_to_frontend(articles_data, primary_ticker)
-                    logger.info(f"Retrieved {len(articles)} pre-computed articles for {primary_ticker}")
-                    return JSONResponse(content=articles)
+                    all_articles = transform_db_articles_to_frontend(articles_data, primary_ticker)
+
+                    # Apply pagination by slicing the results
+                    paginated_articles = all_articles[offset:offset + limit]
+
+                    logger.info(f"Retrieved {len(paginated_articles)} articles (offset: {offset}, limit: {limit}) for {primary_ticker}")
+                    return JSONResponse(content=paginated_articles)
                 else:
                     logger.info(f"No pre-computed research found for {primary_ticker}, returning fallback")
                     return JSONResponse(content=get_fallback_articles())
@@ -326,8 +333,8 @@ def add_article_retrieval_routes(app, shared_limiter, get_db, Article):
 
     @app.get("/api/articles")
     @shared_limiter.limit("30/minute")
-    async def get_personalized_articles(request: Request, tickers: Optional[str] = None, db: Session = Depends(get_db)):
-        return await get_personalized_articles_handler(db, Article, tickers)
+    async def get_personalized_articles(request: Request, tickers: Optional[str] = None, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
+        return await get_personalized_articles_handler(db, Article, tickers, limit, offset)
 
     @app.get("/api/articles/top")
     @shared_limiter.limit("30/minute")

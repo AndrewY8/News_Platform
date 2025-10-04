@@ -8,6 +8,7 @@ import { Search, Bookmark, Rss, User, X, Trash2, BarChart3, MessageCircle, Send,
 import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/api"
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
+import { StockGraphTicker } from "@/components/StockGraphTicker"
 
 export default function HavenNewsApp() {
   const router = useRouter()
@@ -980,26 +981,14 @@ const addTicker = async () => {
           </div>
         </div>
 
-        {/* Scrolling Banner Section */}
-        <div className="bg-gray-900 text-white py-2 overflow-hidden">
-  <div className="flex animate-marquee whitespace-nowrap">
-    {articles.slice(0, 10).map((article) => (
-      <a
-        key={article.id}
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mx-8 text-sm font-medium hover:underline flex items-center gap-1"
-      >
-        {getEmoji(article)} {article.title}
-      </a>
-    ))}
-  </div>
-</div>
-
       </div>
 
-      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
+      {/* Stock Graph Ticker Section - Outside fixed header so it scrolls */}
+      <div className="pt-[80px] sm:pt-[100px] lg:pt-[120px]">
+        <StockGraphTicker tickers={tickers} />
+      </div>
+
+      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen">
         {/* Main Content - Articles */}
         <div className="flex-1 lg:mr-6">
           <div className="py-3 sm:py-4 lg:py-6">
