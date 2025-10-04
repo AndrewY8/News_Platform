@@ -705,7 +705,7 @@ const addTicker = async () => {
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: '#FFFFFF' }}>
       {/* Fixed Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#A5C4D4' }}>
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#FFFFFF' }}>
         <div className="border-b border-gray-200 py-3 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation Combined */}
@@ -844,19 +844,16 @@ const addTicker = async () => {
         </div>
 
         {/* Stock Ticker Graph Bar - directly below navigation, no margins */}
-        <div className="pb-4">
+        <div className="pb-1">
           <StockGraphTicker tickers={tickers} />
         </div>
       </div>
 
       {/* Main content area with proper spacing */}
-      <div className="flex justify-center min-h-screen pt-[170px] sm:pt-[200px] lg:pt-[250px]">
-        {/* Left margin spacer - 1/8 of page */}
-        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
-
-        {/* Main Content - Articles */}
-        <div className="flex-1 px-4 sm:px-6 lg:px-8 max-w-4xl relative">
-          <div className="pt-6 pb-3 sm:pt-8 sm:pb-4 lg:pt-10 lg:pb-6">
+      <div className="min-h-screen pt-[170px] sm:pt-[200px] lg:pt-[250px]">
+        {/* Main Content - Full Width */}
+        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="pt-2 pb-3 sm:pt-3 sm:pb-4 lg:pt-4 lg:pb-6">
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -899,115 +896,165 @@ const addTicker = async () => {
                 {/* Render based on active tab */}
                 {activeTab === 'personalized' ? (
                   <>
-                    {/* Market Indices Card */}
-                    {marketIndices.length > 0 && (
-                      <div className="mb-6 border rounded-lg p-4" style={{ backgroundColor: '#FFFFFF' }}>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-gray-900">Market Overview</h3>
+                    {/* Market Overview and Interests Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                      {/* Market Indices Card - 2/3 width */}
+                      {marketIndices.length > 0 && (
+                        <div className="lg:col-span-2 border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Market Overview</h3>
 
-                          {/* Timeframe Selector */}
-                          <div className="flex gap-2">
-                            {['1d', '5d', '1mo', '1y'].map((tf) => (
-                              <button
-                                key={tf}
-                                onClick={() => {
-                                  setMarketTimeframe(tf)
-                                  loadMarketIndices(tf)
-                                }}
-                                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                                  marketTimeframe === tf
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                              >
-                                {tf.toUpperCase()}
-                              </button>
-                            ))}
+                            {/* Timeframe Selector */}
+                            <div className="flex gap-2">
+                              {['1d', '5d', '1mo', '1y'].map((tf) => (
+                                <button
+                                  key={tf}
+                                  onClick={() => {
+                                    setMarketTimeframe(tf)
+                                    loadMarketIndices(tf)
+                                  }}
+                                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                    marketTimeframe === tf
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {tf.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Single Index Chart */}
+                          <SingleIndexChart />
+
+                          {/* Clickable Index Stats Below Chart */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                            {marketIndices.map((index) => {
+                              const indexName = index.symbol === '^DJI' ? 'Dow Jones' :
+                                              index.symbol === '^IXIC' ? 'NASDAQ' :
+                                              index.symbol === '^GSPC' ? 'S&P 500' : index.symbol
+                              const isSelected = index.symbol === selectedMarketIndex
+                              const indexColors: {[key: string]: string} = {
+                                '^DJI': '#2563eb',
+                                '^IXIC': '#10b981',
+                                '^GSPC': '#f59e0b'
+                              }
+                              return (
+                                <button
+                                  key={index.symbol}
+                                  onClick={() => setSelectedMarketIndex(index.symbol)}
+                                  className={`flex flex-col p-4 rounded-lg transition-all cursor-pointer text-left ${
+                                    isSelected ? 'ring-2 ring-offset-2' : 'hover:bg-gray-100'
+                                  }`}
+                                  style={isSelected ? {
+                                    ringColor: indexColors[index.symbol],
+                                    backgroundColor: `${indexColors[index.symbol]}10`
+                                  } : {}}
+                                >
+                                  <div className="text-sm text-gray-600 mb-1">{indexName}</div>
+                                  <div className="text-2xl font-bold text-gray-900">{index.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                  <div className={`text-sm font-medium ${index.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {index.changePercent >= 0 ? '▲' : '▼'} {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
+                                  </div>
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
+                      )}
 
-                        {/* Single Index Chart */}
-                        <SingleIndexChart />
+                      {/* Your Interests Card - 1/3 width */}
+                      <div className="border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Your Interests</h3>
 
-                        {/* Clickable Index Stats Below Chart */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                          {marketIndices.map((index) => {
-                            const indexName = index.symbol === '^DJI' ? 'Dow Jones' :
-                                            index.symbol === '^IXIC' ? 'NASDAQ' :
-                                            index.symbol === '^GSPC' ? 'S&P 500' : index.symbol
-                            const isSelected = index.symbol === selectedMarketIndex
-                            const indexColors: {[key: string]: string} = {
-                              '^DJI': '#2563eb',
-                              '^IXIC': '#10b981',
-                              '^GSPC': '#f59e0b'
-                            }
-                            return (
-                              <button
-                                key={index.symbol}
-                                onClick={() => setSelectedMarketIndex(index.symbol)}
-                                className={`flex flex-col p-4 rounded-lg transition-all cursor-pointer text-left ${
-                                  isSelected ? 'ring-2 ring-offset-2' : 'hover:bg-gray-100'
-                                }`}
-                                style={isSelected ? {
-                                  ringColor: indexColors[index.symbol],
-                                  backgroundColor: `${indexColors[index.symbol]}10`
-                                } : {}}
-                              >
-                                <div className="text-sm text-gray-600 mb-1">{indexName}</div>
-                                <div className="text-2xl font-bold text-gray-900">{index.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                <div className={`text-sm font-medium ${index.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {index.changePercent >= 0 ? '▲' : '▼'} {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
-                                </div>
-                              </button>
-                            )
-                          })}
+                        <div className="space-y-3 mb-4">
+                          {tickerData.slice(0, 6).map((ticker) => (
+                            <button
+                              key={ticker.symbol}
+                              onClick={() => handleTickerSelect(ticker.symbol)}
+                              className={`w-full p-2 bg-gray-50 border border-gray-200 rounded text-left hover:bg-gray-100 transition-colors ${
+                                selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <img
+                                  src={`https://img.logokit.com/ticker/${ticker.symbol}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
+                                  alt={`${ticker.symbol} logo`}
+                                  className="w-6 h-6 rounded object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                                <div className="font-medium text-gray-900">{ticker.symbol}</div>
+                              </div>
+                              <div className={`text-sm ${ticker.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {ticker.changePercent >= 0 ? '▲' : '▼'} {ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Add New Interest */}
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Add ticker (e.g., AAPL)"
+                            value={newTicker}
+                            onChange={(e) => setNewTicker(e.target.value)}
+                            className="w-full h-9 text-sm"
+                            onKeyPress={(e) => e.key === "Enter" && addTicker()}
+                          />
+                          <Button onClick={addTicker} className="w-full h-9 text-sm">
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Interest
+                          </Button>
                         </div>
                       </div>
-                    )}
+                    </div>
 
                     {/* Section Heading */}
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Companies</h2>
 
-                    {/* Grid Layout - 2 columns */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Single Column Layout - One Company Per Row */}
+                    <div className="space-y-6">
                       {companiesData.map((company: any) => {
                         if (!company.topics || company.topics.length === 0) return null
 
                         // Get stock data for this company if available
                         const stockData = tickerData.find(t => t.symbol === company.ticker)
 
-                        // Get only the 2 most urgent topics
-                        const topTopics = company.topics.slice(0, 2)
+                        // Get only the 3 most urgent topics
+                        const topTopics = company.topics.slice(0, 3)
 
                         return (
-                          <div key={company.ticker} className="border rounded-lg p-3" style={{ backgroundColor: '#FBF5EE' }}>
+                          <div key={company.ticker} className="border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FBF5EE' }}>
                             {/* Company Header */}
-                            <div className="mb-3 pb-2 border-b border-gray-300">
+                            <div className="mb-4 pb-3 border-b border-gray-300">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <img
                                     src={`https://img.logokit.com/ticker/${company.ticker}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
                                     alt={`${company.ticker} logo`}
-                                    className="w-10 h-10 rounded-lg object-cover"
+                                    className="w-12 h-12 rounded-lg object-cover"
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none'
                                     }}
                                   />
                                   <div>
-                                    <h2 className="text-lg font-bold text-gray-900">
+                                    <h2 className="text-xl font-bold text-gray-900">
                                       {company.company_name || company.ticker}
                                     </h2>
-                                    <p className="text-xs text-gray-600 mt-0.5">
+                                    <p className="text-sm text-gray-600 mt-0.5">
                                       {company.ticker} • {company.topics.length} topic{company.topics.length !== 1 ? 's' : ''}
                                     </p>
                                   </div>
                                 </div>
                                 {stockData && (
                                   <div className="text-right">
-                                    <div className="text-base font-semibold text-gray-900">
+                                    <div className="text-lg font-semibold text-gray-900">
                                       ${stockData.price.toFixed(2)}
                                     </div>
-                                    <div className={`text-xs font-medium ${stockData.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <div className={`text-sm font-medium ${stockData.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                       {stockData.changePercent >= 0 ? '▲' : '▼'} {stockData.changePercent >= 0 ? '+' : ''}{stockData.changePercent.toFixed(2)}%
                                     </div>
                                   </div>
@@ -1015,7 +1062,7 @@ const addTicker = async () => {
                               </div>
                             </div>
 
-                            {/* Topics for this company - limited to 2 */}
+                            {/* Topics as Rows */}
                             <div className="space-y-3">
                               {topTopics.map((topic: any) => {
                                 const urgency = topic.urgency || 'medium'
@@ -1035,9 +1082,9 @@ const addTicker = async () => {
                                     >
                                       <div className="flex items-start justify-between mb-1">
                                         <div className="flex items-center gap-2 flex-1">
-                                          <h3 className="text-base font-bold text-gray-900">{topic.name || topic.topic}</h3>
+                                          <h3 className="text-sm font-bold text-gray-900">{topic.name || topic.topic}</h3>
                                           <ChevronDown
-                                            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                           />
                                         </div>
                                         <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor}`}>
@@ -1045,7 +1092,7 @@ const addTicker = async () => {
                                         </span>
                                       </div>
                                       {topic.description && (
-                                        <p className="text-sm text-gray-600 mb-1">{topic.description}</p>
+                                        <p className="text-xs text-gray-600 mb-1">{topic.description}</p>
                                       )}
                                       <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
@@ -1169,102 +1216,6 @@ const addTicker = async () => {
           </div>
         </div>
 
-        {/* Right Sidebar - Tickers and Interests */}
-        <div className="hidden lg:flex w-80 border-l border-gray-200 flex-col sticky top-[170px] sm:top-[200px] lg:top-[250px] h-[calc(100vh-170px)] sm:h-[calc(100vh-200px)] lg:h-[calc(100vh-250px)] overflow-y-auto self-start" style={{ backgroundColor: '#FFFFFF' }}>
-          <div className="p-3 lg:p-4 border-b border-gray-200 flex-shrink-0">
-
-            {/* Interests List - Moved to top */}
-            <div className="space-y-2 mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
-              <div className="grid grid-cols-2 gap-1 mb-3">
-                {tickerData.slice(0, 6).map((ticker) => (
-                  <div key={ticker.symbol} className="relative group">
-                    <button
-                      onClick={() => handleTickerSelect(ticker.symbol)}
-                      className={`w-full p-1.5 bg-white border border-gray-200 rounded text-left hover:bg-gray-50 transition-colors text-xs ${
-                        selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <img
-                          src={`https://img.logokit.com/ticker/${ticker.symbol}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
-                          alt={`${ticker.symbol} logo`}
-                          className="w-5 h-5 rounded object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                        <div className="font-medium text-gray-900">{ticker.symbol}</div>
-                      </div>
-                      <div className={`text-[10px] ${ticker.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {ticker.changePercent >= 0 ? '▲' : '▼'} {ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Add New Interest */}
-              <div className="space-y-2">
-                <Input
-                  placeholder="Add ticker (e.g., AAPL)"
-                  value={newTicker}
-                  onChange={(e) => setNewTicker(e.target.value)}
-                  className="w-full h-8 text-sm"
-                  onKeyPress={(e) => e.key === "Enter" && addTicker()}
-                />
-                <Button onClick={addTicker} className="w-full h-8 text-sm">
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Interest
-                </Button>
-              </div>
-            </div>
-
-            {/* Portfolio Company Selector - Only show on portfolio page */}
-            {activeTab === 'portfolio' && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Select Company</h4>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-left flex items-center justify-between hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  >
-                    <span className={selectedPortfolioCompany ? "text-gray-900" : "text-gray-500"}>
-                      {selectedPortfolioCompany
-                        ? `${COMPANIES.find(c => c.ticker === selectedPortfolioCompany)?.name} (${selectedPortfolioCompany})`
-                        : "Choose a company..."}
-                    </span>
-                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showCompanyDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {showCompanyDropdown && (
-                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                      {COMPANIES.map((company) => (
-                        <button
-                          key={company.ticker}
-                          onClick={() => {
-                            setSelectedPortfolioCompany(company.ticker)
-                            setShowCompanyDropdown(false)
-                          }}
-                          className={`w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors text-xs ${
-                            selectedPortfolioCompany === company.ticker ? 'bg-blue-100' : ''
-                          }`}
-                        >
-                          <div className="font-medium text-gray-900">{company.name}</div>
-                          <div className="text-xs text-gray-500">{company.ticker}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* Right margin spacer - 1/8 of page */}
-        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
       </div>
 
       {/* Mobile Sidebar Modal */}

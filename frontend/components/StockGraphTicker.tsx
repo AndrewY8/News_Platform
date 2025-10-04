@@ -161,8 +161,8 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               <div
                 key={item.stock.symbol}
                 onClick={() => setSelectedStock(item)}
-                className="flex-shrink-0 bg-gray-800 rounded-lg p-2 hover:bg-gray-750 transition-colors cursor-pointer group/card relative"
-                style={{ width: '160px' }}
+                className="flex-shrink-0 bg-gray-800 rounded-lg p-2 hover:bg-gray-750 transition-colors cursor-pointer group/card relative shadow-lg"
+                style={{ width: '200px' }}
               >
                 {/* Magnify icon on hover */}
                 <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
