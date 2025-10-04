@@ -714,6 +714,26 @@ export class ApiService {
     }
   }
 
+  static async getTopicsByInterests(tickers: string[]): Promise<any> {
+    try {
+      const tickersParam = tickers.join(',')
+      const timeoutPromise = this.createTimeoutPromise(10000, { companies: [] })
+      const fetchPromise = fetch(`${API_BASE_URL}/api/companies/topics-by-interest?tickers=${tickersParam}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch topics by interests: ${response.status}`)
+          }
+          return response.json()
+        })
+
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      return result
+    } catch (error) {
+      console.error('Error fetching topics by interests:', error)
+      return { companies: [] }
+    }
+  }
+
   // SEC RAG (Retrieval-Augmented Generation) methods for document-specific queries
   static async querySecDocumentRAG(documentId: string, query: string): Promise<{
     answer: string

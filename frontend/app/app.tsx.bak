@@ -40,12 +40,10 @@ export default function HavenNewsApp() {
   // Thinking steps state
   const [thinkingSteps, setThinkingSteps] = useState<Array<{id: string, text: string, timestamp: number}>>([])
   const [showThinkingSteps, setShowThinkingSteps] = useState(false)
-
-  // Companies and topics state
-  const [companiesData, setCompaniesData] = useState<any[]>([])
-  const [expandedCompany, setExpandedCompany] = useState<string | null>(null)
-  const [expandedTopics, setExpandedTopics] = useState<{[key: string]: boolean}>({})
-
+  const [showSystemPromptsModal, setShowSystemPromptsModal] = useState(false)
+  const [systemPrompts, setSystemPrompts] = useState<Array<{id: string, name: string, content: string}>>([])
+  const [editingPrompt, setEditingPrompt] = useState<{id: string, name: string, content: string} | null>(null)
+  
   // Yahoo Finance state
   const [stockData, setStockData] = useState<StockData | null>(null)
   const [chartData, setChartData] = useState<ChartData | null>(null)
@@ -506,13 +504,36 @@ const loadArticles = async (tickers?: string[]) => {
 
     switch (activeTab) {
       case 'personalized':
-        console.log("Fetching topics by user interests...")
-        // Fetch companies with their topics based on user interests
-        const userTickers = tickers.length > 0 ? tickers : ['AAPL', 'MSFT', 'GOOGL'] // Default tickers if none selected
-        const companiesResponse = await ApiService.getTopicsByInterests(userTickers)
+        console.log("Fetching topics from database...")
+        // Fetch topics from database instead of regular articles
+        const topicsData = await ApiService.getAllTopics(50)
 
-        setCompaniesData(companiesResponse.companies || [])
-        fetchedArticles = [] // We'll use companiesData instead for display
+        // Transform topics into articles format
+        fetchedArticles = []
+        if (topicsData.topics && topicsData.topics.length > 0) {
+          topicsData.topics.forEach((topic: any) => {
+            if (topic.articles && topic.articles.length > 0) {
+              topic.articles.forEach((article: any) => {
+                fetchedArticles.push({
+                  id: article.id,
+                  date: article.published_date || topic.extraction_date || 'Recently',
+                  title: article.title,
+                  source: article.source,
+                  preview: topic.description || '',
+                  sentiment: 'neutral' as const,
+                  tags: [topic.name], // Use topic name as tag
+                  url: article.url,
+                  relevance_score: article.relevance_score,
+                  category: topic.company,
+                  urgency: topic.urgency,
+                  topic_description: topic.description
+                })
+              })
+            }
+          })
+        }
+
+        setCachedPersonalized(fetchedArticles)
         break
 
       case 'portfolio':
@@ -1033,137 +1054,22 @@ const addTicker = async () => {
               </div>
             ) : (
               <div className="w-full space-y-4">
-                {/* Check if we have companiesData (personalized tab) or regular articles */}
-                {activeTab === 'personalized' && companiesData.length > 0 ? (
-                  // Render companies with their topics
-                  companiesData.map((company: any) => {
-                    const urgencyOrder = { high: 1, medium: 2, low: 3 }
-                    const sortedTopics = [...company.topics].sort((a: any, b: any) => {
-                      return (urgencyOrder[a.urgency as keyof typeof urgencyOrder] || 3) -
-                             (urgencyOrder[b.urgency as keyof typeof urgencyOrder] || 3)
-                    })
+                {/* Group articles by topic */}
+                {(() => {
+                  // Group articles by their first tag (topic)
+                  const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
+                    const topic = article.tags && article.tags.length > 0
+                      ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
+                      : 'Uncategorized'
 
-                    return (
-                      <div key={company.ticker} className="border rounded-lg p-4 bg-white">
-                        {/* Company Header with Logo */}
-                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-                          {company.logo_url && (
-                            <img
-                              src={company.logo_url}
-                              alt={`${company.name} logo`}
-                              className="w-12 h-12 object-contain"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h2 className="text-xl font-bold text-gray-900">{company.name}</h2>
-                            <p className="text-sm text-gray-500">{company.ticker}</p>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {company.total_topics} topic{company.total_topics !== 1 ? 's' : ''}
-                          </span>
-                        </div>
+                    if (!acc[topic]) {
+                      acc[topic] = []
+                    }
+                    acc[topic].push(article)
+                    return acc
+                  }, {})
 
-                        {/* Topics */}
-                        <div className="space-y-4">
-                          {sortedTopics.slice(0, expandedCompany === company.ticker ? undefined : 5).map((topic: any) => {
-                            const urgencyColor = topic.urgency === 'high' ? 'bg-red-100 text-red-700' :
-                                               topic.urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                               'bg-green-100 text-green-700'
-                            const topicKey = `${company.ticker}-${topic.id}`
-                            const isExpanded = expandedTopics[topicKey]
-
-                            return (
-                              <div key={topic.id} className="border-l-2 border-gray-200 pl-4">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h3 className="text-base font-semibold text-gray-900 flex-1">{topic.name}</h3>
-                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor} ml-2`}>
-                                    {topic.urgency.toUpperCase()}
-                                  </span>
-                                </div>
-
-                                {topic.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{topic.description}</p>
-                                )}
-
-                                {topic.articles && topic.articles.length > 0 && (
-                                  <>
-                                    <button
-                                      onClick={() => setExpandedTopics(prev => ({
-                                        ...prev,
-                                        [topicKey]: !prev[topicKey]
-                                      }))}
-                                      className="text-sm text-blue-600 hover:text-blue-800 font-medium mb-2"
-                                    >
-                                      {isExpanded ? '▼' : '▶'} {topic.articles.length} article{topic.articles.length !== 1 ? 's' : ''}
-                                    </button>
-
-                                    {isExpanded && (
-                                      <ul className="space-y-2 mt-2">
-                                        {topic.articles.map((article: any) => (
-                                          <li key={article.id} className="flex items-start gap-2">
-                                            <span className="text-gray-400 mt-1">•</span>
-                                            <div className="flex-1">
-                                              <a
-                                                href={article.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
-                                              >
-                                                {article.title}
-                                              </a>
-                                              <div className="text-xs text-gray-500 mt-1">
-                                                {article.source} • {new Date(article.published_date).toLocaleDateString()}
-                                              </div>
-                                            </div>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                            )
-                          })}
-
-                          {/* Show All Topics button */}
-                          {company.total_topics > 5 && expandedCompany !== company.ticker && (
-                            <button
-                              onClick={() => setExpandedCompany(company.ticker)}
-                              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition-colors"
-                            >
-                              Show All {company.total_topics} Topics
-                            </button>
-                          )}
-
-                          {expandedCompany === company.ticker && company.total_topics > 5 && (
-                            <button
-                              onClick={() => setExpandedCompany(null)}
-                              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition-colors"
-                            >
-                              Show Less
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })
-                ) : (
-                  // Regular article display grouped by topic
-                  (() => {
-                    // Group articles by their first tag (topic)
-                    const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
-                      const topic = article.tags && article.tags.length > 0
-                        ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
-                        : 'Uncategorized'
-
-                      if (!acc[topic]) {
-                        acc[topic] = []
-                      }
-                      acc[topic].push(article)
-                      return acc
-                    }, {})
-
-                    return Object.entries(groupedArticles).map(([topic, topicArticles]: [string, any]) => {
+                  return Object.entries(groupedArticles).map(([topic, topicArticles]: [string, any]) => {
                     if (!topicArticles || topicArticles.length === 0) return null
 
                     const firstArticle = topicArticles[0]
@@ -1220,8 +1126,7 @@ const addTicker = async () => {
                     </div>
                     )
                   })
-                  })()
-                )}
+                })()}
               </div>
             )}
           </div>
@@ -1718,6 +1623,143 @@ const addTicker = async () => {
                 Close
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">System Prompts Configuration</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowSystemPromptsModal(false)
+                  setEditingPrompt(null)
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {editingPrompt ? (
+              // Editing/Adding Prompt Interface
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prompt Name
+                  </label>
+                  <Input
+                    value={editingPrompt.name}
+                    onChange={(e) => setEditingPrompt({...editingPrompt, name: e.target.value})}
+                    placeholder="Enter a name for this prompt (e.g., 'Financial Analysis', 'News Summarizer')"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    System Prompt Content
+                  </label>
+                  <textarea
+                    value={editingPrompt.content}
+                    onChange={(e) => setEditingPrompt({...editingPrompt, content: e.target.value})}
+                    className="w-full h-64 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="Enter the system prompt content. This will guide how the AI responds to queries..."
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingPrompt(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={savePrompt}
+                    disabled={!editingPrompt.name.trim() || !editingPrompt.content.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                  >
+                    Save Prompt
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // List of Prompts Interface
+              <div className="space-y-4">
+                {systemPrompts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Custom Prompts</h3>
+                    <p className="text-gray-600 mb-4">
+                      Create custom system prompts to personalize how the AI assistant responds to your queries.
+                    </p>
+                    <Button
+                      onClick={addNewPrompt}
+                      className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add System Prompt
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <p className="text-gray-600">Manage your custom system prompts</p>
+                      <Button
+                        onClick={addNewPrompt}
+                        className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add System Prompt
+                      </Button>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto space-y-3">
+                      {systemPrompts.map((prompt) => (
+                        <div key={prompt.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900 mb-1">{prompt.name}</h4>
+                              <p className="text-sm text-gray-600 line-clamp-2">
+                                {prompt.content}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => editPrompt(prompt)}
+                                className="h-7 px-2 text-xs"
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deletePrompt(prompt.id)}
+                                className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-end pt-4 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSystemPromptsModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

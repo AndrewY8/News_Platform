@@ -1286,6 +1286,128 @@ async def get_all_topics(request: Request, limit: int = 50):
         logger.error(f"Unexpected error in get_all_topics: {e}")
         return {"topics": []}
 
+@app.get("/api/companies/{ticker}/logo")
+@limiter.limit("20/minute")
+async def get_company_logo(ticker: str, request: Request):
+    """Get company logo URL from yfinance"""
+    try:
+        import yfinance as yf
+
+        ticker_obj = yf.Ticker(ticker.upper())
+        info = ticker_obj.info
+
+        logo_url = info.get('logo_url', '')
+
+        return {
+            "ticker": ticker.upper(),
+            "logo_url": logo_url,
+            "name": info.get('longName', ticker.upper())
+        }
+    except Exception as e:
+        logger.error(f"Error fetching logo for {ticker}: {e}")
+        return {
+            "ticker": ticker.upper(),
+            "logo_url": "",
+            "name": ticker.upper()
+        }
+
+@app.get("/api/companies/topics-by-interest")
+@limiter.limit("20/minute")
+async def get_topics_by_user_interests(request: Request, tickers: str = ""):
+    """Get topics organized by company tickers in user's interests"""
+    try:
+        if not tickers:
+            return {"companies": []}
+
+        ticker_list = [t.strip().upper() for t in tickers.split(',') if t.strip()]
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not supabase_key:
+            return {"companies": []}
+
+        try:
+            import sys
+            import yfinance as yf
+            sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+            from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+            db_manager = ResearchDBManager(supabase_url, supabase_key)
+            companies_data = []
+
+            for ticker in ticker_list:
+                # Get company from database
+                company_result = db_manager.supabase.table("companies").select("*").eq("name", ticker).execute()
+
+                if not company_result.data:
+                    continue
+
+                company = company_result.data[0]
+
+                # Get logo from yfinance
+                try:
+                    ticker_obj = yf.Ticker(ticker)
+                    info = ticker_obj.info
+                    logo_url = info.get('logo_url', '')
+                    company_name = info.get('longName', ticker)
+                except:
+                    logo_url = ''
+                    company_name = ticker
+
+                # Get top 5 urgent topics
+                topics_result = db_manager.supabase.table("topics").select("""
+                    id, name, description, business_impact, confidence, urgency,
+                    final_score, rank_position, extraction_date,
+                    article_topics(
+                        contribution_strength,
+                        articles(id, title, url, content, source, source_domain, published_date, relevance_score)
+                    )
+                """).eq("company_id", company["id"]).order("urgency", desc=True).order("final_score", desc=True).limit(5).execute()
+
+                topics = []
+                for topic_data in topics_result.data:
+                    articles = []
+                    for article_topic in topic_data.get("article_topics", []):
+                        if article_topic.get("articles"):
+                            article = article_topic["articles"]
+                            articles.append({
+                                "id": str(article["id"]),
+                                "title": article["title"],
+                                "url": article["url"],
+                                "source": article.get("source_domain") or article.get("source", "Unknown"),
+                                "published_date": article.get("published_date"),
+                                "contribution_strength": article_topic.get("contribution_strength", 0)
+                            })
+
+                    topics.append({
+                        "id": topic_data["id"],
+                        "name": topic_data["name"],
+                        "description": topic_data.get("description", ""),
+                        "urgency": topic_data.get("urgency", "medium"),
+                        "final_score": topic_data.get("final_score", 0),
+                        "extraction_date": topic_data.get("extraction_date"),
+                        "articles": sorted(articles, key=lambda x: x.get("contribution_strength", 0), reverse=True)
+                    })
+
+                companies_data.append({
+                    "ticker": ticker,
+                    "name": company_name,
+                    "logo_url": logo_url,
+                    "topics": topics,
+                    "total_topics": len(topics_result.data)
+                })
+
+            return {"companies": companies_data}
+
+        except Exception as e:
+            logger.error(f"Error fetching topics by interests: {e}", exc_info=True)
+            return {"companies": []}
+
+    except Exception as e:
+        logger.error(f"Error in get_topics_by_user_interests: {e}")
+        return {"companies": []}
+
 def get_mock_company_data(ticker: str):
     """Return mock company data for testing"""
     company_names = {
