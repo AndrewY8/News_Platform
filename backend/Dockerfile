@@ -13,6 +13,8 @@ COPY news_agent /app/news_agent
 
 ENV PYTHONPATH=/app
 
+RUN python -m spacy download en_core_web_sm
+
 # Copy app code
 COPY . /app/
 
