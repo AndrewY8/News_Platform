@@ -292,7 +292,100 @@ def create_findings_summary(agent_results, articles):
 
 # Chat Route Functions
 async def chat_about_news_streaming(request: ChatRequest, supabase_db):
-    """Enhanced chat using news agent system with direct streaming thinking steps"""
+    """Enhanced chat using intelligent query router with database search"""
+    import json
+    import uuid
+
+    async def generate_stream():
+        try:
+            logger.info(f"Chat request: {request.message}")
+
+            # Import intelligent query router
+            try:
+                from .intelligent_query_router import IntelligentQueryRouter
+                from .article_retriever_router import transform_cached_articles_to_frontend
+
+                openai_api_key = os.getenv("OPENAI_API_KEY")
+                gemini_api_key = os.getenv("GEMINI_API_KEY")
+                supabase_url = os.getenv("SUPABASE_URL")
+                supabase_key = os.getenv("SUPABASE_KEY")
+
+                if not (openai_api_key or gemini_api_key):
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Search system not configured'})}\n\n"
+                    return
+
+                router = IntelligentQueryRouter(
+                    openai_api_key=openai_api_key,
+                    gemini_api_key=gemini_api_key,
+                    supabase_url=supabase_url,
+                    supabase_key=supabase_key,
+                    use_openai=True
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize router: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Search system initialization failed'})}\n\n"
+                return
+
+
+            # Use database search with streaming progress
+            try:
+                # Step 1: Analyzing query
+                yield f"data: {json.dumps({'type': 'thinking', 'step': 'Analyzing your query...'})}\n\n"
+                await asyncio.sleep(0.3)
+
+                # Step 2: Search database
+                yield f"data: {json.dumps({'type': 'thinking', 'step': 'Searching research database...'})}\n\n"
+
+                result = router.route_query(request.message)
+
+                # Step 3: Process results
+                suggested_articles = []
+                response_text = ""
+
+                if result['source'] == 'cache':
+                    # Found articles in database
+                    articles = transform_cached_articles_to_frontend(
+                        result['articles'],
+                        result.get('matched_topic', {}).get('name', 'Research')
+                    )
+                    suggested_articles = articles
+
+                    topic_name = result.get('matched_topic', {}).get('name', 'this topic')
+                    company = result.get('matched_company', 'the company')
+
+                    yield f"data: {json.dumps({'type': 'thinking', 'step': f'Found {len(articles)} articles about {topic_name}'})}\n\n"
+
+                    response_text = f"I found {len(articles)} articles about **{topic_name}** for {company}. "
+                    response_text += f"Here's what I discovered:\n\n"
+                    response_text += f"📊 **Topic**: {topic_name}\n"
+                    response_text += f"🏢 **Company**: {company}\n"
+                    response_text += f"📰 **Articles**: {len(articles)}\n\n"
+                    response_text += f"The articles cover recent developments and insights. Check them out below!"
+
+                else:
+                    # No results found
+                    yield f"data: {json.dumps({'type': 'thinking', 'step': 'No matching research found in database'})}\n\n"
+
+                    response_text = f"I couldn't find any pre-researched articles about '{request.message}' in our database. "
+                    response_text += f"This topic might not have been researched yet, or try rephrasing your query."
+
+                # Send final response
+                yield f"data: {json.dumps({'type': 'response', 'response': response_text, 'suggested_articles': suggested_articles})}\n\n"
+
+            except Exception as e:
+                logger.error(f"Database search error: {e}", exc_info=True)
+                yield f"data: {json.dumps({'type': 'error', 'message': f'Search error: {str(e)}'})}\n\n"
+
+        except Exception as e:
+            logger.error(f"Stream generation error: {e}", exc_info=True)
+            yield f"data: {json.dumps({'type': 'error', 'message': 'I encountered an error processing your request'})}\n\n"
+
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")
+
+
+# Keep old implementation as backup
+async def chat_about_news_streaming_OLD(request: ChatRequest, supabase_db):
+    """OLD: Enhanced chat using news agent system with direct streaming thinking steps"""
     import json
     import uuid
 

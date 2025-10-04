@@ -231,8 +231,17 @@ export class ApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/articles/search?q=${encodeURIComponent(query)}`)
       if (!response.ok) throw new Error(`Failed to search news: ${response.status}`)
-      
+
       const data = await response.json()
+
+      // Handle new response format with status field
+      if (data.status && data.articles !== undefined) {
+        // New format: { status: 'no_results'|'error', message: '...', articles: [...] }
+        console.log(`Search status: ${data.status}`, data.message)
+        return this.transformArticles(data.articles)
+      }
+
+      // Handle array response (direct articles)
       return this.transformArticles(data)
     } catch (error) {
       console.error('Error searching news:', error)
@@ -703,6 +712,25 @@ export class ApiService {
     } catch (error) {
       console.error('Error fetching company topics:', error)
       throw error
+    }
+  }
+
+  static async getAllTopics(limit: number = 50): Promise<any> {
+    try {
+      const timeoutPromise = this.createTimeoutPromise(10000, { topics: [] })
+      const fetchPromise = fetch(`${API_BASE_URL}/api/topics/all?limit=${limit}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch all topics: ${response.status}`)
+          }
+          return response.json()
+        })
+
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      return result
+    } catch (error) {
+      console.error('Error fetching all topics:', error)
+      return { topics: [] }
     }
   }
 

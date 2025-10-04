@@ -505,10 +505,36 @@ const loadArticles = async (tickers?: string[]) => {
 
     switch (activeTab) {
       case 'personalized':
-        console.log("Fetching personalized news for tickers:", tickers)
-        const data = await ApiService.getPersonalizedNews(tickers)
-        setCachedPersonalized(data)
-        fetchedArticles = data
+        console.log("Fetching topics from database...")
+        // Fetch topics from database instead of regular articles
+        const topicsData = await ApiService.getAllTopics(50)
+
+        // Transform topics into articles format
+        fetchedArticles = []
+        if (topicsData.topics && topicsData.topics.length > 0) {
+          topicsData.topics.forEach((topic: any) => {
+            if (topic.articles && topic.articles.length > 0) {
+              topic.articles.forEach((article: any) => {
+                fetchedArticles.push({
+                  id: article.id,
+                  date: article.published_date || topic.extraction_date || 'Recently',
+                  title: article.title,
+                  source: article.source,
+                  preview: topic.description || '',
+                  sentiment: 'neutral' as const,
+                  tags: [topic.name], // Use topic name as tag
+                  url: article.url,
+                  relevance_score: article.relevance_score,
+                  category: topic.company,
+                  urgency: topic.urgency,
+                  topic_description: topic.description
+                })
+              })
+            }
+          })
+        }
+
+        setCachedPersonalized(fetchedArticles)
         break
 
       case 'portfolio':
@@ -845,8 +871,8 @@ const addTicker = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <div className="bg-white border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50">
+    <div className="min-h-screen font-sans" style={{ backgroundColor: '#f2e9e6' }}>
+      <div className="border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#f2e9e6' }}>
         <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
@@ -861,7 +887,7 @@ const addTicker = async () => {
           </div>
           
           {/* Horizontal Navigation */}
-          <div className="bg-gray-100 border-t border-b border-gray py-1">
+          <div className="bg-gray-100 border-t border-b border-gray py-1 overflow-x-hidden">
             <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-4 sm:px-6 lg:px-8">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -990,7 +1016,7 @@ const addTicker = async () => {
 
       <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen">
         {/* Main Content - Articles */}
-        <div className="flex-1 lg:mr-6">
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 max-w-4xl relative">
           <div className="py-3 sm:py-4 lg:py-6">
             {loading ? (
               <div className="flex items-center justify-center h-64">
@@ -1030,62 +1056,87 @@ const addTicker = async () => {
                 )}
               </div>
             ) : (
-              <div className="w-full space-y-1 sm:space-y-2">
-                
-                {/* Existing articles */}
-                {articles.map((article: NewsArticle, index: number) => (
-                  <div 
-                    key={article.id} 
-                    className={`border rounded-lg p-3 bg-white hover:bg-gray-50 transition-all duration-300 flex items-center w-full ${
-                      newArticles.has(article.id)
-                        ? 'animate-slide-in-right border-blue-500'
-                        : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex gap-4 w-full">
-                      <div className="text-xs text-gray-500 font-medium min-w-[60px] sm:min-w-[80px] flex items-start pt-0.5 tracking-wide">
-                        {article.date.includes(':') && <span className="mr-1">🔥</span>}
-                        {article.date}
-                      </div>
+              <div className="w-full space-y-4">
+                {/* Group articles by topic */}
+                {(() => {
+                  // Group articles by their first tag (topic)
+                  const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
+                    const topic = article.tags && article.tags.length > 0
+                      ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
+                      : 'Uncategorized'
 
-                      <div className="flex-1 flex flex-col">
-                        <h3 className="font-semibold text-gray-900 mb-1 leading-tight text-sm lg:text-base tracking-wide">
-                          <a
-                            href={article.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline hover:text-blue-600 transition-colors"
-                          >
-                            {article.title}
-                          </a>
-                        </h3>
-                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed tracking-wide mb-2">{article.preview}</p>
+                    if (!acc[topic]) {
+                      acc[topic] = []
+                    }
+                    acc[topic].push(article)
+                    return acc
+                  }, {})
 
-                        {/* Tags moved below content, smaller and wrapped */}
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {(article.tags || []).slice(0, 3).map((tag: any, index: number) => {
-                            const tagText = typeof tag === 'string' ? tag : (tag?.name || String(tag))
-                            return (
-                              <span
-                                key={index}
-                                className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-mono tracking-wide"
-                              >
-                                {tagText}
-                              </span>
-                            )
-                          })}
+                  return Object.entries(groupedArticles).map(([topic, topicArticles]: [string, any]) => {
+                    if (!topicArticles || topicArticles.length === 0) return null
+
+                    const firstArticle = topicArticles[0]
+                    const urgency = firstArticle?.urgency || 'medium'
+                    const description = firstArticle?.topic_description || firstArticle?.preview || ''
+                    const company = firstArticle?.category || ''
+
+                    // Urgency badge color
+                    const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                       urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                       'bg-green-100 text-green-700'
+
+                    return (
+                    <div key={topic} className="border rounded-lg p-4 bg-white">
+                      {/* Topic Header */}
+                      <div className="mb-3 pb-3 border-b border-gray-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-lg font-bold text-gray-900 flex-1">{topic}</h3>
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${urgencyColor}`}>
+                            {urgency.toUpperCase()}
+                          </span>
+                        </div>
+                        {description && (
+                          <p className="text-sm text-gray-600 mb-2">{description}</p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          {company && <span className="font-medium">{company}</span>}
+                          {company && <span>•</span>}
+                          <span>{topicArticles.length} article{topicArticles.length > 1 ? 's' : ''}</span>
+                          <span>•</span>
+                          <span>{firstArticle.date}</span>
                         </div>
                       </div>
+
+                      {/* Articles as bullets */}
+                      <ul className="space-y-2">
+                        {topicArticles.map((article: NewsArticle) => (
+                          <li key={article.id} className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">•</span>
+                            <div className="flex-1">
+                              <a
+                                href={article.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                              >
+                                {article.title}
+                              </a>
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{article.preview}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                ))}
+                    )
+                  })
+                })()}
               </div>
             )}
           </div>
         </div>
 
         {/* Right Sidebar - News Summary and Tickers */}
-        <div className="hidden lg:flex w-80 bg-gray-50 border-l border-gray-200 flex-col sticky top-[80px] sm:top-[100px] lg:top-[160px] h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] lg:h-[calc(100vh-160px)] overflow-y-auto self-start">
+        <div className="hidden lg:flex w-80 border-l border-gray-200 flex-col sticky top-[80px] sm:top-[100px] lg:top-[160px] h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] lg:h-[calc(100vh-160px)] overflow-y-auto self-start" style={{ backgroundColor: '#f2e9e6' }}>
           <div className="p-3 lg:p-4 border-b border-gray-200 flex-shrink-0">
             <h3 className="font-semibold text-gray-900 mb-3">News Summary</h3>
             
@@ -1241,6 +1292,9 @@ const addTicker = async () => {
 
           </div>
         </div>
+
+        {/* Right margin spacer - 1/8 of page */}
+        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
       </div>
 
       {/* Mobile Sidebar Modal */}
@@ -1478,7 +1532,7 @@ const addTicker = async () => {
 
       {/* Thinking Steps Display */}
       {showThinkingSteps && thinkingSteps.length > 0 && (
-        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className="relative">
             {thinkingSteps.map((step, index) => {
               const opacity = index === 0 ? 'opacity-100' :
@@ -1523,7 +1577,7 @@ const addTicker = async () => {
 
       {/* Gemini Response Box */}
       {showChatResponse && (
-        <div className="fixed bottom-28 left-48 right-48 lg:left-48 lg:right-[512px] z-40">
+        <div className="fixed bottom-28 z-40" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className="bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full">
             <div className="flex items-start gap-3">
               <div className="flex-1">
@@ -1566,11 +1620,11 @@ const addTicker = async () => {
       )}
 
       {/* Floating Chat Box */}
-      <div className="fixed bottom-6 left-48 right-48 lg:left-48 lg:right-[512px] z-50">
-        {showChat ? (
+      {showChat ? (
+        <div className="fixed bottom-6 z-50" style={{ left: 'calc(12.5% + 2rem)', right: 'calc(320px + 12.5% + 2rem)' }}>
           <div className={`bg-white/20 backdrop-blur-md border border-gray-300/30 rounded-2xl shadow-lg px-4 py-3 w-full transform transition-all duration-200 ease-out origin-bottom-right ${
-            isClosingChat 
-              ? 'translate-y-4 translate-x-4 opacity-0 scale-75' 
+            isClosingChat
+              ? 'translate-y-4 translate-x-4 opacity-0 scale-75'
               : 'translate-y-0 translate-x-0 opacity-100 scale-100'
           }`}>
             <div className="flex gap-2">
@@ -1615,18 +1669,18 @@ const addTicker = async () => {
               </Button>
             </div>
           </div>
-        ) : (
-          <div className="fixed bottom-6 right-48 lg:right-[512px] z-50">
-            <Button
-              onClick={() => setShowChat(true)}
-              className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white rounded-full h-12 w-12 shadow-lg border border-blue-500/20 transition-all duration-200 hover:scale-105"
-              size="sm"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="fixed bottom-6 z-50" style={{ right: 'calc(320px + 12.5% + 2rem)' }}>
+          <Button
+            onClick={() => setShowChat(true)}
+            className="bg-blue-600/90 hover:bg-blue-700/90 backdrop-blur-sm text-white rounded-full h-12 w-12 shadow-lg border border-blue-500/20 transition-all duration-200 hover:scale-105"
+            size="sm"
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
 
       {/* Expanded Response Modal */}
       {showExpandedResponse && (

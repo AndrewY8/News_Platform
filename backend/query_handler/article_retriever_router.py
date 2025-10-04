@@ -1,6 +1,6 @@
 """
-Article Retriever Router Module - Updated to use Deep Research Agent System
-Contains all article retrieval endpoints using OrchestratorAgent.
+Article Retriever Router Module - Updated with Intelligent Query Routing
+Contains all article retrieval endpoints with NER/keyword extraction and intelligent topic matching.
 """
 
 import logging
@@ -32,6 +32,14 @@ except Exception as e:
     DEEP_RESEARCH_AVAILABLE = False
     print(f"Warning: Deep Research Agent System not available in article retriever router: {e}")
 
+# Import intelligent query router
+try:
+    from .intelligent_query_router import IntelligentQueryRouter
+    INTELLIGENT_ROUTER_AVAILABLE = True
+except Exception as e:
+    INTELLIGENT_ROUTER_AVAILABLE = False
+    print(f"Warning: Intelligent Query Router not available: {e}")
+
 logger = logging.getLogger(__name__)
 
 # Initialize rate limiter
@@ -60,6 +68,31 @@ if DEEP_RESEARCH_AVAILABLE:
         research_db_manager = None
 else:
     research_db_manager = None
+
+# Initialize intelligent query router
+intelligent_router = None
+if INTELLIGENT_ROUTER_AVAILABLE:
+    try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        gemini_api_key = os.getenv("GEMINI_API_KEY")
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        # Prefer OpenAI, fallback to Gemini
+        if openai_api_key or gemini_api_key:
+            intelligent_router = IntelligentQueryRouter(
+                openai_api_key=openai_api_key,
+                gemini_api_key=gemini_api_key,
+                supabase_url=supabase_url,
+                supabase_key=supabase_key,
+                use_openai=True  # Prefer OpenAI if both available
+            )
+            logger.info("✅ Intelligent Query Router initialized")
+        else:
+            logger.warning("⚠️ No LLM API key found (need OPENAI_API_KEY or GEMINI_API_KEY) - Intelligent routing disabled")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Intelligent Query Router: {e}", exc_info=True)
+        intelligent_router = None
 
 # Pydantic Models for Articles
 class ArticleModel(BaseModel):
@@ -114,6 +147,45 @@ def transform_db_articles_to_frontend(articles_data: List[Dict], company_name: s
 
         except Exception as e:
             logger.error(f"Error transforming database article: {e}", exc_info=True)
+            continue
+
+    return articles
+
+
+def transform_cached_articles_to_frontend(articles_data: List[Dict], topic_name: str):
+    """
+    Transform cached articles from intelligent query router to frontend format
+    """
+    articles = []
+
+    if not articles_data:
+        return articles
+
+    for article_data in articles_data:
+        try:
+            article_id = str(article_data.get('id', hashlib.md5(str(article_data).encode()).hexdigest()[:16]))
+
+            # Get contribution strength if available (indicates relevance to topic)
+            contribution = article_data.get('contribution_strength', 0.5)
+            relevance = article_data.get('relevance_score', contribution)
+
+            article = {
+                "id": article_id,
+                "date": format_article_date(article_data.get('published_date')),
+                "title": article_data.get('title', 'Untitled Article'),
+                "source": article_data.get('source', 'Unknown'),
+                "preview": article_data.get('content', '')[:200] + "...",
+                "sentiment": determine_sentiment_from_score(relevance),
+                "tags": [topic_name],
+                "url": article_data.get('url'),
+                "relevance_score": relevance,
+                "category": "News",
+                "cached": True  # Mark as cached result
+            }
+            articles.append(article)
+
+        except Exception as e:
+            logger.error(f"Error transforming cached article: {e}", exc_info=True)
             continue
 
     return articles
@@ -316,16 +388,59 @@ async def get_top_articles_handler(db: Session, Article):
         return JSONResponse(content=get_fallback_articles())
 
 async def search_articles_handler(query: str, db: Session, Article):
-    """Search articles - returns fallback for now"""
+    """
+    Search articles using intelligent query routing with database similarity search
+    Powered by NER/keyword extraction and vector similarity matching
+    """
     try:
-        # For search, we can return fallback or implement query-based research
-        # Deep research agent is optimized for company-specific research
-        logger.info(f"Article search requested for: {query} - returning fallback")
-        return JSONResponse(content=get_fallback_articles())
+        if intelligent_router:
+            logger.info(f"🔍 Database similarity search for: '{query}'")
+
+            # Route the query through intelligent system (database search only)
+            result = intelligent_router.route_query(query)
+
+            # Transform based on source
+            if result['source'] == 'cache':
+                # Cache hit - return matched articles from database
+                articles = transform_cached_articles_to_frontend(
+                    result['articles'],
+                    result.get('matched_topic', {}).get('name', 'Related Research')
+                )
+                logger.info(f"✅ Database search returned {len(articles)} articles")
+                return JSONResponse(content=articles)
+
+            elif result['source'] == 'fresh_search':
+                # No matching data in database
+                logger.info(f"⚠️ No matching articles found in database for '{query}'")
+
+                # Return empty results with message
+                return JSONResponse(content={
+                    'status': 'no_results',
+                    'message': f"No articles found for '{query}'. Database search completed.",
+                    'query_intent': result['query_intent'],
+                    'articles': []
+                })
+
+            else:
+                # Unexpected source
+                logger.warning(f"Unexpected result source: {result.get('source')}")
+                return JSONResponse(content=[])
+        else:
+            # Intelligent router not available
+            logger.error("Database search system not available")
+            return JSONResponse(content={
+                'status': 'error',
+                'message': 'Search system temporarily unavailable',
+                'articles': []
+            })
 
     except Exception as e:
-        logger.error(f"Error searching articles: {e}")
-        return JSONResponse(content=[])
+        logger.error(f"Error searching articles: {e}", exc_info=True)
+        return JSONResponse(content={
+            'status': 'error',
+            'message': f'Search error: {str(e)}',
+            'articles': []
+        })
 
 # Function to add routes to FastAPI app
 def add_article_retrieval_routes(app, shared_limiter, get_db, Article):

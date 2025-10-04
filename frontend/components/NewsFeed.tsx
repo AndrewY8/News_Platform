@@ -243,9 +243,12 @@ export function NewsFeed({ activeTab, tickers }: NewsFeedProps) {
             </p>
           </div>
           {fallbackArticles.map((article) => (
-            <div 
-              key={article.id} 
-              className="border-b border-gray-200 py-3 h-16 flex items-center hover:bg-gray-50 cursor-pointer transition-colors"
+            <div
+              key={article.id}
+              className="border-b border-gray-200 py-3 h-16 flex items-center cursor-pointer transition-colors"
+              style={{ backgroundColor: '#ffffff' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
             >
               <div className="flex gap-4 w-full">
                 <div className="text-xs text-gray-500 font-medium min-w-[70px] flex items-center">
@@ -306,9 +309,12 @@ export function NewsFeed({ activeTab, tickers }: NewsFeedProps) {
     <div className="p-6">
       <div className="max-w-4xl space-y-0">
         {articles.map((article) => (
-          <div 
-            key={article.id} 
-            className="border-b border-gray-200 py-3 h-16 flex items-center hover:bg-gray-50 cursor-pointer transition-colors"
+          <div
+            key={article.id}
+            className="border-b border-gray-200 py-3 h-16 flex items-center cursor-pointer transition-colors"
+            style={{ backgroundColor: '#EEE2DF' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E5D5D0'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#EEE2DF'}
             onClick={() => handleArticleClick(article)}
           >
             <div className="flex gap-4 w-full">

@@ -1205,6 +1205,87 @@ async def get_company_topics(ticker: str, request: Request):
         logger.error(f"Unexpected error in get_company_topics: {e}")
         return get_mock_company_data(ticker)
 
+@app.get("/api/topics/all")
+@limiter.limit("20/minute")
+async def get_all_topics(request: Request, limit: int = 50):
+    """Get all topics across all companies, sorted by urgency (high first)"""
+    try:
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not supabase_key:
+            logger.warning("Supabase not configured")
+            return {"topics": []}
+
+        try:
+            import sys
+            sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+            from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+            db_manager = ResearchDBManager(supabase_url, supabase_key)
+
+            # Fetch all topics with articles, sorted by urgency and final_score
+            topics_result = db_manager.supabase.table("topics").select("""
+                id, name, description, business_impact, confidence, urgency,
+                final_score, rank_position, extraction_date,
+                companies(name),
+                article_topics(
+                    contribution_strength,
+                    articles(id, title, url, content, source, source_domain, published_date, relevance_score)
+                )
+            """).order("urgency", desc=True).order("final_score", desc=True).limit(limit).execute()
+
+            # Transform and organize by urgency
+            urgency_order = {'high': 0, 'medium': 1, 'low': 2}
+            topics = []
+
+            for topic_data in topics_result.data:
+                articles = []
+                for article_topic in topic_data.get("article_topics", []):
+                    if article_topic.get("articles"):
+                        article = article_topic["articles"]
+                        articles.append({
+                            "id": str(article["id"]),
+                            "title": article["title"],
+                            "url": article["url"],
+                            "source": article.get("source_domain") or article.get("source", "Unknown"),
+                            "published_date": article.get("published_date"),
+                            "relevance_score": article.get("relevance_score", 0),
+                            "contribution_strength": article_topic.get("contribution_strength", 0)
+                        })
+
+                company_name = topic_data.get("companies", {}).get("name", "Unknown") if topic_data.get("companies") else "Unknown"
+
+                topics.append({
+                    "id": topic_data["id"],
+                    "name": topic_data["name"],
+                    "description": topic_data.get("description", ""),
+                    "company": company_name,
+                    "urgency": topic_data.get("urgency", "medium"),
+                    "confidence": topic_data.get("confidence", 0),
+                    "final_score": topic_data.get("final_score", 0),
+                    "extraction_date": topic_data.get("extraction_date"),
+                    "articles": sorted(articles, key=lambda x: x.get("contribution_strength", 0), reverse=True)
+                })
+
+            # Sort by urgency (high > medium > low) then by final_score
+            topics.sort(key=lambda x: (urgency_order.get(x['urgency'], 3), -(x.get('final_score') or 0)))
+
+            return {"topics": topics, "total": len(topics)}
+
+        except ImportError as e:
+            logger.warning(f"ResearchDBManager not available: {e}")
+            return {"topics": []}
+        except Exception as e:
+            logger.error(f"Error fetching all topics: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Error fetching topics: {str(e)}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in get_all_topics: {e}")
+        return {"topics": []}
+
 def get_mock_company_data(ticker: str):
     """Return mock company data for testing"""
     company_names = {
