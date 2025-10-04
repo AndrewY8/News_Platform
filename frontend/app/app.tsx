@@ -8,6 +8,7 @@ import { Search, Bookmark, Rss, User, X, Trash2, BarChart3, MessageCircle, Send,
 import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/api"
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
+import { StockGraphTicker } from "@/components/StockGraphTicker"
 
 export default function HavenNewsApp() {
   const router = useRouter()
@@ -987,10 +988,12 @@ const addTicker = async () => {
 
       </div>
 
-      <div className="flex justify-center min-h-screen pt-[80px] sm:pt-[100px] lg:pt-[160px]">
-        {/* Left margin spacer - 1/8 of page */}
-        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
+      {/* Stock Graph Ticker Section - Outside fixed header so it scrolls */}
+      <div className="pt-[80px] sm:pt-[100px] lg:pt-[120px]">
+        <StockGraphTicker tickers={tickers} />
+      </div>
 
+      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen">
         {/* Main Content - Articles */}
         <div className="flex-1 px-4 sm:px-6 lg:px-8 max-w-4xl relative">
           <div className="py-3 sm:py-4 lg:py-6">

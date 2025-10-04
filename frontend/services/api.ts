@@ -12,6 +12,7 @@ export interface NewsArticle {
   url?: string
   relevance_score?: number
   category?: string
+  timestamp?: number // Raw timestamp in milliseconds for chart markers
 }
 
 export interface Ticker {
@@ -505,19 +506,38 @@ export class ApiService {
   // Helper methods
   private static transformArticles(data: any[]): NewsArticle[] {
     if (!Array.isArray(data)) return []
-    
-    return data.map(article => ({
-      id: article.id || `article-${Math.random()}`,
-      date: this.formatDate(article.datetime || article.publishedAt || article.date),
-      title: article.headline || article.title || 'Untitled Article',
-      source: this.extractSource(article),
-      preview: article.summary || article.description || article.preview || 'No preview available',
-      sentiment: this.determineSentiment(article.sentiment_score),
-      tags: this.extractTags(article),
-      url: article.url,
-      relevance_score: article.relevance_score,
-      category: article.category
-    }))
+
+    return data.map(article => {
+      const rawTimestamp = article.published_date || article.datetime || article.publishedAt || article.date
+      return {
+        id: article.id || `article-${Math.random()}`,
+        date: this.formatDate(rawTimestamp),
+        title: article.headline || article.title || 'Untitled Article',
+        source: this.extractSource(article),
+        preview: article.summary || article.description || article.preview || 'No preview available',
+        sentiment: this.determineSentiment(article.sentiment_score),
+        tags: this.extractTags(article),
+        url: article.url,
+        relevance_score: article.relevance_score,
+        category: article.category,
+        // Store the raw timestamp for chart markers
+        timestamp: this.parseTimestamp(rawTimestamp)
+      }
+    })
+  }
+
+  private static parseTimestamp(timestamp: string | number): number {
+    try {
+      if (typeof timestamp === 'number' || (typeof timestamp === 'string' && /^\d+$/.test(timestamp))) {
+        const unixTimestamp = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp
+        return unixTimestamp * 1000 // Convert to milliseconds
+      } else {
+        const date = new Date(timestamp)
+        return isNaN(date.getTime()) ? Date.now() : date.getTime()
+      }
+    } catch (error) {
+      return Date.now()
+    }
   }
 
   private static extractSource(article: any): string {
