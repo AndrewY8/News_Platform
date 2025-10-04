@@ -4,7 +4,7 @@ import json
 import hashlib
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple, Any
-from fastapi import FastAPI, HTTPException, Request, Depends, Response, status
+from fastapi import FastAPI, HTTPException, Request, Depends, Response, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer
@@ -1204,6 +1204,69 @@ async def get_company_topics(ticker: str, request: Request):
     except Exception as e:
         logger.error(f"Unexpected error in get_company_topics: {e}")
         return get_mock_company_data(ticker)
+
+@app.post("/api/companies/{ticker}/generate-topics")
+@limiter.limit("5/minute")
+async def generate_topics_for_ticker(ticker: str, request: Request, background_tasks: BackgroundTasks):
+    """Trigger topic generation for a specific ticker"""
+    try:
+        if not aggregator_agent:
+            logger.warning("Aggregator agent not available")
+            return {"status": "error", "message": "Topic generation not available"}
+
+        # Add background task to generate topics
+        async def generate_topics_task():
+            try:
+                logger.info(f"Starting topic generation for {ticker}")
+
+                # Import necessary components
+                import sys
+                sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+                from deep_news_agent.agent import PlannerAgent
+
+                # Create planner agent and fetch news
+                planner = PlannerAgent(max_concurrent_retrievers=3)
+                query = f"{ticker} latest news and developments"
+                results = await planner.run_async(query)
+
+                # Process through aggregator
+                if results and len(results) > 0:
+                    articles = [
+                        {
+                            "title": article.title,
+                            "content": article.content or article.snippet,
+                            "url": article.url,
+                            "source": article.source or "Unknown",
+                            "published_date": article.date.isoformat() if hasattr(article, 'date') and article.date else None,
+                        }
+                        for article in results
+                    ]
+
+                    aggregated = await aggregator_agent.aggregate_async(
+                        articles=articles,
+                        company_name=ticker,
+                        max_topics=10
+                    )
+
+                    logger.info(f"Successfully generated {len(aggregated.get('topics', []))} topics for {ticker}")
+                else:
+                    logger.warning(f"No articles found for {ticker}")
+
+            except Exception as e:
+                logger.error(f"Error generating topics for {ticker}: {e}")
+
+        # Queue the background task
+        background_tasks.add_task(generate_topics_task)
+
+        return {
+            "status": "started",
+            "message": f"Topic generation started for {ticker}",
+            "ticker": ticker.upper()
+        }
+
+    except Exception as e:
+        logger.error(f"Error starting topic generation for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/topics/all")
 @limiter.limit("20/minute")

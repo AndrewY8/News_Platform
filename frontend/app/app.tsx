@@ -58,6 +58,9 @@ export default function HavenNewsApp() {
   const [selectedPortfolioCompany, setSelectedPortfolioCompany] = useState<string>("")
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
 
+  // Cached articles state
+  const [cachedPersonalized, setCachedPersonalized] = useState<NewsArticle[]>([])
+
   const tabs = [
     { id: "personalized", label: "Personalized feed", icon: User, href: "/personalized-news" },
     { id: "business-news", label: "Business News", icon: Building, href: "#", hasDropdown: true },
@@ -67,307 +70,6 @@ export default function HavenNewsApp() {
   ]
 
   const timePeriods = ["1D", "1W", "1M", "3M", "1Y"]
-
-  const COMPANIES = [
-    { ticker: "AAPL", name: "Apple Inc." },
-    { ticker: "MSFT", name: "Microsoft Corporation" },
-    { ticker: "GOOGL", name: "Alphabet Inc." },
-    { ticker: "AMZN", name: "Amazon.com Inc." },
-    { ticker: "NVDA", name: "NVIDIA Corporation" },
-    { ticker: "TSLA", name: "Tesla Inc." },
-    { ticker: "META", name: "Meta Platforms Inc." },
-    { ticker: "JPM", name: "JPMorgan Chase & Co." },
-    { ticker: "V", name: "Visa Inc." },
-    { ticker: "WMT", name: "Walmart Inc." },
-    { ticker: "JNJ", name: "Johnson & Johnson" },
-    { ticker: "PG", name: "Procter & Gamble Co." },
-    { ticker: "XOM", name: "Exxon Mobil Corporation" },
-    { ticker: "BAC", name: "Bank of America Corp." },
-    { ticker: "DIS", name: "The Walt Disney Company" },
-    { ticker: "NFLX", name: "Netflix Inc." },
-    { ticker: "INTC", name: "Intel Corporation" },
-    { ticker: "AMD", name: "Advanced Micro Devices Inc." },
-    { ticker: "PYPL", name: "PayPal Holdings Inc." },
-    { ticker: "ADBE", name: "Adobe Inc." },
-  ].sort((a, b) => a.name.localeCompare(b.name))
-
-  // Fake news data for testing
-  const fakeNewsData: NewsArticle[] = [
-    {
-      id: '1',
-      title: 'Apple Reports Record Q4 Earnings Amid Strong iPhone 15 Sales',
-      preview: 'Apple Inc. exceeded Wall Street expectations with quarterly revenue of $89.5 billion, driven by robust iPhone sales and growing services revenue.',
-      source: 'Reuters',
-      date: '2h ago',
-      sentiment: 'positive',
-      tags: ['AAPL', 'earnings']
-    },
-    {
-      id: '2', 
-      title: 'Tesla Stock Drops 5% After Cybertruck Production Delays',
-      preview: 'Tesla shares fell in after-hours trading following news of further delays in Cybertruck manufacturing due to supply chain constraints.',
-      source: 'Bloomberg',
-      date: '4h ago',
-      sentiment: 'negative',
-      tags: ['TSLA', 'production']
-    },
-    {
-      id: '3',
-      title: 'Microsoft Azure Cloud Revenue Grows 29% Year-over-Year',
-      preview: 'Microsoft Corporation reported strong cloud growth as enterprises continue digital transformation initiatives amid AI integration.',
-      source: 'CNBC',
-      date: '6h ago', 
-      sentiment: 'positive',
-      tags: ['MSFT', 'cloud']
-    },
-    {
-      id: '4',
-      title: 'NVIDIA Partners with Major Automakers for AI Chip Development',
-      preview: 'The semiconductor giant announced new partnerships to develop specialized AI processing units for autonomous vehicle systems.',
-      source: 'TechCrunch',
-      date: '8h ago',
-      sentiment: 'positive', 
-      tags: ['NVDA', 'AI']
-    },
-    {
-      id: '5',
-      title: 'Amazon Prime Day Sales Hit All-Time High Despite Economic Concerns',
-      preview: 'Amazon Web Services reported record-breaking Prime Day performance with over $12 billion in sales across 48 hours.',
-      source: 'Wall Street Journal',
-      date: '12h ago',
-      sentiment: 'positive',
-      tags: ['AMZN', 'retail']
-    },
-    {
-      id: '6',
-      title: 'Google Faces New Antitrust Investigation in European Union', 
-      preview: 'EU regulators launch probe into Alphabet subsidiary practices regarding search engine dominance and advertising revenue.',
-      source: 'Financial Times',
-      date: '14h ago',
-      sentiment: 'negative',
-      tags: ['GOOGL', 'regulation']
-    },
-    {
-      id: '7',
-      title: 'Meta Announces Major Investment in Virtual Reality Infrastructure',
-      preview: 'The social media giant plans to invest $15 billion over next three years in VR technology and metaverse development.',
-      source: 'The Verge', 
-      date: '16h ago',
-      sentiment: 'neutral',
-      tags: ['META', 'VR']
-    },
-    {
-      id: '8',
-      title: 'Federal Reserve Signals Potential Interest Rate Cuts in 2024',
-      preview: 'Fed Chair Jerome Powell indicated flexibility on monetary policy as inflation shows signs of cooling across major sectors.',
-      source: 'Associated Press',
-      date: '18h ago',
-      sentiment: 'positive',
-      tags: ['FED', 'rates']
-    },
-    {
-      id: '9',
-      title: 'Oil Prices Surge 3% on Middle East Supply Chain Disruptions',
-      preview: 'Crude oil futures climbed to $87 per barrel as geopolitical tensions raise concerns about global energy supply stability.',
-      source: 'MarketWatch',
-      date: '20h ago', 
-      sentiment: 'negative',
-      tags: ['OIL', 'geopolitics']
-    },
-    {
-      id: '10',
-      title: 'Cryptocurrency Market Cap Reaches $2.5 Trillion Milestone',
-      preview: 'Bitcoin and Ethereum lead rally as institutional adoption accelerates and regulatory clarity improves across major markets.',
-      source: 'CoinDesk',
-      date: '22h ago',
-      sentiment: 'positive',
-      tags: ['BTC', 'ETH']
-    },
-    {
-      id: '11',
-      title: 'JPMorgan Chase Reports Strong Q3 Results Despite Economic Headwinds',
-      preview: 'The banking giant posted earnings of $4.33 per share, beating analyst expectations on strong trading revenue and loan growth.',
-      source: 'Financial Times',
-      date: '1d ago',
-      sentiment: 'positive',
-      tags: ['JPM', 'banking']
-    },
-    {
-      id: '12',
-      title: 'Intel Announces $20 Billion Investment in New Ohio Semiconductor Facility',
-      preview: 'The chip manufacturer plans to create 3,000 jobs as part of its strategy to compete with Taiwan Semiconductor and Samsung.',
-      source: 'TechCrunch',
-      date: '1d ago',
-      sentiment: 'positive',
-      tags: ['INTC', 'manufacturing']
-    },
-    {
-      id: '13',
-      title: 'Warner Bros Discovery Stock Plunges on Streaming Subscriber Losses',
-      preview: 'The media conglomerate lost 1.8 million HBO Max subscribers in Q3, raising concerns about its streaming strategy competitiveness.',
-      source: 'Variety',
-      date: '1d ago',
-      sentiment: 'negative',
-      tags: ['WBD', 'streaming']
-    },
-    {
-      id: '14',
-      title: 'Palantir Technologies Secures $178 Million Government Contract',
-      preview: 'The data analytics company won a multi-year deal with the Department of Defense for AI-powered intelligence solutions.',
-      source: 'Defense News',
-      date: '1d ago',
-      sentiment: 'positive',
-      tags: ['PLTR', 'defense']
-    },
-    {
-      id: '15',
-      title: 'Zoom Video Communications Faces Antitrust Investigation in Europe',
-      preview: 'EU regulators are examining the company\'s market dominance in video conferencing and potential anti-competitive practices.',
-      source: 'Reuters',
-      date: '2d ago',
-      sentiment: 'negative',
-      tags: ['ZM', 'regulation']
-    },
-    {
-      id: '16',
-      title: 'Netflix Beats Subscriber Growth Expectations with 8.5 Million New Users',
-      preview: 'The streaming giant added more subscribers than anticipated, driven by popular original content and international expansion.',
-      source: 'The Hollywood Reporter',
-      date: '2d ago',
-      sentiment: 'positive',
-      tags: ['NFLX', 'streaming']
-    },
-    {
-      id: '17',
-      title: 'Salesforce Announces 10% Workforce Reduction Amid Economic Uncertainty',
-      preview: 'The cloud software company will lay off approximately 8,000 employees as it focuses on core business operations and cost reduction.',
-      source: 'San Francisco Chronicle',
-      date: '2d ago',
-      sentiment: 'negative',
-      tags: ['CRM', 'layoffs']
-    },
-    {
-      id: '18',
-      title: 'Ford Motor Company Increases EV Production Target by 40%',
-      preview: 'The automaker plans to produce 2 million electric vehicles annually by 2026, accelerating its transition from traditional cars.',
-      source: 'Automotive News',
-      date: '2d ago',
-      sentiment: 'positive',
-      tags: ['F', 'EV']
-    },
-    {
-      id: '19',
-      title: 'Shopify Partners with TikTok for Enhanced Social Commerce Integration',
-      preview: 'The e-commerce platform will allow merchants to sell directly through TikTok videos, expanding social shopping capabilities.',
-      source: 'TechCrunch',
-      date: '3d ago',
-      sentiment: 'positive',
-      tags: ['SHOP', 'social']
-    },
-    {
-      id: '20',
-      title: 'Johnson & Johnson Settles Talc Lawsuits for $8.9 Billion',
-      preview: 'The healthcare giant reached a settlement agreement to resolve thousands of lawsuits alleging its talc products caused cancer.',
-      source: 'Wall Street Journal',
-      date: '3d ago',
-      sentiment: 'negative',
-      tags: ['JNJ', 'legal']
-    },
-    {
-      id: '21',
-      title: 'Airbnb Reports Record Bookings Despite Economic Slowdown Concerns',
-      preview: 'The home-sharing platform saw 115 million nights booked in Q3, with strong international travel demand offsetting domestic weakness.',
-      source: 'Travel Weekly',
-      date: '3d ago',
-      sentiment: 'positive',
-      tags: ['ABNB', 'travel']
-    },
-    {
-      id: '22',
-      title: 'Uber Stock Rises on Autonomous Vehicle Partnership with Waymo',
-      preview: 'The ride-sharing company announced expansion of its self-driving car pilot program to three additional cities.',
-      source: 'The Verge',
-      date: '3d ago',
-      sentiment: 'positive',
-      tags: ['UBER', 'autonomous']
-    },
-    {
-      id: '23',
-      title: 'Disney+ Subscriber Growth Stalls as Streaming Wars Intensify',
-      preview: 'The entertainment giant added only 100,000 new subscribers globally, well below analyst expectations of 2 million additions.',
-      source: 'Entertainment Weekly',
-      date: '4d ago',
-      sentiment: 'negative',
-      tags: ['DIS', 'streaming']
-    },
-    {
-      id: '24',
-      title: 'Advanced Micro Devices Gains Market Share from Intel in Server CPUs',
-      preview: 'AMD\'s EPYC processors now hold 35% of the server CPU market, up from 25% last year, according to Mercury Research.',
-      source: 'AnandTech',
-      date: '4d ago',
-      sentiment: 'positive',
-      tags: ['AMD', 'semiconductors']
-    },
-    {
-      id: '25',
-      title: 'PayPal Faces Regulatory Scrutiny Over Cryptocurrency Operations',
-      preview: 'The SEC is investigating the payment company\'s crypto trading services and stablecoin operations for compliance violations.',
-      source: 'CoinTelegraph',
-      date: '4d ago',
-      sentiment: 'negative',
-      tags: ['PYPL', 'crypto']
-    }
-  ]
-
-  // Fake top-ranked articles for query results
-  const topRankedArticles: NewsArticle[] = [
-    {
-      id: 'top-1',
-      title: 'Breaking: Major Tech Acquisition Reshapes AI Industry Landscape',
-      preview: 'Industry sources confirm a landmark $47 billion deal that will consolidate AI infrastructure and accelerate autonomous technology development across multiple sectors.',
-      source: 'TechCrunch',
-      date: 'Just now',
-      sentiment: 'positive',
-      tags: ['AI', 'M&A']
-    },
-    {
-      id: 'top-2',
-      title: 'Federal Reserve Chair Signals Aggressive Rate Policy Shift',
-      preview: 'In surprise testimony, Powell indicates potential emergency measures as economic indicators point to unprecedented market volatility in coming quarters.',
-      source: 'Wall Street Journal',
-      date: '5m ago',
-      sentiment: 'negative',
-      tags: ['FED', 'policy']
-    },
-    {
-      id: 'top-3',
-      title: 'Quantum Computing Breakthrough Threatens Current Encryption Standards',
-      preview: 'Researchers demonstrate practical quantum supremacy in cryptography, prompting urgent security reviews across financial and government sectors.',
-      source: 'Nature',
-      date: '12m ago',
-      sentiment: 'neutral',
-      tags: ['QUANTUM', 'security']
-    },
-    {
-      id: 'top-4',
-      title: 'Global Energy Crisis Triggers Emergency Supply Chain Protocols',
-      preview: 'Multiple nations activate strategic reserves as renewable infrastructure failures create widespread shortages affecting manufacturing and transportation.',
-      source: 'Reuters',
-      date: '18m ago',
-      sentiment: 'negative',
-      tags: ['ENERGY', 'crisis']
-    },
-    {
-      id: 'top-5',
-      title: 'Biotech Firm Announces Revolutionary Cancer Treatment Results',
-      preview: 'Phase III trials show 94% efficacy rate for new immunotherapy, potentially transforming oncology treatment protocols worldwide.',
-      source: 'Medical Journal',
-      date: '25m ago',
-      sentiment: 'positive',
-      tags: ['BIOTECH', 'health']
-    }
-  ]
 
   // Set active tab based on current pathname
   useEffect(() => {
@@ -389,61 +91,16 @@ useEffect(() => {
   if (!hasInitialized.current) {
     initializeApp()
     // loadQueryHistory()
-    loadSystemPrompts()
     hasInitialized.current = true
   }
 }, [])
 
-  const loadSystemPrompts = () => {
-    try {
-      const saved = localStorage.getItem('systemPrompts')
-      if (saved) {
-        const prompts = JSON.parse(saved)
-        setSystemPrompts(Array.isArray(prompts) ? prompts : [])
-      }
-    } catch (error) {
-      console.error('Error loading system prompts:', error)
-    }
-  }
-
-  const addNewPrompt = () => {
-    const newPrompt = {
-      id: Date.now().toString(),
-      name: '',
-      content: ''
-    }
-    setEditingPrompt(newPrompt)
-  }
-
-  const savePrompt = () => {
-    if (!editingPrompt || !editingPrompt.name.trim() || !editingPrompt.content.trim()) return
-
-    const updatedPrompts = systemPrompts.some(p => p.id === editingPrompt.id)
-      ? systemPrompts.map(p => p.id === editingPrompt.id ? editingPrompt : p)
-      : [...systemPrompts, editingPrompt]
-
-    setSystemPrompts(updatedPrompts)
-    localStorage.setItem('systemPrompts', JSON.stringify(updatedPrompts))
-    setEditingPrompt(null)
-  }
-
-  const deletePrompt = (id: string) => {
-    const updatedPrompts = systemPrompts.filter(p => p.id !== id)
-    setSystemPrompts(updatedPrompts)
-    localStorage.setItem('systemPrompts', JSON.stringify(updatedPrompts))
-  }
-
-  const editPrompt = (prompt: {id: string, name: string, content: string}) => {
-    setEditingPrompt({ ...prompt })
-  }
-
   // Load articles when tab changes (but not for portfolio - wait for user selection)
 useEffect(() => {
-  if (activeTab !== 'portfolio') {
-    const defaultTickers = ["AAPL"]
-    loadArticles(defaultTickers)
+  if (activeTab !== 'portfolio' && tickers.length > 0) {
+    loadArticles(tickers)
   }
-}, [activeTab])
+}, [activeTab, tickers])
 
   // Re-fetch articles when portfolio company changes
   useEffect(() => {
@@ -454,13 +111,24 @@ useEffect(() => {
 
   const initializeApp = async () => {
     try {
+      console.log("🚀 Initializing app...")
       // Set default tickers
       const defaultTickers = ["AAPL"]
       setTickers(defaultTickers)
-      
+
       // Load initial ticker data
       await loadTickerData(defaultTickers)
-      
+
+      //Load initial topics directly
+      console.log("📊 Loading initial topics for tickers:", defaultTickers)
+      try {
+        const companiesResponse = await ApiService.getTopicsByInterests(defaultTickers)
+        console.log("✅ Received topics:", companiesResponse)
+        setCompaniesData(companiesResponse.companies || [])
+      } catch (error) {
+        console.error("❌ Failed to load initial topics:", error)
+      }
+
       setLoading(false)
     } catch (error) {
       console.error('Failed to initialize app:', error)
@@ -482,7 +150,6 @@ useEffect(() => {
       console.error('Failed to load ticker data:', error)
     }
   }
-const [cachedPersonalized, setCachedPersonalized] = useState<NewsArticle[]>([])
 
   const loadChartData = async (symbol: string, timeframe: string) => {
     try {
@@ -509,7 +176,7 @@ const loadArticles = async (tickers?: string[]) => {
       case 'personalized':
         console.log("Fetching topics by user interests...")
         // Fetch companies with their topics based on user interests
-        const userTickers = tickers.length > 0 ? tickers : ['AAPL', 'MSFT', 'GOOGL'] // Default tickers if none selected
+        const userTickers = (tickers && tickers.length > 0) ? tickers : ['AAPL', 'MSFT', 'GOOGL'] // Default tickers if none selected
         const companiesResponse = await ApiService.getTopicsByInterests(userTickers)
 
         setCompaniesData(companiesResponse.companies || [])
@@ -651,33 +318,64 @@ const getEmoji = (article: NewsArticle) => {
 }
 
 const addTicker = async () => {
-  if (newTicker.trim() && !tickers.find((t) => t === newTicker.toUpperCase())) {
-    const newTickerSymbol = newTicker.toUpperCase()
-    const updatedTickers = [...tickers, newTickerSymbol]
-    setTickers(updatedTickers)
+  if (!newTicker.trim()) return
 
-    // Load data for the new ticker
-    try {
-      const stockData = await YahooFinanceService.getStockQuote(newTickerSymbol)
-      if (stockData) {
-        setTickerData(prev => [...prev, stockData])
+  const newTickerSymbol = newTicker.toUpperCase()
 
-        // If this is the first ticker, select it
-        if (tickers.length === 0) {
-          setSelectedTicker(newTickerSymbol)
-          await loadChartData(newTickerSymbol, selectedTimeframe)
-        }
-      }
+  // Check if ticker already exists
+  if (tickers.find((t) => t === newTickerSymbol)) {
+    alert(`${newTickerSymbol} is already in your interests`)
+    setNewTicker("")
+    return
+  }
 
-      // 🔥 Fetch personalized articles for the updated tickers
-      console.log("Getting articles for tickers:", updatedTickers)
+  // Validate ticker with yfinance
+  try {
+    console.log(`Validating ticker ${newTickerSymbol} with yfinance...`)
+    const stockData = await YahooFinanceService.getStockQuote(newTickerSymbol)
 
-    } catch (error) {
-      console.error('Failed to load new ticker data:', error)
+    if (!stockData) {
+      alert(`${newTickerSymbol} is not a valid ticker symbol. Please check and try again.`)
+      return
     }
 
-    await loadArticles([newTickerSymbol])
+    console.log(`✅ ${newTickerSymbol} is a valid ticker`)
+
+    // Add to tickers list
+    const updatedTickers = [...tickers, newTickerSymbol]
+    setTickers(updatedTickers)
+    setTickerData(prev => [...prev, stockData])
+
+    // If this is the first ticker, select it
+    if (tickers.length === 0) {
+      setSelectedTicker(newTickerSymbol)
+      await loadChartData(newTickerSymbol, selectedTimeframe)
+    }
+
+    // Check if topics already exist for this ticker
+    console.log(`Checking if topics exist for ${newTickerSymbol}...`)
+    const topicsResponse = await ApiService.getCompanyTopics(newTickerSymbol)
+
+    if (topicsResponse.topics && topicsResponse.topics.length > 0) {
+      console.log(`✅ Found ${topicsResponse.topics.length} existing topics for ${newTickerSymbol}`)
+    } else {
+      console.log(`⚠️ No topics found for ${newTickerSymbol}. Triggering deep search...`)
+
+      // Trigger automatic topic generation
+      const topicGenResponse = await ApiService.generateTopicsForTicker(newTickerSymbol)
+      if (topicGenResponse.status === 'started') {
+        console.log(`✅ Deep search started for ${newTickerSymbol}`)
+      } else {
+        console.warn(`⚠️ Topic generation failed for ${newTickerSymbol}:`, topicGenResponse.message)
+      }
+    }
+
+    await loadArticles(updatedTickers)
     setNewTicker("")
+
+  } catch (error) {
+    console.error('Failed to add ticker:', error)
+    alert(`Error adding ${newTickerSymbol}. Please try again.`)
   }
 }
 
@@ -850,10 +548,11 @@ const addTicker = async () => {
   }
 
   return (
-    <div className="min-h-screen font-sans" style={{ backgroundColor: '#f2e9e6' }}>
-      <div className="border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4 fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#f2e9e6' }}>
-        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen font-sans" style={{ backgroundColor: '#FFFFFF' }}>
+      {/* Fixed Navigation Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#FFFFFF' }}>
+        <div className="border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 pb-2 sm:pb-3 lg:pb-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
             <Button
               variant="ghost"
@@ -864,9 +563,9 @@ const addTicker = async () => {
               <BarChart3 className="h-5 w-5" />
             </Button>
           </div>
-          
+
           {/* Horizontal Navigation */}
-          <div className="bg-gray-100 border-t border-b border-gray py-1 overflow-x-hidden">
+          <div className="bg-gray-100 border-t border-b border-gray py-1">
             <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-4 sm:px-6 lg:px-8">
               {tabs.map((tab) => {
                 const Icon = tab.icon
@@ -986,23 +685,26 @@ const addTicker = async () => {
           </div>
         </div>
 
+        {/* Stock Ticker Graph Bar - directly below navigation, no margins */}
+        <div className="pb-4">
+          <StockGraphTicker tickers={tickers} />
+        </div>
       </div>
 
-      {/* Stock Graph Ticker Section - Outside fixed header so it scrolls */}
-      <div className="pt-[80px] sm:pt-[100px] lg:pt-[120px]">
-        <StockGraphTicker tickers={tickers} />
-      </div>
+      {/* Main content area with proper spacing */}
+      <div className="flex justify-center min-h-screen pt-[170px] sm:pt-[200px] lg:pt-[250px]">
+        {/* Left margin spacer - 1/8 of page */}
+        <div className="hidden lg:block" style={{ width: '12.5%' }}></div>
 
-      <div className="flex px-4 sm:px-6 lg:px-8 min-h-screen">
         {/* Main Content - Articles */}
         <div className="flex-1 px-4 sm:px-6 lg:px-8 max-w-4xl relative">
-          <div className="py-3 sm:py-4 lg:py-6">
+          <div className="pt-6 pb-3 sm:pt-8 sm:pb-4 lg:pt-10 lg:pb-6">
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">Loading articles...</span>
               </div>
-            ) : articles.length === 0 ? (
+            ) : (activeTab === 'personalized' ? companiesData.length === 0 : articles.length === 0) ? (
               <div className="text-center text-gray-600 py-8">
                 {activeTab === 'sec-docs' ? (
                   <div className="max-w-md mx-auto">
@@ -1017,7 +719,7 @@ const addTicker = async () => {
                         onKeyPress={(e) => e.key === "Enter" && handleSearch(searchQuery)}
                         className="flex-1"
                       />
-                      <Button 
+                      <Button
                         onClick={() => handleSearch(searchQuery)}
                         disabled={!searchQuery.trim()}
                       >
@@ -1035,125 +737,138 @@ const addTicker = async () => {
                 )}
               </div>
             ) : (
-              <div className="w-full space-y-4">
-                {/* Check if we have companiesData (personalized tab) or regular articles */}
-                {activeTab === 'personalized' && companiesData.length > 0 ? (
-                  // Render companies with their topics
-                  companiesData.map((company: any) => {
-                    const urgencyOrder = { high: 1, medium: 2, low: 3 }
-                    const sortedTopics = [...company.topics].sort((a: any, b: any) => {
-                      return (urgencyOrder[a.urgency as keyof typeof urgencyOrder] || 3) -
-                             (urgencyOrder[b.urgency as keyof typeof urgencyOrder] || 3)
-                    })
+              <div className="w-full">
+                {/* Render based on active tab */}
+                {activeTab === 'personalized' ? (
+                  <>
+                    {/* Section Heading */}
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Companies</h2>
 
-                    return (
-                      <div key={company.ticker} className="border rounded-lg p-4 bg-white">
-                        {/* Company Header with Logo */}
-                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-                          {company.logo_url && (
-                            <img
-                              src={company.logo_url}
-                              alt={`${company.name} logo`}
-                              className="w-12 h-12 object-contain"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h2 className="text-xl font-bold text-gray-900">{company.name}</h2>
-                            <p className="text-sm text-gray-500">{company.ticker}</p>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {company.total_topics} topic{company.total_topics !== 1 ? 's' : ''}
-                          </span>
-                        </div>
+                    {/* Grid Layout - 2 columns */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {companiesData.map((company: any) => {
+                        if (!company.topics || company.topics.length === 0) return null
 
-                        {/* Topics */}
-                        <div className="space-y-4">
-                          {sortedTopics.slice(0, expandedCompany === company.ticker ? undefined : 5).map((topic: any) => {
-                            const urgencyColor = topic.urgency === 'high' ? 'bg-red-100 text-red-700' :
-                                               topic.urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                               'bg-green-100 text-green-700'
-                            const topicKey = `${company.ticker}-${topic.id}`
-                            const isExpanded = expandedTopics[topicKey]
+                        // Get stock data for this company if available
+                        const stockData = tickerData.find(t => t.symbol === company.ticker)
 
-                            return (
-                              <div key={topic.id} className="border-l-2 border-gray-200 pl-4">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h3 className="text-base font-semibold text-gray-900 flex-1">{topic.name}</h3>
-                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor} ml-2`}>
-                                    {topic.urgency.toUpperCase()}
-                                  </span>
+                        // Get only the 2 most urgent topics
+                        const topTopics = company.topics.slice(0, 2)
+
+                        return (
+                          <div key={company.ticker} className="border rounded-lg p-3" style={{ backgroundColor: '#FBF5EE' }}>
+                            {/* Company Header */}
+                            <div className="mb-3 pb-2 border-b border-gray-300">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={`https://img.logokit.com/ticker/${company.ticker}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
+                                    alt={`${company.ticker} logo`}
+                                    className="w-10 h-10 rounded-lg object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                  />
+                                  <div>
+                                    <h2 className="text-lg font-bold text-gray-900">
+                                      {company.company_name || company.ticker}
+                                    </h2>
+                                    <p className="text-xs text-gray-600 mt-0.5">
+                                      {company.ticker} • {company.topics.length} topic{company.topics.length !== 1 ? 's' : ''}
+                                    </p>
+                                  </div>
                                 </div>
-
-                                {topic.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{topic.description}</p>
-                                )}
-
-                                {topic.articles && topic.articles.length > 0 && (
-                                  <>
-                                    <button
-                                      onClick={() => setExpandedTopics(prev => ({
-                                        ...prev,
-                                        [topicKey]: !prev[topicKey]
-                                      }))}
-                                      className="text-sm text-blue-600 hover:text-blue-800 font-medium mb-2"
-                                    >
-                                      {isExpanded ? '▼' : '▶'} {topic.articles.length} article{topic.articles.length !== 1 ? 's' : ''}
-                                    </button>
-
-                                    {isExpanded && (
-                                      <ul className="space-y-2 mt-2">
-                                        {topic.articles.map((article: any) => (
-                                          <li key={article.id} className="flex items-start gap-2">
-                                            <span className="text-gray-400 mt-1">•</span>
-                                            <div className="flex-1">
-                                              <a
-                                                href={article.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
-                                              >
-                                                {article.title}
-                                              </a>
-                                              <div className="text-xs text-gray-500 mt-1">
-                                                {article.source} • {new Date(article.published_date).toLocaleDateString()}
-                                              </div>
-                                            </div>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    )}
-                                  </>
+                                {stockData && (
+                                  <div className="text-right">
+                                    <div className="text-base font-semibold text-gray-900">
+                                      ${stockData.price.toFixed(2)}
+                                    </div>
+                                    <div className={`text-xs font-medium ${stockData.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {stockData.changePercent >= 0 ? '▲' : '▼'} {stockData.changePercent >= 0 ? '+' : ''}{stockData.changePercent.toFixed(2)}%
+                                    </div>
+                                  </div>
                                 )}
                               </div>
-                            )
-                          })}
+                            </div>
 
-                          {/* Show All Topics button */}
-                          {company.total_topics > 5 && expandedCompany !== company.ticker && (
-                            <button
-                              onClick={() => setExpandedCompany(company.ticker)}
-                              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition-colors"
-                            >
-                              Show All {company.total_topics} Topics
-                            </button>
-                          )}
+                            {/* Topics for this company - limited to 2 */}
+                            <div className="space-y-3">
+                              {topTopics.map((topic: any) => {
+                                const urgency = topic.urgency || 'medium'
+                                const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                                   urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                   'bg-green-100 text-green-700'
 
-                          {expandedCompany === company.ticker && company.total_topics > 5 && (
-                            <button
-                              onClick={() => setExpandedCompany(null)}
-                              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition-colors"
-                            >
-                              Show Less
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })
+                                const topicKey = `${company.ticker}-${topic.id}`
+                                const isExpanded = expandedTopics[topicKey] || false
+
+                                return (
+                                  <div key={topic.id} className="border rounded-lg p-3 bg-white">
+                                    {/* Topic Header - Clickable */}
+                                    <div
+                                      className="cursor-pointer"
+                                      onClick={() => setExpandedTopics(prev => ({...prev, [topicKey]: !prev[topicKey]}))}
+                                    >
+                                      <div className="flex items-start justify-between mb-1">
+                                        <div className="flex items-center gap-2 flex-1">
+                                          <h3 className="text-base font-bold text-gray-900">{topic.name || topic.topic}</h3>
+                                          <ChevronDown
+                                            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </div>
+                                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${urgencyColor}`}>
+                                          {urgency.toUpperCase()}
+                                        </span>
+                                      </div>
+                                      {topic.description && (
+                                        <p className="text-sm text-gray-600 mb-1">{topic.description}</p>
+                                      )}
+                                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{topic.articles?.length || 0} source{(topic.articles?.length || 0) !== 1 ? 's' : ''}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Expandable Articles Section with Animation */}
+                                    <div
+                                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                        isExpanded ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+                                      }`}
+                                    >
+                                      {topic.articles && topic.articles.length > 0 && (
+                                        <ul className="space-y-1.5 border-t border-gray-200 pt-2">
+                                          {topic.articles.map((article: any, idx: number) => (
+                                            <li key={`${topic.id}-${idx}`} className="flex items-start gap-2">
+                                              <span className="text-gray-400 mt-1">•</span>
+                                              <div className="flex-1">
+                                                <a
+                                                  href={article.url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                                                >
+                                                  {article.title}
+                                                </a>
+                                                {article.description && (
+                                                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{article.description}</p>
+                                                )}
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 ) : (
-                  // Regular article display grouped by topic
+                  // Group articles by topic for other tabs
                   (() => {
-                    // Group articles by their first tag (topic)
                     const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
                       const topic = article.tags && article.tags.length > 0
                         ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
@@ -1167,62 +882,62 @@ const addTicker = async () => {
                     }, {})
 
                     return Object.entries(groupedArticles).map(([topic, topicArticles]: [string, any]) => {
-                    if (!topicArticles || topicArticles.length === 0) return null
+                      if (!topicArticles || topicArticles.length === 0) return null
 
-                    const firstArticle = topicArticles[0]
-                    const urgency = firstArticle?.urgency || 'medium'
-                    const description = firstArticle?.topic_description || firstArticle?.preview || ''
-                    const company = firstArticle?.category || ''
+                      const firstArticle = topicArticles[0]
+                      const urgency = firstArticle?.urgency || 'medium'
+                      const description = firstArticle?.topic_description || firstArticle?.preview || ''
+                      const company = firstArticle?.category || ''
 
-                    // Urgency badge color
-                    const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
-                                       urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                       'bg-green-100 text-green-700'
+                      // Urgency badge color
+                      const urgencyColor = urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                         urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                         'bg-green-100 text-green-700'
 
-                    return (
-                    <div key={topic} className="border rounded-lg p-4 bg-white">
-                      {/* Topic Header */}
-                      <div className="mb-3 pb-3 border-b border-gray-200">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-bold text-gray-900 flex-1">{topic}</h3>
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${urgencyColor}`}>
-                            {urgency.toUpperCase()}
-                          </span>
+                      return (
+                      <div key={topic} className="border rounded-lg p-4 bg-white">
+                        {/* Topic Header */}
+                        <div className="mb-3 pb-3 border-b border-gray-200">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-lg font-bold text-gray-900 flex-1">{topic}</h3>
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${urgencyColor}`}>
+                              {urgency.toUpperCase()}
+                            </span>
+                          </div>
+                          {description && (
+                            <p className="text-sm text-gray-600 mb-2">{description}</p>
+                          )}
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            {company && <span className="font-medium">{company}</span>}
+                            {company && <span>•</span>}
+                            <span>{topicArticles.length} article{topicArticles.length > 1 ? 's' : ''}</span>
+                            <span>•</span>
+                            <span>{firstArticle.date}</span>
+                          </div>
                         </div>
-                        {description && (
-                          <p className="text-sm text-gray-600 mb-2">{description}</p>
-                        )}
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          {company && <span className="font-medium">{company}</span>}
-                          {company && <span>•</span>}
-                          <span>{topicArticles.length} article{topicArticles.length > 1 ? 's' : ''}</span>
-                          <span>•</span>
-                          <span>{firstArticle.date}</span>
-                        </div>
+
+                        {/* Articles as bullets */}
+                        <ul className="space-y-2">
+                          {topicArticles.map((article: NewsArticle) => (
+                            <li key={article.id} className="flex items-start gap-2">
+                              <span className="text-gray-400 mt-1">•</span>
+                              <div className="flex-1">
+                                <a
+                                  href={article.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                                >
+                                  {article.title}
+                                </a>
+                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{article.preview}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-
-                      {/* Articles as bullets */}
-                      <ul className="space-y-2">
-                        {topicArticles.map((article: NewsArticle) => (
-                          <li key={article.id} className="flex items-start gap-2">
-                            <span className="text-gray-400 mt-1">•</span>
-                            <div className="flex-1">
-                              <a
-                                href={article.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
-                              >
-                                {article.title}
-                              </a>
-                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{article.preview}</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    )
-                  })
+                      )
+                    })
                   })()
                 )}
               </div>
@@ -1231,13 +946,13 @@ const addTicker = async () => {
         </div>
 
         {/* Right Sidebar - Tickers and Interests */}
-        <div className="hidden lg:flex w-80 border-l border-gray-200 flex-col sticky top-[80px] sm:top-[100px] lg:top-[160px] h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] lg:h-[calc(100vh-160px)] overflow-y-auto self-start" style={{ backgroundColor: '#f2e9e6' }}>
+        <div className="hidden lg:flex w-80 border-l border-gray-200 flex-col sticky top-[170px] sm:top-[200px] lg:top-[250px] h-[calc(100vh-170px)] sm:h-[calc(100vh-200px)] lg:h-[calc(100vh-250px)] overflow-y-auto self-start" style={{ backgroundColor: '#FFFFFF' }}>
           <div className="p-3 lg:p-4 border-b border-gray-200 flex-shrink-0">
 
             {/* Interests List - Moved to top */}
             <div className="space-y-2 mb-4">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Your Interests</h4>
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-1 mb-3">
                 {tickerData.slice(0, 6).map((ticker) => (
                   <div key={ticker.symbol} className="relative group">
                     <button
@@ -1246,13 +961,38 @@ const addTicker = async () => {
                         selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
                       }`}
                     >
-                      <div className="font-medium text-gray-900">{ticker.symbol}</div>
-                      <div className={`text-[10px] ${ticker.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                        {ticker.trend === 'up' ? '▲' : '▼'} {ticker.value}
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <img
+                          src={`https://img.logokit.com/ticker/${ticker.symbol}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
+                          alt={`${ticker.symbol} logo`}
+                          className="w-5 h-5 rounded object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <div className="font-medium text-gray-900">{ticker.symbol}</div>
+                      </div>
+                      <div className={`text-[10px] ${ticker.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {ticker.changePercent >= 0 ? '▲' : '▼'} {ticker.changePercent >= 0 ? '+' : ''}{ticker.changePercent.toFixed(2)}%
                       </div>
                     </button>
                   </div>
                 ))}
+              </div>
+
+              {/* Add New Interest */}
+              <div className="space-y-2">
+                <Input
+                  placeholder="Add ticker (e.g., AAPL)"
+                  value={newTicker}
+                  onChange={(e) => setNewTicker(e.target.value)}
+                  className="w-full h-8 text-sm"
+                  onKeyPress={(e) => e.key === "Enter" && addTicker()}
+                />
+                <Button onClick={addTicker} className="w-full h-8 text-sm">
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Interest
+                </Button>
               </div>
             </div>
 
@@ -1344,7 +1084,17 @@ const addTicker = async () => {
                         selectedTicker === ticker.symbol ? 'bg-blue-50 border-blue-200' : ''
                       }`}
                     >
-                      <div className="font-medium text-gray-900 mb-0.5">{ticker.symbol}</div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <img
+                          src={`https://img.logokit.com/ticker/${ticker.symbol}?token=${process.env.NEXT_PUBLIC_LOGO_API_KEY}`}
+                          alt={`${ticker.symbol} logo`}
+                          className="w-5 h-5 rounded object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <div className="font-medium text-gray-900">{ticker.symbol}</div>
+                      </div>
                       <div className="text-gray-600 mb-0.5">${ticker.price.toFixed(2)}</div>
                       <div className={`font-medium ${
                         ticker.change >= 0 ? 'text-green-600' : 'text-red-600'

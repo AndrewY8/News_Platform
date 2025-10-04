@@ -754,6 +754,26 @@ export class ApiService {
     }
   }
 
+  static async generateTopicsForTicker(ticker: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/companies/${ticker}/generate-topics`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate topics for ${ticker}: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Error generating topics for ${ticker}:`, error)
+      return { status: 'error', message: String(error) }
+    }
+  }
+
   // SEC RAG (Retrieval-Augmented Generation) methods for document-specific queries
   static async querySecDocumentRAG(documentId: string, query: string): Promise<{
     answer: string
