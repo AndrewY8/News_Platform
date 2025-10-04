@@ -1027,7 +1027,7 @@ const addTicker = async () => {
                         const topTopics = company.topics.slice(0, 3)
 
                         return (
-                          <div key={company.ticker} className="border rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#FBF5EE' }}>
+                          <div key={company.ticker} className="border rounded-lg p-4 shadow-lg bg-white">
                             {/* Company Header */}
                             <div className="mb-4 pb-3 border-b border-gray-300">
                               <div className="flex items-center justify-between">
