@@ -262,6 +262,7 @@ cors_origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
+    "http://3.92.79.88:3000"
 ]
 
 # Add production origins from environment if specified

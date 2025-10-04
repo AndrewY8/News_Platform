@@ -12,6 +12,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 # redis  # Commented out for dev
 slowapi
+spacy
 yfinance
 authlib
 httpx
