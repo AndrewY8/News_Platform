@@ -89,12 +89,12 @@ try:
     from news_agent.agent import PlannerAgent
     from news_agent.aggregator.aggregator import AggregatorAgent
     NEWS_AGENT_AVAILABLE = True
-    print("✅ News Agent System available")
+    print("News Agent System available")
 except Exception as e:
     NEWS_AGENT_AVAILABLE = False
-    print(f"⚠️ News Agent System not available: {e}")
+    print(f"News Agent System not available: {e}")
     NEWS_AGENT_AVAILABLE = False
-    print(f"⚠️ News Agent System not available: {e}")
+    print(f"News Agent System not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
