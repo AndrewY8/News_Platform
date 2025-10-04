@@ -1269,6 +1269,150 @@ async def generate_topics_for_ticker(ticker: str, request: Request, background_t
         logger.error(f"Error starting topic generation for {ticker}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/companies/{ticker}/details")
+@limiter.limit("20/minute")
+async def get_company_details(ticker: str, request: Request):
+    """
+    Get comprehensive company details including:
+    - Company info (name, business areas, status)
+    - Stock fundamentals (P/E, market cap, dividend, etc.)
+    - Research topics if available
+    """
+    try:
+        ticker = ticker.upper()
+
+        # Initialize response structure
+        company_details = {
+            "ticker": ticker,
+            "name": ticker,
+            "description": "",
+            "business_areas": [],
+            "industry": "",
+            "fundamentals": {},
+            "topics": [],
+            "has_research": False
+        }
+
+        # 1. Get stock fundamentals from yfinance
+        if YFINANCE_AVAILABLE:
+            try:
+                stock = yf.Ticker(ticker)
+                info = stock.info
+
+                company_details["name"] = info.get("longName", ticker)
+                company_details["description"] = info.get("longBusinessSummary", "")
+                company_details["industry"] = info.get("industry", "")
+                company_details["sector"] = info.get("sector", "")
+
+                company_details["fundamentals"] = {
+                    "market_cap": info.get("marketCap"),
+                    "pe_ratio": info.get("trailingPE"),
+                    "forward_pe": info.get("forwardPE"),
+                    "dividend_yield": info.get("dividendYield"),
+                    "beta": info.get("beta"),
+                    "52_week_high": info.get("fiftyTwoWeekHigh"),
+                    "52_week_low": info.get("fiftyTwoWeekLow"),
+                    "avg_volume": info.get("averageVolume"),
+                    "revenue": info.get("totalRevenue"),
+                    "revenue_growth": info.get("revenueGrowth"),
+                    "earnings_growth": info.get("earningsGrowth"),
+                    "profit_margin": info.get("profitMargins"),
+                    "operating_margin": info.get("operatingMargins"),
+                    "roe": info.get("returnOnEquity"),
+                    "debt_to_equity": info.get("debtToEquity"),
+                    "current_ratio": info.get("currentRatio"),
+                    "book_value": info.get("bookValue"),
+                    "price_to_book": info.get("priceToBook"),
+                }
+            except Exception as e:
+                logger.warning(f"Could not fetch yfinance data for {ticker}: {e}")
+
+        # 2. Get company research data from Supabase
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+
+        if supabase_url and supabase_key:
+            try:
+                import sys
+                sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+                from deep_news_agent.db.research_db_manager import ResearchDBManager
+
+                db_manager = ResearchDBManager(supabase_url, supabase_key)
+
+                # Get company from database
+                companies_result = db_manager.supabase.table("companies").select("*").eq("name", ticker).execute()
+
+                if companies_result.data:
+                    company_data = companies_result.data[0]
+                    company_details["has_research"] = True
+
+                    # Override with research data if available
+                    if company_data.get("business_areas"):
+                        company_details["business_areas"] = company_data["business_areas"]
+
+                    # Get topics
+                    topics_result = db_manager.supabase.table("topics").select("""
+                        id, name, description, business_impact, confidence, urgency,
+                        final_score, rank_position, subtopics, extraction_date,
+                        article_topics(
+                            contribution_strength,
+                            articles(id, title, url, content, source, source_domain, published_date, relevance_score)
+                        )
+                    """).eq("company_id", company_data["id"]).order("rank_position", desc=False).limit(20).execute()
+
+                    # Transform topics
+                    topics = []
+                    for topic_data in topics_result.data:
+                        subtopics = topic_data.get("subtopics", [])
+                        if isinstance(subtopics, str):
+                            import json
+                            try:
+                                subtopics = json.loads(subtopics)
+                            except:
+                                subtopics = []
+
+                        articles = []
+                        for article_topic in topic_data.get("article_topics", []):
+                            article_data = article_topic.get("articles")
+                            if article_data:
+                                articles.append({
+                                    "id": article_data["id"],
+                                    "title": article_data["title"],
+                                    "url": article_data["url"],
+                                    "source": article_data.get("source", "Unknown"),
+                                    "published_date": article_data.get("published_date"),
+                                    "relevance_score": article_data.get("relevance_score", 0.5),
+                                    "contribution_strength": article_topic.get("contribution_strength", 0.5)
+                                })
+
+                        topics.append({
+                            "id": topic_data["id"],
+                            "name": topic_data["name"],
+                            "description": topic_data.get("description", ""),
+                            "business_impact": topic_data.get("business_impact", ""),
+                            "confidence": topic_data.get("confidence", 0.5),
+                            "urgency": topic_data.get("urgency", "medium"),
+                            "final_score": topic_data.get("final_score"),
+                            "rank_position": topic_data.get("rank_position"),
+                            "subtopics": subtopics,
+                            "extraction_date": topic_data.get("extraction_date"),
+                            "article_count": len(articles),
+                            "articles": articles
+                        })
+
+                    company_details["topics"] = topics
+
+            except ImportError as e:
+                logger.warning(f"ResearchDBManager not available: {e}")
+            except Exception as e:
+                logger.warning(f"Could not fetch research data for {ticker}: {e}")
+
+        return company_details
+
+    except Exception as e:
+        logger.error(f"Error fetching company details for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/topics/all")
 @limiter.limit("20/minute")
 async def get_all_topics(request: Request, limit: int = 50):

@@ -1398,8 +1398,11 @@ const addTicker = async () => {
 
                         return (
                           <div key={company.ticker} id={`company-${company.ticker}`} className="border rounded-lg p-4 shadow-lg bg-white">
-                            {/* Company Header */}
-                            <div className="mb-4 pb-3 border-b border-gray-300">
+                            {/* Company Header - Clickable */}
+                            <div
+                              className="mb-4 pb-3 border-b border-gray-300 cursor-pointer hover:bg-gray-50 transition-colors rounded-lg p-2 -m-2"
+                              onClick={() => router.push(`/company/${company.ticker}`)}
+                            >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <img
@@ -1411,11 +1414,11 @@ const addTicker = async () => {
                                     }}
                                   />
                                   <div>
-                                    <h2 className="text-xl font-bold text-gray-900">
+                                    <h2 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
                                       {company.company_name || company.ticker}
                                     </h2>
                                     <p className="text-sm text-gray-600 mt-0.5">
-                                      {company.ticker} • {company.topics.length} topic{company.topics.length !== 1 ? 's' : ''}
+                                      {company.ticker} • {company.topics.length} topic{company.topics.length !== 1 ? 's' : ''} • Click to view details
                                     </p>
                                   </div>
                                 </div>
