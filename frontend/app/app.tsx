@@ -53,6 +53,10 @@ export default function HavenNewsApp() {
   const [selectedTicker, setSelectedTicker] = useState<string>("")
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("1mo")
   const [tickerData, setTickerData] = useState<StockData[]>([])
+  const [marketIndices, setMarketIndices] = useState<StockData[]>([])
+  const [marketChartsData, setMarketChartsData] = useState<{[key: string]: ChartData}>({})
+  const [marketTimeframe, setMarketTimeframe] = useState<string>('1d')
+  const [selectedMarketIndex, setSelectedMarketIndex] = useState<string>('^GSPC') // Default to S&P 500
 
   // Portfolio company selector state
   const [selectedPortfolioCompany, setSelectedPortfolioCompany] = useState<string>("")
@@ -109,6 +113,36 @@ useEffect(() => {
     }
   }, [selectedPortfolioCompany])
 
+  const loadMarketIndices = async (timeframe: string = '1d') => {
+    try {
+      const indices = ['^DJI', '^IXIC', '^GSPC'] // Dow Jones, NASDAQ, S&P 500
+      const indicesData = await Promise.all(
+        indices.map(symbol => YahooFinanceService.getStockQuote(symbol))
+      )
+      setMarketIndices(indicesData.filter(data => data !== null) as StockData[])
+
+      // Load chart data for all indices
+      const timeframeMap: {[key: string]: {interval: string, range: string}} = {
+        '1d': { interval: '5m', range: '1d' },
+        '5d': { interval: '30m', range: '5d' },
+        '1mo': { interval: '1d', range: '1mo' },
+        '1y': { interval: '1d', range: '1y' }
+      }
+      const { interval, range } = timeframeMap[timeframe]
+
+      const chartsData: {[key: string]: ChartData} = {}
+      for (const symbol of indices) {
+        const chart = await YahooFinanceService.getChartData(symbol, interval, range)
+        if (chart) {
+          chartsData[symbol] = chart
+        }
+      }
+      setMarketChartsData(chartsData)
+    } catch (error) {
+      console.error('Failed to load market indices:', error)
+    }
+  }
+
   const initializeApp = async () => {
     try {
       console.log("🚀 Initializing app...")
@@ -118,6 +152,9 @@ useEffect(() => {
 
       // Load initial ticker data
       await loadTickerData(defaultTickers)
+
+      // Load market indices
+      await loadMarketIndices()
 
       //Load initial topics directly
       console.log("📊 Loading initial topics for tickers:", defaultTickers)
@@ -547,26 +584,136 @@ const addTicker = async () => {
     return timestamp.toLocaleDateString()
   }
 
+  // Single Index Market Chart Component
+  function SingleIndexChart() {
+    const chart = marketChartsData[selectedMarketIndex]
+
+    if (!chart || chart.data.length === 0) {
+      return <div className="h-80 bg-gray-50 rounded flex items-center justify-center text-sm text-gray-400">Loading chart data...</div>
+    }
+
+    const indexColors: {[key: string]: string} = {
+      '^DJI': '#2563eb',   // Blue for Dow Jones
+      '^IXIC': '#10b981',  // Green for NASDAQ
+      '^GSPC': '#f59e0b'   // Orange for S&P 500
+    }
+
+    const prices = chart.data.map(d => d.close).filter(p => p > 0)
+    if (prices.length === 0) return null
+
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
+    const range = max - min || 1
+
+    const points = prices.map((price, index) => {
+      const x = (index / (prices.length - 1)) * 100
+      const y = 100 - ((price - min) / range) * 100
+      return `${x},${y}`
+    }).join(' ')
+
+    const areaPath = `M ${points} L 100,100 L 0,100 Z`
+    const linePath = `M ${points}`
+    const color = indexColors[selectedMarketIndex] || '#2563eb'
+
+    // Calculate Y-axis labels with round numbers
+    const yLabels = []
+
+    // Determine appropriate step size based on range
+    let step = 100
+    if (range > 10000) {
+      step = 5000
+    } else if (range > 5000) {
+      step = 1000
+    } else if (range > 1000) {
+      step = 500
+    } else if (range > 500) {
+      step = 100
+    } else if (range > 100) {
+      step = 50
+    } else {
+      step = 10
+    }
+
+    // Calculate nice round min and max
+    const roundMin = Math.floor(min / step) * step
+    const roundMax = Math.ceil(max / step) * step
+    const roundRange = roundMax - roundMin
+
+    // Generate 5 evenly spaced round labels
+    for (let i = 0; i < 5; i++) {
+      const price = roundMin + (roundRange * i / 4)
+      const y = 100 - (((price - min) / range) * 100)
+      yLabels.push({ price, y })
+    }
+
+    // Calculate X-axis labels (time)
+    const xLabels = []
+    const labelCount = 5
+    for (let i = 0; i < labelCount; i++) {
+      const index = Math.floor((i / (labelCount - 1)) * (chart.data.length - 1))
+      const timestamp = chart.data[index].timestamp
+      const date = new Date(timestamp)
+      let label = ''
+
+      if (marketTimeframe === '1d') {
+        label = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      } else if (marketTimeframe === '5d') {
+        label = date.toLocaleDateString([], { weekday: 'short' })
+      } else if (marketTimeframe === '1mo') {
+        label = date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+      } else if (marketTimeframe === '1y') {
+        label = date.toLocaleDateString([], { month: 'short' })
+      }
+
+      const x = (i / (labelCount - 1)) * 100
+      xLabels.push({ x, label })
+    }
+
+    return (
+      <div className="h-80 bg-gray-50 rounded p-4 relative">
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-4 bottom-12 w-16 flex flex-col justify-between text-xs text-gray-600">
+          {yLabels.reverse().map((item, i) => (
+            <div key={i} className="text-right pr-2">{item.price.toFixed(0)}</div>
+          ))}
+        </div>
+
+        {/* Chart area with padding for axes */}
+        <div className="ml-16 mr-2 h-full pb-8">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id={`market-gradient-${selectedMarketIndex.replace('^', '')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                <stop offset="100%" stopColor={color} stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+            <path d={areaPath} fill={`url(#market-gradient-${selectedMarketIndex.replace('^', '')})`} />
+            <path d={linePath} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
+
+        {/* X-axis labels */}
+        <div className="absolute bottom-0 left-16 right-2 h-8 flex justify-between items-center text-xs text-gray-600">
+          {xLabels.map((item, i) => (
+            <div key={i} className="text-center">{item.label}</div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: '#FFFFFF' }}>
       {/* Fixed Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#FFFFFF' }}>
-        <div className="border-b border-gray-200 pt-2 sm:pt-3 lg:pt-4">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 pb-2 sm:pb-3 lg:pb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black" style={{letterSpacing: '0.1em'}}>Haven News</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden p-2"
-              onClick={() => setShowMobileSidebar(true)}
-            >
-              <BarChart3 className="h-5 w-5" />
-            </Button>
-          </div>
+      <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#A5C4D4' }}>
+        <div className="border-b border-gray-200 py-3 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo and Navigation Combined */}
+            <div className="flex items-center gap-6">
+              <h1 className="text-sm font-bold text-black whitespace-nowrap" style={{letterSpacing: '0.1em'}}>Haven News</h1>
 
-          {/* Horizontal Navigation */}
-          <div className="bg-gray-100 border-t border-b border-gray py-1">
-            <div className="flex gap-2 sm:gap-4 lg:gap-8 overflow-visible px-4 sm:px-6 lg:px-8">
+              {/* Horizontal Navigation - Same Line */}
+              <div className="hidden lg:flex gap-4 overflow-visible">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 
@@ -578,7 +725,7 @@ const addTicker = async () => {
                     >
                       <Button
                         variant="ghost"
-                        className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-1 sm:py-2 text-xs sm:text-sm tracking-wide whitespace-nowrap text-gray-500 hover:bg-gray-200"
+                        className="flex items-center gap-1 px-3 py-1 text-sm tracking-wide whitespace-nowrap text-gray-700 hover:bg-white/50"
                       >
                         {tab.label}
                         <ChevronDown className="h-3 w-3" />
@@ -674,14 +821,25 @@ const addTicker = async () => {
                   <Button
                     key={tab.id}
                     variant="ghost"
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-1 sm:py-2 text-xs sm:text-sm tracking-wide whitespace-nowrap text-gray-500 hover:bg-gray-200"
+                    className="flex items-center gap-1 px-3 py-1 text-sm tracking-wide whitespace-nowrap text-gray-700 hover:bg-white/50"
                     onClick={() => router.push(tab.href)}
                   >
                     {tab.label}
                   </Button>
                 )
               })}
+              </div>
             </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden p-2"
+              onClick={() => setShowMobileSidebar(true)}
+            >
+              <BarChart3 className="h-5 w-5" />
+            </Button>
           </div>
         </div>
 
@@ -741,6 +899,72 @@ const addTicker = async () => {
                 {/* Render based on active tab */}
                 {activeTab === 'personalized' ? (
                   <>
+                    {/* Market Indices Card */}
+                    {marketIndices.length > 0 && (
+                      <div className="mb-6 border rounded-lg p-4" style={{ backgroundColor: '#FFFFFF' }}>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-gray-900">Market Overview</h3>
+
+                          {/* Timeframe Selector */}
+                          <div className="flex gap-2">
+                            {['1d', '5d', '1mo', '1y'].map((tf) => (
+                              <button
+                                key={tf}
+                                onClick={() => {
+                                  setMarketTimeframe(tf)
+                                  loadMarketIndices(tf)
+                                }}
+                                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                  marketTimeframe === tf
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {tf.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Single Index Chart */}
+                        <SingleIndexChart />
+
+                        {/* Clickable Index Stats Below Chart */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                          {marketIndices.map((index) => {
+                            const indexName = index.symbol === '^DJI' ? 'Dow Jones' :
+                                            index.symbol === '^IXIC' ? 'NASDAQ' :
+                                            index.symbol === '^GSPC' ? 'S&P 500' : index.symbol
+                            const isSelected = index.symbol === selectedMarketIndex
+                            const indexColors: {[key: string]: string} = {
+                              '^DJI': '#2563eb',
+                              '^IXIC': '#10b981',
+                              '^GSPC': '#f59e0b'
+                            }
+                            return (
+                              <button
+                                key={index.symbol}
+                                onClick={() => setSelectedMarketIndex(index.symbol)}
+                                className={`flex flex-col p-4 rounded-lg transition-all cursor-pointer text-left ${
+                                  isSelected ? 'ring-2 ring-offset-2' : 'hover:bg-gray-100'
+                                }`}
+                                style={isSelected ? {
+                                  ringColor: indexColors[index.symbol],
+                                  backgroundColor: `${indexColors[index.symbol]}10`
+                                } : {}}
+                              >
+                                <div className="text-sm text-gray-600 mb-1">{indexName}</div>
+                                <div className="text-2xl font-bold text-gray-900">{index.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                <div className={`text-sm font-medium ${index.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {index.changePercent >= 0 ? '▲' : '▼'} {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Section Heading */}
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Companies</h2>
 
