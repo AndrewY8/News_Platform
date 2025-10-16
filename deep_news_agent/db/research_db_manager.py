@@ -195,8 +195,22 @@ class ResearchDBManager:
                 topic_id = result.data[0]["id"]
 
                 # Create article-topic relationships
-                # For now, link all source articles to this topic with equal contribution
-                self._create_article_topic_relationships(source_articles, topic_id, topic.sources)
+                # Link ONLY the articles that were cited as sources for this topic
+                topic_source_articles = []
+                if hasattr(topic, 'source_article_indices') and topic.source_article_indices:
+                    # Use the specific articles cited in the topic extraction
+                    for idx in topic.source_article_indices:
+                        if 0 <= idx < len(source_articles):
+                            topic_source_articles.append(source_articles[idx])
+                else:
+                    # Fallback: link articles whose URLs match topic sources
+                    topic_source_articles = [a for a in source_articles if a.url in topic.sources]
+
+                if topic_source_articles:
+                    self._create_article_topic_relationships(topic_source_articles, topic_id, topic.sources)
+                    self.logger.debug(f"Linked {len(topic_source_articles)} articles to topic: {topic.name}")
+                else:
+                    self.logger.warning(f"No source articles found for topic: {topic.name}")
 
                 stored_topics.append(StoredTopic(
                     id=topic_id,
@@ -247,25 +261,27 @@ class ResearchDBManager:
     def _create_article_topic_relationships(self, articles: List[StoredArticle],
                                           topic_id: int, topic_sources: List[str]) -> None:
         """
-        Create many-to-many relationships between articles and topics
+        Create many-to-many relationships between SPECIFIC articles and this topic
+        Only links articles that were actually cited as sources
         """
         try:
             relationships = []
 
             for article in articles:
-                # Simple heuristic: if article URL is in topic sources, higher contribution
-                contribution_strength = 0.8 if article.url in topic_sources else 0.3
+                # All articles passed here are already filtered to be topic sources
+                # Give higher contribution if URL explicitly in topic.sources
+                contribution_strength = 0.9 if article.url in topic_sources else 0.7
 
                 relationships.append({
                     "article_id": article.id,
                     "topic_id": topic_id,
                     "contribution_strength": contribution_strength,
-                    "extraction_method": "batch_extraction"
+                    "extraction_method": "source_article_citation"
                 })
 
             if relationships:
                 self.supabase.table("article_topics").insert(relationships).execute()
-                self.logger.debug(f"Created {len(relationships)} article-topic relationships")
+                self.logger.debug(f"Created {len(relationships)} article-topic relationships for topic {topic_id}")
 
         except Exception as e:
             self.logger.error(f"Error creating article-topic relationships: {e}")

@@ -218,12 +218,12 @@ class SearchAgent:
             return fallback_queries
 
     async def search_with_tavily(self, queries: List[str], context: ResearchContext) -> List[TavilySearchResult]:
-        """Search using both General and Trusted News retrievers"""
+        """Search using both General and Trusted News retrievers with dual time windows"""
         results = []
 
         for query in queries:
             try:
-                self.logger.info(f"Searching with both retrievers for: {query}")
+                self.logger.info(f"Searching with dual-window strategy for: {query}")
 
                 # Check if API key is available
                 import os
@@ -231,30 +231,66 @@ class SearchAgent:
                     self.logger.error("TAVILY_API_KEY environment variable is not set")
                     continue
 
-                # Search with Trusted News Retriever
-                trusted_news_retriever = TrustedNewsRetriever(
+                # WINDOW 1: Recent news (last 7 days) - HIGH PRIORITY for daily updates
+                # Trusted news - recent
+                trusted_recent_retriever = TrustedNewsRetriever(
                     query=query,
                     topic="general"
                 )
-                trusted_news_response = trusted_news_retriever.search(
+                trusted_recent_response = trusted_recent_retriever.search(
                     search_depth="advanced",
-                    max_results=5,  # Limit trusted news results
-                    days=30
+                    max_results=8,  # MORE recent trusted news (users need daily updates)
+                    days=7          # Last week only
                 )
 
-                # Search with General Retriever (excludes trusted news domains)
-                general_retriever = GeneralRetriever(
+                # General sources - recent
+                general_recent_retriever = GeneralRetriever(
                     query=query,
                     topic="general"
                 )
-                general_response = general_retriever.search(
+                general_recent_response = general_recent_retriever.search(
                     search_depth="advanced",
-                    max_results=5,  # More general results to diversify sources
-                    days=30
+                    max_results=7,  # MORE recent general news
+                    days=7          # Last week only
                 )
 
-                # Combine both responses
-                combined_response = trusted_news_response + general_response
+                # WINDOW 2: Historical context (8-60 days) - SUPPLEMENT for analytical depth
+                # Trusted news - historical
+                trusted_historical_retriever = TrustedNewsRetriever(
+                    query=query,
+                    topic="general"
+                )
+                trusted_historical_response = trusted_historical_retriever.search(
+                    search_depth="advanced",
+                    max_results=3,  # LESS historical trusted (just for context)
+                    days=60         # Last 2 months
+                )
+
+                # General sources - historical
+                general_historical_retriever = GeneralRetriever(
+                    query=query,
+                    topic="general"
+                )
+                general_historical_response = general_historical_retriever.search(
+                    search_depth="advanced",
+                    max_results=2,  # LESS historical general
+                    days=60         # Last 2 months
+                )
+
+                # Tag articles with time window for priority sorting
+                for item in trusted_recent_response + general_recent_response:
+                    item['time_window'] = 'recent'
+
+                for item in trusted_historical_response + general_historical_response:
+                    item['time_window'] = 'historical'
+
+                # Combine: Recent gets priority, historical supplements
+                # Total per query: 8+7+3+2 = 20 articles (up from 10)
+                combined_response = (trusted_recent_response + general_recent_response +
+                                    trusted_historical_response + general_historical_response)
+
+                self.logger.info(f"Retrieved {len(trusted_recent_response + general_recent_response)} recent + " +
+                               f"{len(trusted_historical_response + general_historical_response)} historical articles")
 
                 # Convert response to TavilySearchResult objects
                 for item in combined_response:
@@ -279,7 +315,7 @@ class SearchAgent:
                     )
                     results.append(result)
 
-                self.logger.info(f"Found {len(trusted_news_response)} trusted news + {len(general_response)} general results for query: {query}")
+                # Updated logging removed - already logged above with recent/historical breakdown
 
             except Exception as e:
                 self.logger.error(f"Error searching with retrievers for query '{query}': {e}")
@@ -352,21 +388,48 @@ class SearchAgent:
             return []
 
     def filter_and_rank_results(self, results: List[TavilySearchResult], context: ResearchContext) -> List[TavilySearchResult]:
-        """Filter and rank Tavily search results by relevance and quality"""
+        """Filter and rank Tavily search results with RECENCY PRIORITY"""
         if not results:
             return []
 
-        # Filter out low-quality results
-        filtered = [r for r in results if r.relevance_score >= 0.3]
+        # Separate recent vs historical
+        recent_results = []
+        historical_results = []
 
-        # Sort by relevance score (descending)
-        ranked = sorted(filtered, key=lambda x: x.relevance_score, reverse=True)
+        for r in results:
+            # Articles from last 7 days are "recent"
+            days_old = (datetime.now() - r.timestamp).days
+            if days_old <= 7:
+                recent_results.append(r)
+            else:
+                historical_results.append(r)
 
-        # Limit to top 20 results
-        top_results = ranked[:20]
+        # Filter recent with LENIENT threshold (keep more daily news)
+        recent_filtered = [r for r in recent_results if r.relevance_score >= 0.15]
 
-        self.logger.info(f"Filtered {len(results)} Tavily results down to {len(top_results)} high-quality results")
-        return top_results
+        # Filter historical with STRICTER threshold (keep only best for context)
+        historical_filtered = [r for r in historical_results if r.relevance_score >= 0.3]
+
+        # Sort recent by: timestamp first (newest first), then relevance
+        recent_sorted = sorted(recent_filtered,
+                              key=lambda x: (x.timestamp, x.relevance_score),
+                              reverse=True)
+
+        # Sort historical by relevance only
+        historical_sorted = sorted(historical_filtered,
+                                  key=lambda x: x.relevance_score,
+                                  reverse=True)
+
+        # Combine with 70% recent quota, 30% historical quota
+        recent_quota = 35  # Users want fresh news!
+        historical_quota = 15  # Just for analytical context
+
+        final_results = recent_sorted[:recent_quota] + historical_sorted[:historical_quota]
+
+        self.logger.info(f"Filtered {len(results)} total → {len(recent_filtered)} recent + {len(historical_filtered)} historical")
+        self.logger.info(f"Final: {len(recent_sorted[:recent_quota])} recent + {len(historical_sorted[:historical_quota])} historical = {len(final_results)} articles")
+
+        return final_results
 
     def _build_query_generation_prompt(self, questions: List[Question], context: ResearchContext) -> str:
         """Build prompt for generating analytical search queries from questions"""

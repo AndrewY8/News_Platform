@@ -191,15 +191,26 @@ class RankingAgent(RankingInterface):
 
     def _calculate_recency_score(self, topic: Topic) -> float:
         """
-        Calculate recency score using exponential decay (90-day half-life)
+        Calculate recency score with AGGRESSIVE boost for very recent news
+        Users want to see today/yesterday news FIRST!
         """
         days_old = (datetime.now() - topic.extraction_date).days
 
-        # Exponential decay with 90-day half-life
-        half_life_days = 90
-        recency_score = math.exp(-days_old * math.log(2) / half_life_days)
-
-        return min(recency_score, 1.0)
+        # SUPER BOOST for news from last 48 hours (users need daily updates!)
+        if days_old == 0:
+            return 1.0  # Today = perfect score
+        elif days_old == 1:
+            return 0.95  # Yesterday = near perfect
+        elif days_old <= 3:
+            return 0.9  # Last 3 days = high priority
+        elif days_old <= 7:
+            return 0.8  # Last week = important
+        else:
+            # Exponential decay with 90-day half-life for older news
+            half_life_days = 90
+            recency_score = math.exp(-days_old * math.log(2) / half_life_days)
+            # Cap older news at 0.75 to ensure recent news always ranks higher
+            return min(recency_score, 0.75)
 
     def _calculate_relatedness_score(self, topic: Topic, company_context: CompanyContext) -> float:
         """
