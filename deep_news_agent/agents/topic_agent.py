@@ -546,8 +546,12 @@ For each decision, explain the semantic relationship and why consolidation is/is
                     # Merge sources and metadata
                     merged_topic.sources.extend(new_topic.sources)
                     merged_topic.sources = list(set(merged_topic.sources))  # Remove duplicates
-                    merged_topic.subtopics.extend(new_topic.subtopics)
-                    merged_topic.subtopics = list(set(merged_topic.subtopics))
+
+                    # Merge subtopics - use name-based deduplication since Subtopic is not hashable
+                    existing_subtopic_names = {st.name for st in merged_topic.subtopics if hasattr(st, 'name')}
+                    for new_subtopic in new_topic.subtopics:
+                        if hasattr(new_subtopic, 'name') and new_subtopic.name not in existing_subtopic_names:
+                            merged_topic.subtopics.append(new_subtopic)
 
                     # Merge article indices (handle None cases)
                     if merged_topic.source_article_indices is None:

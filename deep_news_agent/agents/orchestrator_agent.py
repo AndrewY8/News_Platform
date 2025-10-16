@@ -176,6 +176,9 @@ class OrchestratorAgent(OrchestratorInterface):
             {"iteration": iteration, "total_topics_in_memory": len(state.topic_memory)}
         )
 
+        # Store topic memory in search agent for context-aware query generation
+        self.search_agent._topic_memory = state.topic_memory
+
         if iteration < state.max_iterations:
             next_questions = await self.search_agent.generate_questions_from_topics(
                 [{"name": t.name, "description": t.description} for t in state.topic_memory],

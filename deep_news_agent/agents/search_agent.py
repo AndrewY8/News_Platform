@@ -183,7 +183,7 @@ class SearchAgent:
                         "strict": True
                     }
                 },
-                max_output_tokens=390
+                max_output_tokens=800  # Increased to accommodate 10-12 analytical queries
             )
 
             # Parse the structured JSON response
@@ -369,67 +369,63 @@ class SearchAgent:
         return top_results
 
     def _build_query_generation_prompt(self, questions: List[Question], context: ResearchContext) -> str:
-        """Build prompt for generating search queries from questions"""
+        """Build prompt for generating analytical search queries from questions"""
         questions_text = "\n".join([f"- {q.text}" for q in questions])
 
-        # Get current year
+        # Get current date and year
         current_year = datetime.now().year
+        current_date = datetime.now().strftime("%Y-%m-%d")
 
-        # Build context-specific prompt
+        # Build context-specific information
         context_name = context.get_display_name()
         focus_areas = ', '.join(context.get_focus_areas())
         research_type = context.get_research_type()
 
-        # Different prompts for company vs macro research
+        # Import analytical prompts
+        from ..prompts import (
+            ANALYTICAL_REASONING_FRAMEWORK,
+            CREATIVE_QUERY_GENERATION_PROMPT_COMPANY,
+            CREATIVE_QUERY_GENERATION_PROMPT_MACRO
+        )
+
+        # Build topics summary from memory (if available)
+        topics_summary = "No topics discovered yet (first iteration)"
+        if hasattr(self, '_topic_memory') and self._topic_memory:
+            topics_summary = "\n".join([
+                f"• {t.name}: {t.description[:120]}{'...' if len(t.description) > 120 else ''}"
+                for t in self._topic_memory[:8]  # Show up to 8 topics for context
+            ])
+
+        # Build previous insights summary from questions
+        previous_insights = "\n".join([
+            f"• {q.text[:100]}{'...' if len(q.text) > 100 else ''}"
+            for q in questions[:5]  # Show up to 5 previous questions
+        ])
+
+        # Inject analytical framework with target name
+        analytical_framework = ANALYTICAL_REASONING_FRAMEWORK.format(target=context_name)
+
+        # Use different prompts for company vs macro research
         if research_type.value == "company":
-            return f"""Company: {context_name}
-Business Areas: {focus_areas}
-
-Questions to research:
-{questions_text}
-
-Convert these questions into concise web search queries for company-specific information.
-
-**CRITICAL CONSTRAINT: Each query must be under 400 characters (Tavily API limit).**
-
-Each query should be:
-- Concise but specific (50-150 characters ideal)
-- Include company name + relevant keywords
-- Target recent news/developments (use "{current_year}", "recent", "latest")
-- Use search-optimized language (avoid questions, use keywords)
-- Focus on ONE specific aspect per query
-
-Examples:
-- Good: "{context_name} {current_year} earnings revenue growth"
-- Bad: "What are the latest developments regarding {context_name}'s financial performance and growth prospects?"
-
-Generate 5-7 short, targeted search queries maximum."""
-
+            return CREATIVE_QUERY_GENERATION_PROMPT_COMPANY.format(
+                current_date=current_date,
+                current_year=current_year,
+                company_name=context_name,
+                business_areas=focus_areas,
+                analytical_framework=analytical_framework,
+                topics_summary=topics_summary,
+                previous_insights=previous_insights
+            )
         else:  # macro or political research
-            return f"""Macro Research Category: {context_name}
-Focus Areas: {focus_areas}
-
-Questions to research:
-{questions_text}
-
-Convert these questions into concise web search queries for MARKET-WIDE macro/political information.
-
-**CRITICAL CONSTRAINT: Each query must be under 400 characters (Tavily API limit).**
-
-Each query should be:
-- Concise but specific (50-150 characters ideal)
-- Focus on MARKET IMPLICATIONS and investor impact
-- Include time relevance: "{current_year}", "latest", "recent"
-- Use financial/economic terminology (Fed, rates, inflation, GDP, etc.)
-- NO company-specific focus - keep it market-wide
-- Target policy changes, economic data, analyst outlooks
-
-Examples:
-- Good: "Federal Reserve {current_year} interest rate policy market outlook"
-- Good: "inflation impact {current_year} equity markets investor strategy"
-- Bad: "What is the Federal Reserve doing about interest rates?"
-
-Generate 5-7 short, market-focused search queries maximum."""
+            return CREATIVE_QUERY_GENERATION_PROMPT_MACRO.format(
+                current_date=current_date,
+                current_year=current_year,
+                category_name=context_name,
+                focus_areas=focus_areas,
+                analytical_framework=analytical_framework,
+                topics_summary=topics_summary,
+                previous_insights=previous_insights
+            )
 
     async def generate_questions_from_topics(self, topics: List[Dict], context: ResearchContext, iteration: int) -> List[Question]:
         """Generate research questions from extracted topics"""
