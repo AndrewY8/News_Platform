@@ -39,6 +39,7 @@ export function NewspaperSection({
   const [localColumnSpan, setLocalColumnSpan] = useState(columnSpan)
   const [isResizingVertical, setIsResizingVertical] = useState(false)
   const [isResizingHorizontal, setIsResizingHorizontal] = useState(false)
+  const [resizeDirection, setResizeDirection] = useState<'left' | 'right'>('right')
   const resizeRef = useRef<HTMLDivElement>(null)
   const startXRef = useRef<number>(0)
   const startSpanRef = useRef<number>(columnSpan)
@@ -72,11 +73,22 @@ export function NewspaperSection({
     setIsResizingVertical(true)
   }
 
-  // Handle horizontal resize
+  // Handle horizontal resize from right
   const handleHorizontalMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsResizingHorizontal(true)
+    setResizeDirection('right')
+    startXRef.current = e.clientX
+    startSpanRef.current = localColumnSpan
+  }
+
+  // Handle horizontal resize from left
+  const handleLeftHorizontalMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizingHorizontal(true)
+    setResizeDirection('left')
     startXRef.current = e.clientX
     startSpanRef.current = localColumnSpan
   }
@@ -104,7 +116,10 @@ export function NewspaperSection({
         const columnWidth = parentWidth / 12 // 12-column grid
 
         // Calculate how many columns the delta represents
-        const columnDelta = Math.round(deltaX / columnWidth)
+        // When resizing from left, invert the delta (dragging left = bigger, dragging right = smaller)
+        const columnDelta = resizeDirection === 'left'
+          ? -Math.round(deltaX / columnWidth)
+          : Math.round(deltaX / columnWidth)
         const newSpan = Math.max(3, Math.min(12, startSpanRef.current + columnDelta))
 
         if (newSpan !== localColumnSpan) {
@@ -128,7 +143,7 @@ export function NewspaperSection({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizingVertical, isResizingHorizontal, localColumnSpan, onColumnSpanChange, section.section_id])
+  }, [isResizingVertical, isResizingHorizontal, localColumnSpan, onColumnSpanChange, section.section_id, resizeDirection])
 
   return (
     <section
@@ -228,25 +243,53 @@ export function NewspaperSection({
         <GripHorizontal className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
       </div>
 
-      {/* Horizontal Resize Handle (Right) */}
+      {/* Horizontal Resize Handle (Left) */}
       <div
-        onMouseDown={handleHorizontalMouseDown}
-        className={`absolute top-0 right-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
-          isResizingHorizontal ? 'bg-blue-200' : ''
+        onMouseDown={handleLeftHorizontalMouseDown}
+        className={`absolute top-0 left-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
+          isResizingHorizontal && resizeDirection === 'left' ? 'bg-blue-200' : ''
         }`}
       >
         <GripVertical className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
       </div>
 
-      {/* Corner Resize Handle (Bottom-Right) - for both directions */}
+      {/* Horizontal Resize Handle (Right) */}
+      <div
+        onMouseDown={handleHorizontalMouseDown}
+        className={`absolute top-0 right-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
+          isResizingHorizontal && resizeDirection === 'right' ? 'bg-blue-200' : ''
+        }`}
+      >
+        <GripVertical className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+      </div>
+
+      {/* Corner Resize Handle (Bottom-Left) */}
       <div
         onMouseDown={(e) => {
           e.preventDefault()
           setIsResizingVertical(true)
           setIsResizingHorizontal(true)
+          setResizeDirection('left')
+          startXRef.current = e.clientX
+          startSpanRef.current = localColumnSpan
+        }}
+        className={`absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize bg-gray-300 hover:bg-blue-400 transition-colors ${
+          isResizingVertical && isResizingHorizontal && resizeDirection === 'left' ? 'bg-blue-500' : ''
+        }`}
+      />
+
+      {/* Corner Resize Handle (Bottom-Right) */}
+      <div
+        onMouseDown={(e) => {
+          e.preventDefault()
+          setIsResizingVertical(true)
+          setIsResizingHorizontal(true)
+          setResizeDirection('right')
+          startXRef.current = e.clientX
+          startSpanRef.current = localColumnSpan
         }}
         className={`absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-gray-300 hover:bg-blue-400 transition-colors ${
-          isResizingVertical && isResizingHorizontal ? 'bg-blue-500' : ''
+          isResizingVertical && isResizingHorizontal && resizeDirection === 'right' ? 'bg-blue-500' : ''
         }`}
       />
     </section>
