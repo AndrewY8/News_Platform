@@ -797,7 +797,7 @@ const addTicker = async () => {
     <div className="min-h-screen font-sans" style={{ backgroundColor: '#FFFFFF' }}>
       {/* Fixed Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#FFFFFF' }}>
-        <div className="border-b border-gray-200 py-3 px-4 sm:px-6 lg:px-8">
+        <div className="border-b border-gray-200 py-3 px-2 sm:px-3 lg:px-4">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation Combined */}
             <div className="flex items-center gap-6">
@@ -947,7 +947,7 @@ const addTicker = async () => {
       {/* Main content area with proper spacing */}
       <div className="min-h-screen pt-[170px] sm:pt-[200px] lg:pt-[250px]">
         {/* Main Content - Full Width */}
-        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="px-2 sm:px-3 lg:px-4 max-w-[1600px] mx-auto">
           <div className="pt-2 pb-3 sm:pt-3 sm:pb-4 lg:pt-4 lg:pb-6">
             {/* Daily Planet has its own loading/data management */}
             {activeTab === 'daily-planet' ? (

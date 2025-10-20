@@ -477,7 +477,7 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
             strategy={rectSortingStrategy}
           >
             <div
-              className="grid gap-6"
+              className="grid gap-3"
               style={{
                 gridTemplateColumns: 'repeat(12, 1fr)',
                 gridAutoRows: 'min-content',
