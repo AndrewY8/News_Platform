@@ -949,7 +949,13 @@ const addTicker = async () => {
         {/* Main Content - Full Width */}
         <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="pt-2 pb-3 sm:pt-3 sm:pb-4 lg:pt-4 lg:pb-6">
-            {loading ? (
+            {/* Daily Planet has its own loading/data management */}
+            {activeTab === 'daily-planet' ? (
+              <DailyPlanetHub
+                userId="demo_user_1"
+                initialTickers={tickers}
+              />
+            ) : loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">Loading articles...</span>
@@ -989,12 +995,7 @@ const addTicker = async () => {
             ) : (
               <div className="w-full">
                 {/* Render based on active tab */}
-                {activeTab === 'daily-planet' ? (
-                  <DailyPlanetHub
-                    userId="demo_user_1"
-                    initialTickers={tickers}
-                  />
-                ) : activeTab === 'personalized' ? (
+                {activeTab === 'personalized' ? (
                   <>
                     {/* Market Overview and Headlines Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

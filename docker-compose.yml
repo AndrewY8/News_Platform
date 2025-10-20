@@ -13,8 +13,9 @@ services:
       # Browser needs to connect to localhost, not container name
       # NEXT_PUBLIC_ variables are exposed to the browser
       - NEXT_PUBLIC_API_URL=http://localhost:8000
-    depends_on:
-      - backend
+    # Comment out depends_on to allow frontend to run without backend
+    # depends_on:
+    #   - backend
     restart: unless-stopped
 
   backend:
