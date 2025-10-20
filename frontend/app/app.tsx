@@ -989,7 +989,7 @@ const addTicker = async () => {
                         </h2>
                       </div>
                       <div className="p-2 flex-1 overflow-y-auto">
-                        <StockGraphTicker tickers={tickers} />
+                        <StockGraphTicker tickers={['^GSPC', '^DJI', '^IXIC', '^RUT', '^VIX']} />
                       </div>
                     </div>
                   </div>
