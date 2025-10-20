@@ -10,6 +10,7 @@ interface ArticleCardProps {
   onRemove?: (articleId: string, reason: string) => void
   onRead?: (articleId: string, duration: number) => void
   showRemoveButton?: boolean
+  columnSpan?: number // For responsive hiding
 }
 
 export function ArticleCard({
@@ -18,6 +19,7 @@ export function ArticleCard({
   onRemove,
   onRead,
   showRemoveButton = true,
+  columnSpan = 6,
 }: ArticleCardProps) {
   const [showRemoveMenu, setShowRemoveMenu] = useState(false)
   const [readStartTime, setReadStartTime] = useState<number | null>(null)
@@ -79,49 +81,67 @@ export function ArticleCard({
   }
 
   if (variant === "compact") {
+    // Determine what to hide based on column span
+    // columnSpan: 3-4 = very small, 5-6 = small, 7+ = normal
+    const isVerySmall = columnSpan <= 4
+    const isSmall = columnSpan <= 6
+
     return (
       <div
         ref={cardRef}
         className="relative group hover:bg-gray-50 transition-colors"
       >
-        <div className="px-6 py-3 flex items-start gap-4">
-          {/* Time */}
-          <div className="flex-shrink-0 w-16 text-xs text-gray-500 pt-1">
-            {article.date}
-          </div>
+        <div className="px-4 py-3 flex items-start gap-3">
+          {/* Time - hide when very small */}
+          {!isVerySmall && (
+            <div className="flex-shrink-0 w-14 text-xs text-gray-500 pt-1">
+              {article.date}
+            </div>
+          )}
 
-          {/* Sentiment */}
-          <div className="flex-shrink-0 pt-1">
-            {getSentimentIcon()}
-          </div>
+          {/* Sentiment - hide when very small */}
+          {!isVerySmall && (
+            <div className="flex-shrink-0 pt-1">
+              {getSentimentIcon()}
+            </div>
+          )}
 
           {/* Content */}
           <div
-            className="flex-1 cursor-pointer"
+            className="flex-1 cursor-pointer min-w-0"
             onClick={handleArticleClick}
           >
-            <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1 hover:text-blue-600">
+            <h3 className={`font-semibold text-gray-900 leading-snug mb-1 hover:text-blue-600 ${
+              isVerySmall ? 'text-xs' : 'text-sm'
+            }`}>
               {article.title}
             </h3>
-            <p className="text-xs text-gray-600 line-clamp-1">
+            <p className={`text-gray-600 line-clamp-1 ${
+              isVerySmall ? 'text-xs' : 'text-xs'
+            }`}>
               {article.preview}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-500">{article.source}</span>
-              {article.relevance_score && article.relevance_score > 0.7 && (
-                <span className="text-xs text-blue-600 font-medium">
-                  {(article.relevance_score * 100).toFixed(0)}% relevant
-                </span>
-              )}
-            </div>
+            {!isSmall && (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-gray-500">{article.source}</span>
+                {article.relevance_score && article.relevance_score > 0.7 && (
+                  <span className="text-xs text-blue-600 font-medium">
+                    {(article.relevance_score * 100).toFixed(0)}% relevant
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Tags & Actions */}
-          <div className="flex-shrink-0 flex items-center gap-2">
-            {article.tags.slice(0, 3).map((tag, index) => (
+          {/* Tags & Actions - make smaller and stack when small */}
+          <div className={`flex-shrink-0 flex items-center gap-1.5 ${
+            isSmall ? 'flex-col' : 'flex-row'
+          }`}>
+            {!isVerySmall && article.tags.slice(0, isSmall ? 2 : 3).map((tag, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded font-mono"
+                className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-mono"
+                style={{ fontSize: '10px' }}
               >
                 {tag}
               </span>
@@ -134,10 +154,10 @@ export function ArticleCard({
                     e.stopPropagation()
                     setShowRemoveMenu(!showRemoveMenu)
                   }}
-                  className="p-1.5 hover:bg-red-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 hover:bg-red-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove article"
                 >
-                  <X className="w-4 h-4 text-red-600" />
+                  <X className="w-3 h-3 text-red-600" />
                 </button>
 
                 {showRemoveMenu && (

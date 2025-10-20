@@ -479,11 +479,6 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
           </p>
         </div>
 
-        {/* Hero Section */}
-        <div className="mb-8">
-          <HeroSection article={mockData.heroArticle} loading={false} />
-        </div>
-
         {/* Dynamic Sections - Flexible grid with DnD */}
         <DndContext
           sensors={sensors}

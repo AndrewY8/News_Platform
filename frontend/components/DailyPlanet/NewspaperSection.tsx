@@ -203,6 +203,7 @@ export function NewspaperSection({
               onRemove={onRemoveArticle}
               onRead={onReadArticle}
               showRemoveButton={true}
+              columnSpan={localColumnSpan}
             />
           ))
         )}
