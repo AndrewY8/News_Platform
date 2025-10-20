@@ -18,6 +18,8 @@ interface NewspaperSectionProps {
   onToggleVisibility?: (sectionId: string) => void
   onRemoveSection?: (sectionId: string) => void
   onConfigureSection?: (sectionId: string) => void
+  columnSpan?: number
+  onColumnSpanChange?: (sectionId: string, span: number) => void
 }
 
 export function NewspaperSection({
@@ -30,10 +32,16 @@ export function NewspaperSection({
   onToggleVisibility,
   onRemoveSection,
   onConfigureSection,
+  columnSpan = 6,
+  onColumnSpanChange,
 }: NewspaperSectionProps) {
   const [height, setHeight] = useState(400)
-  const [isResizing, setIsResizing] = useState(false)
+  const [localColumnSpan, setLocalColumnSpan] = useState(columnSpan)
+  const [isResizingVertical, setIsResizingVertical] = useState(false)
+  const [isResizingHorizontal, setIsResizingHorizontal] = useState(false)
   const resizeRef = useRef<HTMLDivElement>(null)
+  const startXRef = useRef<number>(0)
+  const startSpanRef = useRef<number>(columnSpan)
 
   const {
     attributes,
@@ -53,30 +61,65 @@ export function NewspaperSection({
   const visibleArticles = 3
   const hasMoreArticles = articles.length > visibleArticles
 
-  // Handle resize
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Update local span when prop changes
+  useEffect(() => {
+    setLocalColumnSpan(columnSpan)
+  }, [columnSpan])
+
+  // Handle vertical resize
+  const handleVerticalMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
-    setIsResizing(true)
+    setIsResizingVertical(true)
+  }
+
+  // Handle horizontal resize
+  const handleHorizontalMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizingHorizontal(true)
+    startXRef.current = e.clientX
+    startSpanRef.current = localColumnSpan
   }
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing || !resizeRef.current) return
+      if (!resizeRef.current) return
 
       const rect = resizeRef.current.getBoundingClientRect()
-      const newHeight = e.clientY - rect.top
+      const parentRect = resizeRef.current.parentElement?.getBoundingClientRect()
 
-      // Min height 200px, max height 1000px
-      if (newHeight >= 200 && newHeight <= 1000) {
-        setHeight(newHeight)
+      // Vertical resize
+      if (isResizingVertical) {
+        const newHeight = e.clientY - rect.top
+        // Min height 200px, max height 1000px
+        if (newHeight >= 200 && newHeight <= 1000) {
+          setHeight(newHeight)
+        }
+      }
+
+      // Horizontal resize - calculate column span change
+      if (isResizingHorizontal && parentRect && onColumnSpanChange) {
+        const deltaX = e.clientX - startXRef.current
+        const parentWidth = parentRect.width
+        const columnWidth = parentWidth / 12 // 12-column grid
+
+        // Calculate how many columns the delta represents
+        const columnDelta = Math.round(deltaX / columnWidth)
+        const newSpan = Math.max(3, Math.min(12, startSpanRef.current + columnDelta))
+
+        if (newSpan !== localColumnSpan) {
+          setLocalColumnSpan(newSpan)
+          onColumnSpanChange(section.section_id, newSpan)
+        }
       }
     }
 
     const handleMouseUp = () => {
-      setIsResizing(false)
+      setIsResizingVertical(false)
+      setIsResizingHorizontal(false)
     }
 
-    if (isResizing) {
+    if (isResizingVertical || isResizingHorizontal) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     }
@@ -85,7 +128,7 @@ export function NewspaperSection({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing])
+  }, [isResizingVertical, isResizingHorizontal, localColumnSpan, onColumnSpanChange, section.section_id])
 
   return (
     <section
@@ -98,6 +141,7 @@ export function NewspaperSection({
       style={{
         ...style,
         height: `${height}px`,
+        gridColumn: `span ${localColumnSpan}`,
       }}
       className="bg-white border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col relative"
     >
@@ -173,15 +217,37 @@ export function NewspaperSection({
         </div>
       )}
 
-      {/* Resize Handle */}
+      {/* Vertical Resize Handle (Bottom) */}
       <div
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleVerticalMouseDown}
         className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
-          isResizing ? 'bg-blue-200' : ''
+          isResizingVertical ? 'bg-blue-200' : ''
         }`}
       >
         <GripHorizontal className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
       </div>
+
+      {/* Horizontal Resize Handle (Right) */}
+      <div
+        onMouseDown={handleHorizontalMouseDown}
+        className={`absolute top-0 right-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
+          isResizingHorizontal ? 'bg-blue-200' : ''
+        }`}
+      >
+        <GripVertical className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+      </div>
+
+      {/* Corner Resize Handle (Bottom-Right) - for both directions */}
+      <div
+        onMouseDown={(e) => {
+          e.preventDefault()
+          setIsResizingVertical(true)
+          setIsResizingHorizontal(true)
+        }}
+        className={`absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-gray-300 hover:bg-blue-400 transition-colors ${
+          isResizingVertical && isResizingHorizontal ? 'bg-blue-500' : ''
+        }`}
+      />
     </section>
   )
 }

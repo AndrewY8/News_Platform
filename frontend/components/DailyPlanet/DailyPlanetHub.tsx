@@ -18,6 +18,21 @@ import {
   ContentExclusion,
 } from "@/types/dailyplanet"
 import { mockData } from "@/lib/mockDailyPlanetData"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable"
 
 interface DailyPlanetHubProps {
   userId?: string
@@ -90,6 +105,19 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
+  const [columnSpans, setColumnSpans] = useState<Map<string, number>>(new Map())
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Initial data fetch
   useEffect(() => {
@@ -223,6 +251,97 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
     }
   }
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = state.sections.findIndex((s) => s.section_id === active.id)
+      const newIndex = state.sections.findIndex((s) => s.section_id === over.id)
+
+      const reorderedSections = arrayMove(state.sections, oldIndex, newIndex).map(
+        (section, index) => ({
+          ...section,
+          display_order: index,
+        })
+      )
+
+      dispatch({ type: "REORDER_SECTIONS", payload: reorderedSections })
+
+      try {
+        await ApiService.updateDailyPlanetSections(reorderedSections)
+        console.log("✅ Section order saved")
+      } catch (error) {
+        console.log("⚠️ Backend not available - order saved locally only")
+        // Don't revert - keep the new order
+      }
+    }
+  }
+
+  const handleColumnSpanChange = (sectionId: string, newSpan: number) => {
+    const visibleSections = state.sections
+      .filter(section => section.is_visible)
+      .sort((a, b) => a.display_order - b.display_order)
+
+    const sectionIndex = visibleSections.findIndex(s => s.section_id === sectionId)
+    if (sectionIndex === -1) return
+
+    // Calculate which row this section is in
+    let currentRow = 0
+    let currentRowSpan = 0
+    let rowStartIndex = 0
+
+    for (let i = 0; i <= sectionIndex; i++) {
+      const span = columnSpans.get(visibleSections[i].section_id) || 6
+      if (currentRowSpan + span > 12) {
+        // New row
+        currentRow++
+        currentRowSpan = span
+        rowStartIndex = i
+      } else {
+        currentRowSpan += span
+      }
+    }
+
+    // Find all sections in the same row
+    const sectionsInRow: string[] = []
+    let rowSpan = 0
+    for (let i = rowStartIndex; i < visibleSections.length; i++) {
+      const span = columnSpans.get(visibleSections[i].section_id) || 6
+      if (rowSpan + span > 12) break
+      sectionsInRow.push(visibleSections[i].section_id)
+      rowSpan += span
+    }
+
+    // If there's only one section in the row, allow resize without adjustment
+    if (sectionsInRow.length === 1) {
+      setColumnSpans(prev => new Map(prev).set(sectionId, newSpan))
+      return
+    }
+
+    // Find adjacent section to adjust
+    const sectionIndexInRow = sectionsInRow.indexOf(sectionId)
+    const adjacentIndex = sectionIndexInRow === 0 ? 1 : sectionIndexInRow - 1
+    const adjacentSectionId = sectionsInRow[adjacentIndex]
+
+    if (!adjacentSectionId) {
+      setColumnSpans(prev => new Map(prev).set(sectionId, newSpan))
+      return
+    }
+
+    const oldSpan = columnSpans.get(sectionId) || 6
+    const spanChange = newSpan - oldSpan
+    const adjacentOldSpan = columnSpans.get(adjacentSectionId) || 6
+    const adjacentNewSpan = Math.max(3, Math.min(12, adjacentOldSpan - spanChange))
+
+    // Update both spans
+    setColumnSpans(prev => {
+      const updated = new Map(prev)
+      updated.set(sectionId, newSpan)
+      updated.set(adjacentSectionId, adjacentNewSpan)
+      return updated
+    })
+  }
+
   if (state.loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -354,48 +473,57 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
 
       {/* Main Content */}
       <div className="w-full">
-        {state.editMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-blue-900 font-medium">
-              Edit Mode: Drag sections to reorder, click to edit, or remove sections you don't want.
-            </p>
-          </div>
-        )}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-900 font-medium">
+            💡 Drag sections to reorder • Resize by dragging edges • Scroll within sections for more articles
+          </p>
+        </div>
 
         {/* Hero Section */}
         <div className="mb-8">
           <HeroSection article={mockData.heroArticle} loading={false} />
         </div>
 
-        {/* Dynamic Sections */}
-        <div
-          className={`grid gap-8 ${
-            state.preferences?.layout_density === 1
-              ? 'grid-cols-1'
-              : state.preferences?.layout_density === 3
-              ? 'grid-cols-3'
-              : 'grid-cols-2'
-          }`}
+        {/* Dynamic Sections - Flexible grid with DnD */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          {state.sections
-            .filter(section => section.is_visible)
-            .sort((a, b) => a.display_order - b.display_order)
-            .map((section) => {
-              const sectionContent = state.sectionContent.get(section.section_id)
+          <SortableContext
+            items={state.sections.filter(s => s.is_visible).map(s => s.section_id)}
+            strategy={rectSortingStrategy}
+          >
+            <div
+              className="grid gap-6"
+              style={{
+                gridTemplateColumns: 'repeat(12, 1fr)',
+                gridAutoRows: 'min-content',
+              }}
+            >
+              {state.sections
+                .filter(section => section.is_visible)
+                .sort((a, b) => a.display_order - b.display_order)
+                .map((section) => {
+                  const sectionContent = state.sectionContent.get(section.section_id)
 
-              return (
-                <NewspaperSection
-                  key={section.section_id}
-                  section={section}
-                  articles={sectionContent?.articles || []}
-                  loading={sectionContent?.loading || false}
-                  onRemoveArticle={handleArticleRemove}
-                  onReadArticle={handleArticleRead}
-                  editMode={state.editMode}
-                />
-              )
-            })}
-        </div>
+                  return (
+                    <NewspaperSection
+                      key={section.section_id}
+                      section={section}
+                      articles={sectionContent?.articles || []}
+                      loading={sectionContent?.loading || false}
+                      onRemoveArticle={handleArticleRemove}
+                      onReadArticle={handleArticleRead}
+                      editMode={state.editMode}
+                      columnSpan={columnSpans.get(section.section_id) || 6}
+                      onColumnSpanChange={handleColumnSpanChange}
+                    />
+                  )
+                })}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* Empty State */}
         {state.sections.filter(s => s.is_visible).length === 0 && (
