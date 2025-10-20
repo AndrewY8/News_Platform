@@ -141,51 +141,42 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
   return (
     <>
-      <div className="bg-white border-b border-gray-300 relative group">
-        {/* Left Scroll Button */}
-        <button
-          onClick={() => scroll('left')}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow"
-        >
-          <ChevronLeft className="w-3 h-3 text-gray-700" />
-        </button>
-
+      <div className="bg-white border-b border-gray-300">
         {/* Scrollable Container */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto overflow-y-hidden scrollbar-hide py-2 px-3"
+          className="overflow-x-auto overflow-y-hidden scrollbar-hide py-3 px-2"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          <div className="flex gap-2 min-w-max">
+          <div className="flex flex-col gap-3">
             {tickerDataWithCharts.map((item) => (
               <div
                 key={item.stock.symbol}
                 onClick={() => setSelectedStock(item)}
-                className="flex-shrink-0 bg-gray-50 border border-gray-300 p-2 hover:bg-gray-100 transition-colors cursor-pointer group/card relative shadow-sm"
-                style={{ width: '200px' }}
+                className="bg-gray-50 border border-gray-300 p-3 hover:bg-gray-100 transition-colors cursor-pointer group/card relative shadow-sm"
               >
                 {/* Magnify icon on hover */}
-                <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
                   <Maximize2 className="w-3 h-3 text-gray-600" />
                 </div>
 
                 {/* Header: Symbol, Price, Change */}
-                <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-3">
                   <div>
                     <div
-                      className="font-black text-sm uppercase tracking-wide text-black"
+                      className="font-black text-base uppercase tracking-wide text-black"
                       style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
                     >
                       {item.stock.symbol}
                     </div>
                     <div
-                      className="text-lg font-semibold text-gray-900"
+                      className="text-xl font-semibold text-gray-900"
                       style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
                     >
                       ${item.stock.price.toFixed(2)}
                     </div>
                   </div>
-                  <div className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 ${
+                  <div className={`flex items-center gap-0.5 text-xs font-medium px-2 py-1 ${
                     item.stock.changePercent >= 0
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
@@ -201,7 +192,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
                 {/* Daily Return Chart */}
                 {item.chartData && item.chartData.data.length > 0 && (
-                  <div className="h-12 w-full bg-white border border-gray-200 p-1 relative">
+                  <div className="h-20 w-full bg-white border border-gray-200 p-2 relative">
                     <DailyReturnChart
                       data={item.chartData.data}
                       isPositive={item.stock.changePercent >= 0}
@@ -213,14 +204,6 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
             ))}
           </div>
         </div>
-
-        {/* Right Scroll Button */}
-        <button
-          onClick={() => scroll('right')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow"
-        >
-          <ChevronRight className="w-3 h-3 text-gray-700" />
-        </button>
 
         {/* CSS for hiding scrollbar */}
         <style jsx>{`
