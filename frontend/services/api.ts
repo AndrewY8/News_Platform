@@ -950,4 +950,263 @@ export class ApiService {
       }
     }
   }
+
+  // ===========================
+  // Daily Planet API Methods
+  // ===========================
+
+  // User Preferences
+  static async getDailyPlanetPreferences(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/preferences`)
+      if (!response.ok) throw new Error(`Failed to fetch preferences: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching Daily Planet preferences:', error)
+      throw error
+    }
+  }
+
+  static async updateDailyPlanetPreferences(preferences: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preferences)
+      })
+      if (!response.ok) throw new Error(`Failed to update preferences: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error updating Daily Planet preferences:', error)
+      throw error
+    }
+  }
+
+  // Topics
+  static async getDailyPlanetTopics(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/topics`)
+      if (!response.ok) throw new Error(`Failed to fetch topics: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching Daily Planet topics:', error)
+      throw error
+    }
+  }
+
+  static async addDailyPlanetTopic(topic: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/topics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(topic)
+      })
+      if (!response.ok) throw new Error(`Failed to add topic: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error adding Daily Planet topic:', error)
+      throw error
+    }
+  }
+
+  static async updateDailyPlanetTopic(topicId: string, update: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/topics/${topicId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update)
+      })
+      if (!response.ok) throw new Error(`Failed to update topic: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error updating Daily Planet topic:', error)
+      throw error
+    }
+  }
+
+  static async deleteDailyPlanetTopic(topicId: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/topics/${topicId}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error(`Failed to delete topic: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error deleting Daily Planet topic:', error)
+      throw error
+    }
+  }
+
+  // Layout Sections
+  static async getDailyPlanetSections(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/layout/sections`)
+      if (!response.ok) throw new Error(`Failed to fetch sections: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching Daily Planet sections:', error)
+      throw error
+    }
+  }
+
+  static async createDailyPlanetSection(section: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/layout/sections`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(section)
+      })
+      if (!response.ok) throw new Error(`Failed to create section: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error creating Daily Planet section:', error)
+      throw error
+    }
+  }
+
+  static async updateDailyPlanetSection(sectionId: string, update: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/layout/sections/${sectionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update)
+      })
+      if (!response.ok) throw new Error(`Failed to update section: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error updating Daily Planet section:', error)
+      throw error
+    }
+  }
+
+  static async reorderDailyPlanetSections(sectionOrders: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/layout/sections/reorder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section_orders: sectionOrders })
+      })
+      if (!response.ok) throw new Error(`Failed to reorder sections: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error reordering Daily Planet sections:', error)
+      throw error
+    }
+  }
+
+  static async deleteDailyPlanetSection(sectionId: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/layout/sections/${sectionId}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error(`Failed to delete section: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error deleting Daily Planet section:', error)
+      throw error
+    }
+  }
+
+  // Exclusions
+  static async getDailyPlanetExclusions(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/exclusions`)
+      if (!response.ok) throw new Error(`Failed to fetch exclusions: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching Daily Planet exclusions:', error)
+      throw error
+    }
+  }
+
+  static async addDailyPlanetExclusion(exclusion: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/exclusions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exclusion)
+      })
+      if (!response.ok) throw new Error(`Failed to add exclusion: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error adding Daily Planet exclusion:', error)
+      throw error
+    }
+  }
+
+  static async deleteDailyPlanetExclusion(exclusionId: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/exclusions/${exclusionId}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error(`Failed to delete exclusion: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error deleting Daily Planet exclusion:', error)
+      throw error
+    }
+  }
+
+  // Article Interactions
+  static async trackArticleRemoval(articleId: string, removalData: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/articles/${articleId}/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(removalData)
+      })
+      if (!response.ok) throw new Error(`Failed to track removal: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error tracking article removal:', error)
+      throw error
+    }
+  }
+
+  static async trackArticleRead(articleId: string, readData: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/articles/${articleId}/track-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(readData)
+      })
+      if (!response.ok) throw new Error(`Failed to track read: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error tracking article read:', error)
+      throw error
+    }
+  }
+
+  // Onboarding
+  static async completeDailyPlanetOnboarding(onboardingData: any): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/onboarding/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(onboardingData)
+      })
+      if (!response.ok) throw new Error(`Failed to complete onboarding: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error completing Daily Planet onboarding:', error)
+      throw error
+    }
+  }
+
+  // Natural Language Preferences
+  static async submitNaturalLanguagePreference(message: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/daily-planet/preferences/natural-language`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      })
+      if (!response.ok) throw new Error(`Failed to process natural language preference: ${response.status}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error submitting natural language preference:', error)
+      throw error
+    }
+  }
 }

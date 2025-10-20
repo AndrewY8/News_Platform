@@ -9,11 +9,12 @@ import { ApiService, NewsArticle, ChatMessage, SearchQuery } from "@/services/ap
 import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinance"
 import { StockChart } from "@/components/StockChart"
 import { StockGraphTicker } from "@/components/StockGraphTicker"
+import { DailyPlanetHub } from "@/components/DailyPlanet"
 
 export default function HavenNewsApp() {
   const router = useRouter()
   const pathname = usePathname()
-  const [activeTab, setActiveTab] = useState("personalized")
+  const [activeTab, setActiveTab] = useState("daily-planet")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTimePeriod, setSelectedTimePeriod] = useState("1D")
   const [tickers, setTickers] = useState<string[]>([])
@@ -73,6 +74,7 @@ export default function HavenNewsApp() {
   const [cachedPersonalized, setCachedPersonalized] = useState<NewsArticle[]>([])
 
   const tabs = [
+    { id: "daily-planet", label: "The Daily Planet", icon: Rss, href: "/daily-planet" },
     { id: "personalized", label: "Personalized feed", icon: User, href: "/personalized-news" },
     { id: "business-news", label: "Business News", icon: Building, href: "#", hasDropdown: true },
     { id: "sec-docs", label: "SEC Doc Searcher", icon: Search, href: "/sec-docs" },
@@ -80,18 +82,12 @@ export default function HavenNewsApp() {
 
   const timePeriods = ["1D", "1W", "1M", "3M", "1Y"]
 
-  // Set active tab based on current pathname
+  // Set active tab based on current pathname (only on initial load)
   useEffect(() => {
-    const pathToTab = {
-      '/': 'personalized',
-      '/personalized-news': 'personalized',
-      '/portfolio': 'portfolio',
-      '/saved-news': 'saved',
-      '/sec-docs': 'sec-docs'
+    if (pathname === '/') {
+      setActiveTab('daily-planet')
     }
-    const currentTab = pathToTab[pathname as keyof typeof pathToTab] || 'personalized'
-    setActiveTab(currentTab)
-  }, [pathname])
+  }, [])
 
   // Initialize app with data
 const hasInitialized = useRef(false)
@@ -916,8 +912,12 @@ const addTicker = async () => {
                   <Button
                     key={tab.id}
                     variant="ghost"
-                    className="flex items-center gap-1 px-3 py-1 text-sm tracking-wide whitespace-nowrap text-gray-700 hover:bg-white/50"
-                    onClick={() => router.push(tab.href)}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm tracking-wide whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'text-blue-700 bg-blue-50 font-medium'
+                        : 'text-gray-700 hover:bg-white/50'
+                    }`}
+                    onClick={() => setActiveTab(tab.id)}
                   >
                     {tab.label}
                   </Button>
@@ -989,7 +989,12 @@ const addTicker = async () => {
             ) : (
               <div className="w-full">
                 {/* Render based on active tab */}
-                {activeTab === 'personalized' ? (
+                {activeTab === 'daily-planet' ? (
+                  <DailyPlanetHub
+                    userId="demo_user_1"
+                    initialTickers={tickers}
+                  />
+                ) : activeTab === 'personalized' ? (
                   <>
                     {/* Market Overview and Headlines Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
