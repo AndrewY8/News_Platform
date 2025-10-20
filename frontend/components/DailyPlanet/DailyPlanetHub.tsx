@@ -464,13 +464,6 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
         </div>
       </div>
 
-      {/* Market Snapshot */}
-      {state.preferences?.show_market_snapshot && (
-        <div className="mb-6">
-          <MarketSnapshot tickers={initialTickers} compact={false} />
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="w-full">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
