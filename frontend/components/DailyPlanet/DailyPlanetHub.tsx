@@ -263,9 +263,9 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
 
       {/* Customize Panel */}
       {showCustomize && state.preferences && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-end">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-end">
           <div className="bg-white h-full w-full max-w-2xl shadow-2xl overflow-y-auto">
-            <div className="p-6 border-b bg-white sticky top-0 z-10">
+            <div className="p-6 border-b bg-white sticky top-0 z-[10000]">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Customize Your Daily Planet</h2>
                 <button
