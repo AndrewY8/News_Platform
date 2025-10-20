@@ -125,29 +125,29 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 text-white py-2 flex items-center justify-center">
-        <div className="animate-pulse text-xs">Loading market data...</div>
+      <div className="bg-white border-b border-gray-300 py-2 flex items-center justify-center">
+        <div className="animate-pulse text-xs text-gray-700">Loading market data...</div>
       </div>
     )
   }
 
   if (tickerDataWithCharts.length === 0) {
     return (
-      <div className="bg-gray-900 text-white py-2 flex items-center justify-center">
-        <div className="text-xs text-gray-400">Add tickers to see live market data</div>
+      <div className="bg-white border-b border-gray-300 py-2 flex items-center justify-center">
+        <div className="text-xs text-gray-500">Add tickers to see live market data</div>
       </div>
     )
   }
 
   return (
     <>
-      <div className="bg-gray-900 text-white relative group">
+      <div className="bg-white border-b border-gray-300 relative group">
         {/* Left Scroll Button */}
         <button
           onClick={() => scroll('left')}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 hover:bg-gray-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow"
         >
-          <ChevronLeft className="w-3 h-3" />
+          <ChevronLeft className="w-3 h-3 text-gray-700" />
         </button>
 
         {/* Scrollable Container */}
@@ -161,26 +161,34 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               <div
                 key={item.stock.symbol}
                 onClick={() => setSelectedStock(item)}
-                className="flex-shrink-0 bg-gray-800 rounded-lg p-2 hover:bg-gray-750 transition-colors cursor-pointer group/card relative shadow-lg"
+                className="flex-shrink-0 bg-gray-50 border border-gray-300 p-2 hover:bg-gray-100 transition-colors cursor-pointer group/card relative shadow-sm"
                 style={{ width: '200px' }}
               >
                 {/* Magnify icon on hover */}
                 <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                  <Maximize2 className="w-3 h-3 text-gray-400" />
+                  <Maximize2 className="w-3 h-3 text-gray-600" />
                 </div>
 
                 {/* Header: Symbol, Price, Change */}
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-bold text-sm">{item.stock.symbol}</div>
-                    <div className="text-lg font-semibold text-white">
+                    <div
+                      className="font-black text-sm uppercase tracking-wide text-black"
+                      style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                    >
+                      {item.stock.symbol}
+                    </div>
+                    <div
+                      className="text-lg font-semibold text-gray-900"
+                      style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                    >
                       ${item.stock.price.toFixed(2)}
                     </div>
                   </div>
-                  <div className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded ${
+                  <div className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 ${
                     item.stock.changePercent >= 0
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-red-500/20 text-red-400"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
                   }`}>
                     {item.stock.changePercent >= 0 ? (
                       <TrendingUp className="w-3 h-3" />
@@ -193,7 +201,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
                 {/* Daily Return Chart */}
                 {item.chartData && item.chartData.data.length > 0 && (
-                  <div className="h-12 w-full bg-gray-900 rounded p-1 relative">
+                  <div className="h-12 w-full bg-white border border-gray-200 p-1 relative">
                     <DailyReturnChart
                       data={item.chartData.data}
                       isPositive={item.stock.changePercent >= 0}
@@ -209,9 +217,9 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
         {/* Right Scroll Button */}
         <button
           onClick={() => scroll('right')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 hover:bg-gray-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow"
         >
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-3 h-3 text-gray-700" />
         </button>
 
         {/* CSS for hiding scrollbar */}
@@ -225,33 +233,41 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
       {/* Magnified Modal View */}
       {selectedStock && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
           onClick={() => setSelectedStock(null)}
         >
           <div
-            className="bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white border-2 border-gray-300 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setSelectedStock(null)}
-              className="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-colors"
+              className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 border border-gray-300 p-2 transition-colors"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 text-gray-700" />
             </button>
 
             {/* Header: Symbol, Price, Change */}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <div className="font-bold text-3xl text-white">{selectedStock.stock.symbol}</div>
-                <div className="text-5xl font-semibold text-white mt-2">
+                <div
+                  className="font-black text-3xl text-black uppercase tracking-wide"
+                  style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                >
+                  {selectedStock.stock.symbol}
+                </div>
+                <div
+                  className="text-5xl font-semibold text-gray-900 mt-2"
+                  style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                >
                   ${selectedStock.stock.price.toFixed(2)}
                 </div>
               </div>
-              <div className={`flex items-center gap-2 text-xl font-medium px-4 py-2 rounded-lg ${
+              <div className={`flex items-center gap-2 text-xl font-medium px-4 py-2 ${
                 (timeFramePriceChange?.changePercent ?? selectedStock.stock.changePercent) >= 0
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-red-500/20 text-red-400"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
               }`}>
                 {(timeFramePriceChange?.changePercent ?? selectedStock.stock.changePercent) >= 0 ? (
                   <TrendingUp className="w-6 h-6" />
@@ -275,11 +291,12 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                 <button
                   key={tf}
                   onClick={() => setSelectedTimeFrame(tf)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-colors border ${
                     selectedTimeFrame === tf
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      ? 'bg-gray-900 text-white border-black'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   }`}
+                  style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
                 >
                   {tf}
                 </button>
@@ -288,11 +305,11 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
             {/* Large Chart with article markers */}
             {loadingTimeFrame ? (
-              <div className="bg-gray-900 rounded-lg p-4 mb-6 h-80 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="bg-gray-50 border border-gray-300 p-4 mb-6 h-80 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : timeFrameChartData && timeFrameChartData.data.length > 0 ? (
-              <div className="bg-gray-900 rounded-lg p-4 mb-6">
+              <div className="bg-white border border-gray-300 p-4 mb-6">
                 <InteractiveChart
                   data={timeFrameChartData.data}
                   isPositive={(timeFramePriceChange?.changePercent ?? 0) >= 0}
@@ -305,59 +322,62 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                 />
               </div>
             ) : (
-              <div className="bg-gray-900 rounded-lg p-4 mb-6 h-80 flex items-center justify-center text-gray-400">
+              <div className="bg-gray-50 border border-gray-300 p-4 mb-6 h-80 flex items-center justify-center text-gray-600">
                 No chart data available
               </div>
             )}
 
             {/* Detailed Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white mb-6">
-              <div className="bg-gray-900 rounded-lg p-3">
-                <div className="text-gray-400 text-sm">Open</div>
-                <div className="text-xl font-semibold mt-1">${selectedStock.stock.open.toFixed(2)}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 border border-gray-300 p-3">
+                <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Open</div>
+                <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${selectedStock.stock.open.toFixed(2)}</div>
               </div>
-              <div className="bg-gray-900 rounded-lg p-3">
-                <div className="text-gray-400 text-sm">High</div>
-                <div className="text-xl font-semibold mt-1 text-green-400">${selectedStock.stock.high.toFixed(2)}</div>
+              <div className="bg-gray-50 border border-gray-300 p-3">
+                <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>High</div>
+                <div className="text-xl font-semibold mt-1 text-green-700" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${selectedStock.stock.high.toFixed(2)}</div>
               </div>
-              <div className="bg-gray-900 rounded-lg p-3">
-                <div className="text-gray-400 text-sm">Low</div>
-                <div className="text-xl font-semibold mt-1 text-red-400">${selectedStock.stock.low.toFixed(2)}</div>
+              <div className="bg-gray-50 border border-gray-300 p-3">
+                <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Low</div>
+                <div className="text-xl font-semibold mt-1 text-red-700" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${selectedStock.stock.low.toFixed(2)}</div>
               </div>
-              <div className="bg-gray-900 rounded-lg p-3">
-                <div className="text-gray-400 text-sm">Prev Close</div>
-                <div className="text-xl font-semibold mt-1">${selectedStock.stock.previousClose.toFixed(2)}</div>
+              <div className="bg-gray-50 border border-gray-300 p-3">
+                <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Prev Close</div>
+                <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${selectedStock.stock.previousClose.toFixed(2)}</div>
               </div>
               {selectedStock.stock.volume && (
-                <div className="bg-gray-900 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">Volume</div>
-                  <div className="text-xl font-semibold mt-1">{(selectedStock.stock.volume / 1000000).toFixed(2)}M</div>
+                <div className="bg-gray-50 border border-gray-300 p-3">
+                  <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Volume</div>
+                  <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>{(selectedStock.stock.volume / 1000000).toFixed(2)}M</div>
                 </div>
               )}
               {selectedStock.stock.marketCap && (
-                <div className="bg-gray-900 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">Market Cap</div>
-                  <div className="text-xl font-semibold mt-1">${(selectedStock.stock.marketCap / 1000000000).toFixed(2)}B</div>
+                <div className="bg-gray-50 border border-gray-300 p-3">
+                  <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Market Cap</div>
+                  <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${(selectedStock.stock.marketCap / 1000000000).toFixed(2)}B</div>
                 </div>
               )}
               {selectedStock.stock.pe && (
-                <div className="bg-gray-900 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">P/E Ratio</div>
-                  <div className="text-xl font-semibold mt-1">{selectedStock.stock.pe.toFixed(2)}</div>
+                <div className="bg-gray-50 border border-gray-300 p-3">
+                  <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>P/E Ratio</div>
+                  <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>{selectedStock.stock.pe.toFixed(2)}</div>
                 </div>
               )}
               {selectedStock.stock.dividend && (
-                <div className="bg-gray-900 rounded-lg p-3">
-                  <div className="text-gray-400 text-sm">Dividend</div>
-                  <div className="text-xl font-semibold mt-1">${selectedStock.stock.dividend.toFixed(2)}</div>
+                <div className="bg-gray-50 border border-gray-300 p-3">
+                  <div className="text-gray-600 text-sm uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontSize: '11px' }}>Dividend</div>
+                  <div className="text-xl font-semibold mt-1 text-gray-900" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>${selectedStock.stock.dividend.toFixed(2)}</div>
                 </div>
               )}
             </div>
 
             {/* Related Articles Section */}
             {selectedStock.articles.length > 0 && (
-              <div ref={articlesListRef} className="border-t border-gray-700 pt-6">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <div ref={articlesListRef} className="border-t-2 border-black pt-6">
+                <h3
+                  className="text-xl font-black text-black mb-4 flex items-center gap-2 uppercase tracking-wide"
+                  style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                >
                   <FileText className="w-5 h-5" />
                   Related Articles ({selectedStock.articles.length})
                 </h3>
@@ -368,31 +388,34 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block bg-gray-900 hover:bg-gray-750 rounded-lg p-4 transition-colors group"
+                      className="block bg-gray-50 hover:bg-gray-100 border border-gray-300 p-4 transition-colors group"
                     >
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <h4 className="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">
+                          <h4
+                            className="text-gray-900 font-semibold mb-1 group-hover:text-blue-700 transition-colors"
+                            style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+                          >
                             {article.title}
                           </h4>
-                          <p className="text-gray-400 text-sm line-clamp-2 mb-2">
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-2">
                             {article.preview}
                           </p>
                           <div className="flex items-center gap-3 text-xs">
                             <span className="text-gray-500">{article.source}</span>
                             <span className="text-gray-500">{article.date}</span>
                             {article.sentiment && (
-                              <span className={`px-2 py-0.5 rounded-full ${
-                                article.sentiment === 'positive' ? 'bg-green-500/20 text-green-400' :
-                                article.sentiment === 'negative' ? 'bg-red-500/20 text-red-400' :
-                                'bg-gray-500/20 text-gray-400'
+                              <span className={`px-2 py-0.5 ${
+                                article.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                article.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-200 text-gray-700'
                               }`}>
                                 {article.sentiment}
                               </span>
                             )}
                           </div>
                         </div>
-                        <ExternalLink className="w-4 h-4 text-gray-500 flex-shrink-0 group-hover:text-blue-400 transition-colors" />
+                        <ExternalLink className="w-4 h-4 text-gray-500 flex-shrink-0 group-hover:text-blue-600 transition-colors" />
                       </div>
                     </a>
                   ))}
@@ -406,34 +429,39 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
       {/* Article Preview Popup */}
       {selectedArticle && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
           onClick={() => setSelectedArticle(null)}
         >
           <div
-            className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full shadow-2xl"
+            className="bg-white border-2 border-gray-300 p-6 max-w-2xl w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-2xl font-bold text-white pr-8">{selectedArticle.title}</h3>
+              <h3
+                className="text-2xl font-bold text-gray-900 pr-8"
+                style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+              >
+                {selectedArticle.title}
+              </h3>
               <button
                 onClick={() => setSelectedArticle(null)}
-                className="bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-colors flex-shrink-0"
+                className="bg-gray-100 hover:bg-gray-200 border border-gray-300 p-2 transition-colors flex-shrink-0"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
             <div className="flex items-center gap-3 text-sm mb-4">
-              <span className="text-gray-400">{selectedArticle.source}</span>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-400">{selectedArticle.date}</span>
+              <span className="text-gray-600">{selectedArticle.source}</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600">{selectedArticle.date}</span>
               {selectedArticle.sentiment && (
                 <>
-                  <span className="text-gray-500">•</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedArticle.sentiment === 'positive' ? 'bg-green-500/20 text-green-400' :
-                    selectedArticle.sentiment === 'negative' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
+                  <span className="text-gray-400">•</span>
+                  <span className={`px-2 py-0.5 text-xs ${
+                    selectedArticle.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                    selectedArticle.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                    'bg-gray-200 text-gray-700'
                   }`}>
                     {selectedArticle.sentiment}
                   </span>
@@ -441,7 +469,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               )}
             </div>
 
-            <p className="text-gray-300 mb-6 leading-relaxed">
+            <p className="text-gray-700 mb-6 leading-relaxed">
               {selectedArticle.preview}
             </p>
 
@@ -449,7 +477,8 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               href={selectedArticle.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 border border-black transition-colors font-medium"
+              style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
             >
               Read Full Article
               <ExternalLink className="w-4 h-4" />

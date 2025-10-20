@@ -935,6 +935,22 @@ const addTicker = async () => {
             >
               <BarChart3 className="h-5 w-5" />
             </Button>
+
+            {/* Customize button - only show on Daily Planet */}
+            {activeTab === 'daily-planet' && (
+              <button
+                onClick={() => {
+                  // We'll need to access the Daily Planet's customize function
+                  // For now, we'll add this functionality
+                  const event = new CustomEvent('openDailyPlanetCustomize')
+                  window.dispatchEvent(event)
+                }}
+                className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-2 text-sm"
+              >
+                <Settings className="w-4 h-4" />
+                Customize
+              </button>
+            )}
           </div>
         </div>
 
@@ -953,7 +969,7 @@ const addTicker = async () => {
           <div className="pt-2 pb-3 sm:pt-3 sm:pb-4 lg:pt-4 lg:pb-6">
             {/* Daily Planet has its own loading/data management */}
             {activeTab === 'daily-planet' ? (
-              <div className="flex gap-4">
+              <div className="flex gap-4 relative">
                 {/* Main Content - 4/5 width */}
                 <div className="flex-1" style={{ width: '80%' }}>
                   <DailyPlanetHub
@@ -962,17 +978,17 @@ const addTicker = async () => {
                   />
                 </div>
 
-                {/* Market Sidebar - 1/5 width */}
+                {/* Market Sidebar - 1/5 width - Full height */}
                 <div className="w-1/5 min-w-[250px]">
-                  <div className="sticky top-[80px] space-y-4">
+                  <div className="fixed top-[80px] bottom-0 w-[20%] min-w-[250px] overflow-y-auto">
                     {/* Market Charts Section */}
-                    <div className="border border-gray-300 bg-white">
-                      <div className="border-b-2 border-black bg-gray-50 px-3 py-2">
+                    <div className="border border-gray-300 bg-white h-full flex flex-col">
+                      <div className="border-b-2 border-black bg-gray-50 px-3 py-2 flex-shrink-0">
                         <h2 className="text-sm font-black text-black uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>
                           Markets
                         </h2>
                       </div>
-                      <div className="p-2">
+                      <div className="p-2 flex-1 overflow-y-auto">
                         <StockGraphTicker tickers={tickers} />
                       </div>
                     </div>

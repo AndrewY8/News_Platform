@@ -124,6 +124,17 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
     loadUserData()
   }, [])
 
+  // Listen for customize event from header
+  useEffect(() => {
+    const handleCustomizeEvent = () => {
+      setShowCustomize(true)
+    }
+    window.addEventListener('openDailyPlanetCustomize', handleCustomizeEvent)
+    return () => {
+      window.removeEventListener('openDailyPlanetCustomize', handleCustomizeEvent)
+    }
+  }, [])
+
   const loadUserData = async () => {
     try {
       dispatch({ type: "SET_LOADING", payload: true })
@@ -424,37 +435,33 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'serif' }}>
-              The Daily Planet
-            </h1>
-            <p className="text-sm text-gray-600">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowCustomize(true)}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm"
-            >
-              <Settings className="w-4 h-4" />
-              Customize
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="w-full">
+        {/* Page Header */}
+        <div className="mb-6 pb-4 border-b-4 border-black">
+          <div className="flex items-end justify-between">
+            <h1
+              className="text-6xl font-black tracking-tight text-black"
+              style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+            >
+              The Daily Planet
+            </h1>
+            <div className="text-right">
+              <div
+                className="text-sm text-gray-600 uppercase tracking-wide"
+                style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
+              >
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Dynamic Sections - Flexible grid with DnD */}
         <DndContext
           sensors={sensors}
