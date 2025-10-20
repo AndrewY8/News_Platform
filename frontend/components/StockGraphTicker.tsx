@@ -153,7 +153,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
               <div
                 key={item.stock.symbol}
                 onClick={() => setSelectedStock(item)}
-                className="bg-gray-50 border border-gray-300 p-3 hover:bg-gray-100 transition-colors cursor-pointer group/card relative shadow-sm"
+                className="bg-white p-3 hover:bg-gray-50 transition-colors cursor-pointer group/card relative"
               >
                 {/* Magnify icon on hover */}
                 <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
@@ -192,7 +192,7 @@ export function StockGraphTicker({ tickers }: StockGraphTickerProps) {
 
                 {/* Daily Return Chart */}
                 {item.chartData && item.chartData.data.length > 0 && (
-                  <div className="h-20 w-full bg-white border border-gray-200 p-2 relative">
+                  <div className="h-20 w-full bg-white relative">
                     <DailyReturnChart
                       data={item.chartData.data}
                       isPositive={item.stock.changePercent >= 0}
