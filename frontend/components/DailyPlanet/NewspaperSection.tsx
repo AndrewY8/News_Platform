@@ -1,6 +1,7 @@
 "use client"
 
-import { GripVertical } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { GripVertical, GripHorizontal } from "lucide-react"
 import { LayoutSection } from "@/types/dailyplanet"
 import { NewsArticle } from "@/types"
 import { ArticleCard } from "./ArticleCard"
@@ -30,6 +31,10 @@ export function NewspaperSection({
   onRemoveSection,
   onConfigureSection,
 }: NewspaperSectionProps) {
+  const [height, setHeight] = useState(400)
+  const [isResizing, setIsResizing] = useState(false)
+  const resizeRef = useRef<HTMLDivElement>(null)
+
   const {
     attributes,
     listeners,
@@ -48,11 +53,53 @@ export function NewspaperSection({
   const visibleArticles = 3
   const hasMoreArticles = articles.length > visibleArticles
 
+  // Handle resize
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !resizeRef.current) return
+
+      const rect = resizeRef.current.getBoundingClientRect()
+      const newHeight = e.clientY - rect.top
+
+      // Min height 200px, max height 1000px
+      if (newHeight >= 200 && newHeight <= 1000) {
+        setHeight(newHeight)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
+
   return (
     <section
-      ref={setNodeRef}
-      style={style}
-      className="bg-white border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col"
+      ref={(node) => {
+        setNodeRef(node)
+        if (resizeRef) {
+          resizeRef.current = node
+        }
+      }}
+      style={{
+        ...style,
+        height: `${height}px`,
+      }}
+      className="bg-white border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col relative"
     >
       {/* Newspaper-style Header */}
       <div className="border-b-2 border-black bg-white flex-shrink-0">
@@ -82,7 +129,7 @@ export function NewspaperSection({
       </div>
 
       {/* Articles - Scrollable container */}
-      <div className="overflow-y-auto max-h-[600px] divide-y divide-gray-200 flex-1">
+      <div className="overflow-y-auto divide-y divide-gray-200 flex-1">
         {loading ? (
           <div className="p-6">
             <div className="space-y-4">
@@ -125,6 +172,16 @@ export function NewspaperSection({
           </p>
         </div>
       )}
+
+      {/* Resize Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group hover:bg-blue-100 transition-colors ${
+          isResizing ? 'bg-blue-200' : ''
+        }`}
+      >
+        <GripHorizontal className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+      </div>
     </section>
   )
 }
