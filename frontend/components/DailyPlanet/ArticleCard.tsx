@@ -116,19 +116,14 @@ export function ArticleCard({
             }`}>
               {article.title}
             </h3>
-            <p className={`text-gray-600 line-clamp-1 ${
-              isVerySmall ? 'text-xs' : 'text-xs'
+            <p className={`text-gray-600 ${
+              isVerySmall ? 'line-clamp-2 text-xs' : isSmall ? 'line-clamp-3 text-xs' : 'line-clamp-4 text-xs'
             }`}>
               {article.preview}
             </p>
             {!isSmall && (
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-gray-500">{article.source}</span>
-                {article.relevance_score && article.relevance_score > 0.7 && (
-                  <span className="text-xs text-blue-600 font-medium">
-                    {(article.relevance_score * 100).toFixed(0)}% relevant
-                  </span>
-                )}
               </div>
             )}
           </div>
@@ -280,14 +275,9 @@ export function ArticleCard({
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {article.relevance_score && (
-              <span className="text-sm text-blue-600 font-medium">
-                {(article.relevance_score * 100).toFixed(0)}% relevant
-              </span>
-            )}
             {article.category && (
               <span className="text-sm text-gray-500">
-                · {article.category}
+                {article.category}
               </span>
             )}
           </div>
