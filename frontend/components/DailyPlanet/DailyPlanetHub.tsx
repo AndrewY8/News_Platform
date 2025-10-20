@@ -466,12 +466,6 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
 
       {/* Main Content */}
       <div className="w-full">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-blue-900 font-medium">
-            💡 Drag sections to reorder • Resize by dragging edges • Scroll within sections for more articles
-          </p>
-        </div>
-
         {/* Dynamic Sections - Flexible grid with DnD */}
         <DndContext
           sensors={sensors}
