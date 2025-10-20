@@ -41,21 +41,22 @@ export function NewspaperSection({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || 'transform 200ms ease',
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const articleLimit = section.config_json?.article_limit || 10
+  const visibleArticles = 3
+  const hasMoreArticles = articles.length > visibleArticles
 
   return (
     <section
       ref={setNodeRef}
       style={style}
-      className="bg-white border-2 border-black shadow-sm"
+      className="bg-white border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col"
     >
       {/* Newspaper-style Header */}
-      <div className="border-b-4 border-double border-black bg-white">
-        <div className="px-4 py-2 flex items-center gap-3 bg-gray-50 border-b border-gray-300">
+      <div className="border-b-2 border-black bg-white flex-shrink-0">
+        <div className="px-4 py-2 flex items-center gap-3 bg-gray-50 border-b border-gray-200">
           {/* Drag Handle */}
           <button
             {...attributes}
@@ -68,7 +69,7 @@ export function NewspaperSection({
           {/* Section Title - Classic Newspaper Style */}
           <div className="flex-1">
             <h2
-              className="text-2xl font-black text-black uppercase tracking-wide leading-tight"
+              className="text-xl font-black text-black uppercase tracking-wide leading-tight"
               style={{
                 fontFamily: '"Georgia", "Times New Roman", serif',
                 letterSpacing: '0.05em'
@@ -80,8 +81,8 @@ export function NewspaperSection({
         </div>
       </div>
 
-      {/* Articles */}
-      <div className="divide-y divide-gray-300">
+      {/* Articles - Scrollable container */}
+      <div className="overflow-y-auto max-h-[600px] divide-y divide-gray-200 flex-1">
         {loading ? (
           <div className="p-6">
             <div className="space-y-4">
@@ -103,7 +104,7 @@ export function NewspaperSection({
             </p>
           </div>
         ) : (
-          articles.slice(0, articleLimit).map((article) => (
+          articles.map((article) => (
             <ArticleCard
               key={article.id}
               article={article}
@@ -116,15 +117,12 @@ export function NewspaperSection({
         )}
       </div>
 
-      {/* Footer - More Articles */}
-      {articles.length > articleLimit && (
-        <div className="border-t-2 border-black bg-gray-50 px-4 py-2 text-center">
-          <button
-            className="text-xs font-bold text-black uppercase tracking-widest hover:underline"
-            style={{ fontFamily: '"Georgia", serif' }}
-          >
-            {articles.length - articleLimit} More →
-          </button>
+      {/* Footer - Article count */}
+      {hasMoreArticles && (
+        <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 text-center flex-shrink-0">
+          <p className="text-xs text-gray-600 italic">
+            Showing {visibleArticles} of {articles.length} articles • Scroll for more
+          </p>
         </div>
       )}
     </section>
