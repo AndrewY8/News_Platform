@@ -317,6 +317,99 @@ def get_db():
     finally:
         db.close()
 
+# OAuth Authentication Endpoints
+from auth import oauth, create_access_token, get_current_user, get_current_user_required, FRONTEND_URL
+
+@app.get("/api/auth/google")
+async def google_login(request: Request):
+    """Initiate Google OAuth flow"""
+    if not hasattr(oauth, 'google'):
+        raise HTTPException(
+            status_code=500,
+            detail="Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in backend/.env"
+        )
+    redirect_uri = request.url_for('google_callback')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/api/auth/google/callback")
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    """Handle Google OAuth callback"""
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get('userinfo')
+
+        if not user_info:
+            raise HTTPException(status_code=400, detail="Failed to get user info from Google")
+
+        # Check if user exists
+        user = db.query(User).filter(User.email == user_info['email']).first()
+
+        if not user:
+            # Create new user
+            user_id = f"google_{user_info['sub']}"
+            user = User(
+                id=user_id,
+                email=user_info['email'],
+                username=user_info.get('email').split('@')[0],
+                full_name=user_info.get('name'),
+                provider='google',
+                provider_id=user_info['sub'],
+                avatar_url=user_info.get('picture'),
+                verified=user_info.get('email_verified', False),
+                last_login=datetime.utcnow()
+            )
+            db.add(user)
+        else:
+            # Update last login
+            user.last_login = datetime.utcnow()
+
+        db.commit()
+
+        # Create JWT token
+        access_token = create_access_token(
+            data={
+                "user_id": user.id,
+                "email": user.email,
+                "username": user.username
+            }
+        )
+
+        # Redirect to frontend with token
+        redirect_url = f"{FRONTEND_URL}?token={access_token}"
+        return RedirectResponse(url=redirect_url)
+
+    except Exception as e:
+        logger.error(f"OAuth callback error: {e}")
+        return RedirectResponse(url=f"{FRONTEND_URL}/sign-in?error=authentication_failed")
+
+@app.get("/api/auth/me")
+async def get_current_user_info(request: Request, db: Session = Depends(get_db)):
+    """Get current authenticated user info"""
+    user_data = await get_current_user(request)
+
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = db.query(User).filter(User.id == user_data['user_id']).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "username": user.username,
+        "full_name": user.full_name,
+        "avatar_url": user.avatar_url,
+        "verified": user.verified,
+        "trades": json.loads(user.trades) if user.trades else []
+    }
+
+@app.post("/api/auth/logout")
+async def logout():
+    """Logout endpoint (client handles token deletion)"""
+    return {"message": "Logged out successfully"}
+
 # Configure Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
