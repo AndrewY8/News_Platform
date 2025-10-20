@@ -443,17 +443,6 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => dispatch({ type: "TOGGLE_EDIT_MODE" })}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm ${
-                state.editMode
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <Edit3 className="w-4 h-4" />
-              {state.editMode ? 'Exit Edit Mode' : 'Edit Layout'}
-            </button>
-            <button
               onClick={() => setShowCustomize(true)}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm"
             >
