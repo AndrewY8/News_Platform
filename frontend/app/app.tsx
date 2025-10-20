@@ -938,23 +938,47 @@ const addTicker = async () => {
           </div>
         </div>
 
-        {/* Stock Ticker Graph Bar - directly below navigation, no margins */}
-        <div className="pb-1">
-          <StockGraphTicker tickers={tickers} />
-        </div>
+        {/* Stock Ticker Graph Bar - directly below navigation, no margins - hidden on Daily Planet */}
+        {activeTab !== 'daily-planet' && (
+          <div className="pb-1">
+            <StockGraphTicker tickers={tickers} />
+          </div>
+        )}
       </div>
 
       {/* Main content area with proper spacing */}
-      <div className="min-h-screen pt-[170px] sm:pt-[200px] lg:pt-[250px]">
+      <div className={`min-h-screen ${activeTab === 'daily-planet' ? 'pt-[80px]' : 'pt-[170px] sm:pt-[200px] lg:pt-[250px]'}`}>
         {/* Main Content - Full Width */}
         <div className="px-2 sm:px-3 lg:px-4 max-w-[1600px] mx-auto">
           <div className="pt-2 pb-3 sm:pt-3 sm:pb-4 lg:pt-4 lg:pb-6">
             {/* Daily Planet has its own loading/data management */}
             {activeTab === 'daily-planet' ? (
-              <DailyPlanetHub
-                userId="demo_user_1"
-                initialTickers={tickers}
-              />
+              <div className="flex gap-4">
+                {/* Main Content - 4/5 width */}
+                <div className="flex-1" style={{ width: '80%' }}>
+                  <DailyPlanetHub
+                    userId="demo_user_1"
+                    initialTickers={tickers}
+                  />
+                </div>
+
+                {/* Market Sidebar - 1/5 width */}
+                <div className="w-1/5 min-w-[250px]">
+                  <div className="sticky top-[80px] space-y-4">
+                    {/* Market Charts Section */}
+                    <div className="border border-gray-300 bg-white">
+                      <div className="border-b-2 border-black bg-gray-50 px-3 py-2">
+                        <h2 className="text-sm font-black text-black uppercase tracking-wide" style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}>
+                          Markets
+                        </h2>
+                      </div>
+                      <div className="p-2">
+                        <StockGraphTicker tickers={tickers} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
