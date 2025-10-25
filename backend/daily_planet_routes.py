@@ -151,10 +151,21 @@ def get_or_create_user_preference(db: Session, user_id: str) -> UserPreference:
 # User Preferences Endpoints
 # ===========================
 
+def get_db_dependency():
+    """
+    Database dependency for Daily Planet routes
+    """
+    from app import SessionLocal
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @router.get("/preferences")
 async def get_user_preferences(
     request: Request,
-    db: Session = Depends(lambda: None)  # Will be injected by main app
+    db: Session = Depends(get_db_dependency)
 ):
     """Get user's Daily Planet preferences"""
     try:
@@ -186,7 +197,7 @@ async def get_user_preferences(
 @router.post("/preferences")
 async def update_user_preferences(
     preference_update: PreferenceUpdate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Update user's Daily Planet preferences"""
     try:
@@ -229,7 +240,7 @@ async def update_user_preferences(
 # ===========================
 
 @router.get("/topics")
-async def get_user_topics(db: Session = Depends(lambda: None)):
+async def get_user_topics(db: Session = Depends(get_db_dependency)):
     """Get user's topic interests"""
     try:
         user_id = "demo_user_1"
@@ -262,7 +273,7 @@ async def get_user_topics(db: Session = Depends(lambda: None)):
 @router.post("/topics")
 async def add_user_topic(
     topic_data: TopicCreate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Add a new topic interest"""
     try:
@@ -313,7 +324,7 @@ async def add_user_topic(
 async def update_user_topic(
     topic_id: str,
     topic_update: TopicUpdate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Update a topic's priority or active status"""
     try:
@@ -346,7 +357,7 @@ async def update_user_topic(
 @router.delete("/topics/{topic_id}")
 async def delete_user_topic(
     topic_id: str,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Delete a topic interest"""
     try:
@@ -377,7 +388,7 @@ async def delete_user_topic(
 # ===========================
 
 @router.get("/layout/sections")
-async def get_layout_sections(db: Session = Depends(lambda: None)):
+async def get_layout_sections(db: Session = Depends(get_db_dependency)):
     """Get user's layout sections"""
     try:
         user_id = "demo_user_1"
@@ -410,7 +421,7 @@ async def get_layout_sections(db: Session = Depends(lambda: None)):
 @router.post("/layout/sections")
 async def create_layout_section(
     section_data: SectionCreate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Create a new layout section"""
     try:
@@ -462,7 +473,7 @@ async def create_layout_section(
 async def update_layout_section(
     section_id: str,
     section_update: SectionUpdate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Update a layout section"""
     try:
@@ -499,7 +510,7 @@ async def update_layout_section(
 @router.post("/layout/sections/reorder")
 async def reorder_sections(
     reorder_data: SectionReorder,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Reorder layout sections"""
     try:
@@ -528,7 +539,7 @@ async def reorder_sections(
 @router.delete("/layout/sections/{section_id}")
 async def delete_layout_section(
     section_id: str,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Delete a layout section"""
     try:
@@ -559,7 +570,7 @@ async def delete_layout_section(
 # ===========================
 
 @router.get("/exclusions")
-async def get_exclusions(db: Session = Depends(lambda: None)):
+async def get_exclusions(db: Session = Depends(get_db_dependency)):
     """Get user's content exclusions"""
     try:
         user_id = "demo_user_1"
@@ -588,7 +599,7 @@ async def get_exclusions(db: Session = Depends(lambda: None)):
 @router.post("/exclusions")
 async def add_exclusion(
     exclusion_data: ExclusionCreate,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Add a content exclusion"""
     try:
@@ -629,7 +640,7 @@ async def add_exclusion(
 @router.delete("/exclusions/{exclusion_id}")
 async def delete_exclusion(
     exclusion_id: str,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Delete a content exclusion"""
     try:
@@ -663,7 +674,7 @@ async def delete_exclusion(
 async def remove_article(
     article_id: str,
     removal_data: ArticleRemoval,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Track article removal for learning"""
     try:
@@ -695,7 +706,7 @@ async def remove_article(
 async def track_article_read(
     article_id: str,
     read_data: ReadTracking,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Track article reading for learning"""
     try:
@@ -728,7 +739,7 @@ async def track_article_read(
 @router.post("/onboarding/complete")
 async def complete_onboarding(
     onboarding_data: OnboardingData,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Complete onboarding and save all user preferences"""
     try:
@@ -781,7 +792,7 @@ async def complete_onboarding(
 @router.post("/preferences/natural-language")
 async def natural_language_preference(
     request_data: NaturalLanguagePreferenceRequest,
-    db: Session = Depends(lambda: None)
+    db: Session = Depends(get_db_dependency)
 ):
     """Parse natural language preference request and update database"""
     try:
@@ -818,13 +829,7 @@ def add_daily_planet_routes(app, get_db_dependency):
         app: FastAPI application instance
         get_db_dependency: Database session dependency function
     """
-    # Update router dependencies
-    for route in router.routes:
-        # Replace the placeholder dependency with actual DB dependency
-        if hasattr(route, "dependencies"):
-            route.dependencies = [Depends(get_db_dependency)]
-
-    # Include router in app
+    # Simply include the router - dependencies will be handled by Depends(get_db) in each route
     app.include_router(router)
 
     logger.info("✅ Daily Planet routes added successfully")

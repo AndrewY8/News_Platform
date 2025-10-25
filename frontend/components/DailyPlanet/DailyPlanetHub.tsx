@@ -124,6 +124,26 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
     loadUserData()
   }, [])
 
+  // Initialize column spans only once when sections load, don't reset on preference changes
+  useEffect(() => {
+    if (state.sections.length > 0 && columnSpans.size === 0) {
+      const layoutDensity = state.preferences?.layout_density || 2
+      const defaultSpan = layoutDensity === 1 ? 12 : layoutDensity === 2 ? 6 : 4
+
+      // Initialize column spans for new sections only
+      const newSpans = new Map<string, number>()
+      state.sections.forEach(section => {
+        // Only set if not already set
+        if (!columnSpans.has(section.section_id)) {
+          newSpans.set(section.section_id, defaultSpan)
+        }
+      })
+      if (newSpans.size > 0) {
+        setColumnSpans(prev => new Map([...prev, ...newSpans]))
+      }
+    }
+  }, [state.sections.length])
+
   // Listen for customize event from header
   useEffect(() => {
     const handleCustomizeEvent = () => {
@@ -412,6 +432,17 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
               exclusions={state.exclusions}
               onUpdatePreferences={async (update) => {
                 await ApiService.updateDailyPlanetPreferences(update)
+
+                // If layout_density changed, reset all column spans to match new layout
+                if (update.layout_density && update.layout_density !== state.preferences.layout_density) {
+                  const defaultSpan = update.layout_density === 1 ? 12 : update.layout_density === 2 ? 6 : 4
+                  const newSpans = new Map<string, number>()
+                  state.sections.forEach(section => {
+                    newSpans.set(section.section_id, defaultSpan)
+                  })
+                  setColumnSpans(newSpans)
+                }
+
                 await loadUserData()
               }}
               onAddTopic={async (topic) => {
@@ -485,6 +516,10 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
                 .map((section) => {
                   const sectionContent = state.sectionContent.get(section.section_id)
 
+                  // Calculate default column span based on layout_density preference
+                  const layoutDensity = state.preferences?.layout_density || 2
+                  const defaultSpan = layoutDensity === 1 ? 12 : layoutDensity === 2 ? 6 : 4
+
                   return (
                     <NewspaperSection
                       key={section.section_id}
@@ -494,7 +529,7 @@ export function DailyPlanetHub({ userId, initialTickers = [] }: DailyPlanetHubPr
                       onRemoveArticle={handleArticleRemove}
                       onReadArticle={handleArticleRead}
                       editMode={state.editMode}
-                      columnSpan={columnSpans.get(section.section_id) || 6}
+                      columnSpan={columnSpans.get(section.section_id) || defaultSpan}
                       onColumnSpanChange={handleColumnSpanChange}
                     />
                   )

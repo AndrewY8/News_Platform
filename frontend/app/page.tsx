@@ -9,15 +9,23 @@ export default function HomePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   useEffect(() => {
     // Check for OAuth callback token in URL
     const token = searchParams.get('token')
     const error = searchParams.get('error')
+    const needsOnboardingParam = searchParams.get('needs_onboarding')
 
     if (token) {
       AuthService.setToken(token)
-      // Remove token from URL
+
+      // Check if this is a new user who needs onboarding
+      if (needsOnboardingParam === 'true') {
+        setNeedsOnboarding(true)
+      }
+
+      // Remove token and onboarding params from URL
       router.replace('/')
       setIsLoading(false)
       return
@@ -46,5 +54,5 @@ export default function HomePage() {
     )
   }
 
-  return <HavenNewsApp />
+  return <HavenNewsApp initialShowOnboarding={needsOnboarding} />
 }

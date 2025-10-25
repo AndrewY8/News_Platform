@@ -15,12 +15,12 @@ from sqlalchemy import (
     Enum as SQLEnum,
     JSON,
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 
-Base = declarative_base()
+# Import Base from app.py to use the same declarative base
+from app import Base
 
 
 # Enums for type safety

@@ -10,11 +10,18 @@ import { YahooFinanceService, StockData, ChartData } from "@/services/yahooFinan
 import { StockChart } from "@/components/StockChart"
 import { StockGraphTicker } from "@/components/StockGraphTicker"
 import { DailyPlanetHub } from "@/components/DailyPlanet"
+import { OnboardingWizard } from "@/components/DailyPlanet/OnboardingWizard"
+import { OnboardingData } from "@/types/dailyplanet"
 
-export default function HavenNewsApp() {
+interface HavenNewsAppProps {
+  initialShowOnboarding?: boolean
+}
+
+export default function HavenNewsApp({ initialShowOnboarding = false }: HavenNewsAppProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [activeTab, setActiveTab] = useState("daily-planet")
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(initialShowOnboarding)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTimePeriod, setSelectedTimePeriod] = useState("1D")
   const [tickers, setTickers] = useState<string[]>([])
@@ -354,6 +361,25 @@ const normalizeDate = (dateStr: string): number => {
       setQueryHistory(history)
     } catch (error) {
       console.error('Failed to load query history:', error)
+    }
+  }
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = async (data: OnboardingData) => {
+    try {
+      // Save onboarding data to backend
+      await ApiService.completeDailyPlanetOnboarding(data)
+
+      // Close the wizard
+      setShowOnboardingWizard(false)
+
+      // Navigate to Daily Planet page
+      setActiveTab("daily-planet")
+
+      console.log('Onboarding completed successfully!')
+    } catch (error) {
+      console.error('Failed to complete onboarding:', error)
+      alert('Failed to save your preferences. Please try again.')
     }
   }
 
@@ -1089,8 +1115,8 @@ const addTicker = async () => {
                                     isSelected ? 'ring-2 ring-offset-2' : 'hover:bg-gray-100'
                                   }`}
                                   style={isSelected ? {
-                                    ringColor: indexColors[index.symbol],
-                                    backgroundColor: `${indexColors[index.symbol]}10`
+                                    backgroundColor: `${indexColors[index.symbol]}10`,
+                                    borderColor: indexColors[index.symbol]
                                   } : {}}
                                 >
                                   <div className="text-sm text-gray-600 mb-1">{indexName}</div>
@@ -1563,7 +1589,7 @@ const addTicker = async () => {
                   (() => {
                     const groupedArticles = articles.reduce((acc: any, article: NewsArticle) => {
                       const topic = article.tags && article.tags.length > 0
-                        ? (typeof article.tags[0] === 'string' ? article.tags[0] : article.tags[0]?.name || 'Uncategorized')
+                        ? (typeof article.tags[0] === 'string' ? article.tags[0] : (article.tags[0] as any)?.name || 'Uncategorized')
                         : 'Uncategorized'
 
                       if (!acc[topic]) {
@@ -2075,6 +2101,15 @@ const addTicker = async () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Onboarding Wizard for new users */}
+      {showOnboardingWizard && (
+        <OnboardingWizard
+          onComplete={handleOnboardingComplete}
+          onSkip={() => setShowOnboardingWizard(false)}
+          existingTickers={tickers}
+        />
       )}
     </div>
   )

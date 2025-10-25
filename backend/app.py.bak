@@ -817,7 +817,7 @@ if not HANDLERS_AVAILABLE:
     logger.info("⚠️ Loading fallback routes since handlers are not available")
 
     @app.get("/api/chat/history")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def get_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
         """Get chat history for user (fallback)"""
         try:
@@ -835,7 +835,7 @@ if not HANDLERS_AVAILABLE:
             logger.error(f"Error getting chat history: {e}")
             return JSONResponse(content=[])
     @app.get("/api/chat/history")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def get_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
         """Get chat history for user (fallback)"""
         try:
@@ -854,7 +854,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content=[])
 
     @app.post("/api/chat/history")
-    @limiter.limit("1000/minute")
+    @limiter.limit("20/minute")
     async def save_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
         """Save chat query to history (fallback)"""
         try:
@@ -873,7 +873,7 @@ if not HANDLERS_AVAILABLE:
             logger.error(f"Error saving chat history: {e}")
             return JSONResponse(content={"success": False, "error": str(e)})
     @app.post("/api/chat/history")
-    @limiter.limit("1000/minute")
+    @limiter.limit("20/minute")
     async def save_chat_history_fallback(request: Request, db: Session = Depends(get_db)):
         """Save chat query to history (fallback)"""
         try:
@@ -893,7 +893,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.delete("/api/chat/history/{query_id}")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def delete_chat_history_fallback(query_id: str, request: Request, db: Session = Depends(get_db)):
         """Delete chat history entry (fallback)"""
         try:
@@ -907,7 +907,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.get("/api/market/summary")
-    @limiter.limit("1000/minute")
+    @limiter.limit("30/minute")
     async def get_market_summary_fallback(tickers: str, request: Request):
         """Get market data for tickers (fallback)"""
         try:
@@ -944,7 +944,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={'tickers': []})
 
     @app.post("/api/user")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def update_user_fallback(request: Request, db: Session = Depends(get_db)):
         """Update user preferences (fallback)"""
         try:
@@ -954,7 +954,7 @@ if not HANDLERS_AVAILABLE:
             logger.error(f"Error updating user: {e}")
             return JSONResponse(content={"success": False, "error": str(e)})
     @app.delete("/api/chat/history/{query_id}")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def delete_chat_history_fallback(query_id: str, request: Request, db: Session = Depends(get_db)):
         """Delete chat history entry (fallback)"""
         try:
@@ -968,7 +968,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.get("/api/market/summary")
-    @limiter.limit("1000/minute")
+    @limiter.limit("30/minute")
     async def get_market_summary_fallback(tickers: str, request: Request):
         """Get market data for tickers (fallback)"""
         try:
@@ -1005,7 +1005,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={'tickers': []})
 
     @app.post("/api/user")
-    @limiter.limit("1000/minute")
+    @limiter.limit("10/minute")
     async def update_user_fallback(request: Request, db: Session = Depends(get_db)):
         """Update user preferences (fallback)"""
         try:
@@ -1016,7 +1016,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.post("/api/articles/{article_id}/save")
-    @limiter.limit("1000/minute")
+    @limiter.limit("20/minute")
     async def save_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
         """Save an article (fallback)"""
         try:
@@ -1030,7 +1030,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.post("/api/articles/{article_id}/unsave")
-    @limiter.limit("1000/minute")
+    @limiter.limit("20/minute")
     async def unsave_article_fallback(article_id: str, request: Request, db: Session = Depends(get_db)):
         """Unsave an article (fallback)"""
         try:
@@ -1044,7 +1044,7 @@ if not HANDLERS_AVAILABLE:
             return JSONResponse(content={"success": False, "error": str(e)})
 
     @app.get("/api/articles/saved")
-    @limiter.limit("1000/minute")
+    @limiter.limit("30/minute")
     async def get_saved_articles_fallback(request: Request, db: Session = Depends(get_db)):
         """Get saved articles (fallback)"""
         try:
@@ -1214,7 +1214,7 @@ def transform_aggregated_results_to_articles(aggregated_output):
 
 # Company data endpoints
 @app.get("/api/companies/{ticker}/topics")
-@limiter.limit("1000/minute")
+@limiter.limit("20/minute")
 async def get_company_topics(ticker: str, request: Request):
     """Get topics and articles for a specific company"""
     try:
@@ -1381,7 +1381,7 @@ async def generate_topics_for_ticker(ticker: str, request: Request, background_t
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/companies/{ticker}/details")
-@limiter.limit("1000/minute")
+@limiter.limit("20/minute")
 async def get_company_details(ticker: str, request: Request):
     """
     Get comprehensive company details including:
@@ -1525,7 +1525,7 @@ async def get_company_details(ticker: str, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/topics/all")
-@limiter.limit("1000/minute")
+@limiter.limit("20/minute")
 async def get_all_topics(request: Request, limit: int = 50):
     """Get all topics across all companies, sorted by urgency (high first)"""
     try:
@@ -1606,7 +1606,7 @@ async def get_all_topics(request: Request, limit: int = 50):
         return {"topics": []}
 
 @app.get("/api/companies/{ticker}/logo")
-@limiter.limit("1000/minute")
+@limiter.limit("20/minute")
 async def get_company_logo(ticker: str, request: Request):
     """Get company logo URL from yfinance"""
     try:
@@ -1631,7 +1631,7 @@ async def get_company_logo(ticker: str, request: Request):
         }
 
 @app.get("/api/companies/topics-by-interest")
-@limiter.limit("1000/minute")
+@limiter.limit("20/minute")
 async def get_topics_by_user_interests(request: Request, tickers: str = ""):
     """Get topics organized by company tickers in user's interests"""
     try:
@@ -1858,7 +1858,7 @@ async def get_stock_chart(
         )
 
 @app.get("/api/macro-topics")
-@limiter.limit("1000/minute")
+@limiter.limit("30/minute")
 async def get_macro_topics(
     request: Request,
     topic_type: str = "macro",
@@ -1947,7 +1947,7 @@ async def get_macro_topics(
 
 
 @app.get("/api/front-page-topics")
-@limiter.limit("1000/minute")
+@limiter.limit("30/minute")
 async def get_front_page_topics(
     request: Request,
     limit: int = 20

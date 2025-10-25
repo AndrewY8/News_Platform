@@ -78,7 +78,7 @@ export function OnboardingWizard({ onComplete, onSkip, existingTickers = [] }: O
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Progress Bar */}
         <div className="h-2 bg-gray-200">
           <div
@@ -88,7 +88,7 @@ export function OnboardingWizard({ onComplete, onSkip, existingTickers = [] }: O
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-8 overflow-y-auto flex-1">
           {/* Step Indicator */}
           <div className="flex items-center justify-between mb-8">
             {steps.map((step, index) => {
@@ -333,9 +333,11 @@ export function OnboardingWizard({ onComplete, onSkip, existingTickers = [] }: O
               </div>
             )}
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t">
+        {/* Actions - Outside scrollable area so always visible */}
+        <div className="p-8 pt-0">
+          <div className="flex items-center justify-between pt-6 border-t">
             <div>
               {onSkip && currentStep === 0 && (
                 <button
