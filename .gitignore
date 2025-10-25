@@ -53,3 +53,9 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 /.history
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
