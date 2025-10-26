@@ -20,7 +20,7 @@ from deep_news_agent.db.research_db_manager import ResearchDBManager
 from deep_news_agent.prompts.prompts import MICROSOFT_EARNINGS
 
 # Load environment from root directory
-load_dotenv(Path(__file__).parent.parent / '.env')
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 
 async def run_microsoft_research(max_iterations=3):
@@ -31,22 +31,22 @@ async def run_microsoft_research(max_iterations=3):
         max_iterations: Number of research iterations (default: 3)
     """
 
-    print("="*80)
-    print("🔬 MICROSOFT DEEP RESEARCH PIPELINE")
-    print("="*80)
-    print(f"\n📊 Using earnings call transcript as context")
-    print(f"🔄 Running {max_iterations} research iterations\n")
+    print("=" * 80)
+    print("MICROSOFT DEEP RESEARCH PIPELINE")
+    print("=" * 80)
+    print(f"Using earnings call transcript as context")
+    print(f"Running {max_iterations} research iterations\n")
 
     # Get Supabase credentials
-    supabase_url = os.getenv('SUPABASE_URL')
-    supabase_key = os.getenv('SUPABASE_KEY')
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
 
     if not supabase_url or not supabase_key:
-        print("❌ Error: SUPABASE_URL and SUPABASE_KEY must be set in .env")
+        print("Error: SUPABASE_URL and SUPABASE_KEY must be set in .env")
         return
 
     # Initialize database manager
-    print("🔌 Connecting to Supabase database...")
+    print("Connecting to Supabase database...")
     db_manager = ResearchDBManager(supabase_url, supabase_key)
 
     # Create Microsoft company context
@@ -62,7 +62,7 @@ async def run_microsoft_research(max_iterations=3):
             "Copilot AI Assistant",
             "Database & Analytics (Fabric)",
             "Security & Identity (Entra, Defender)",
-            "Gaming & Xbox"
+            "Gaming & Xbox",
         ],
         current_status={
             "microsoft_cloud_revenue": "$168B annually (up 23%)",
@@ -73,15 +73,15 @@ async def run_microsoft_research(max_iterations=3):
             "fabric_growth": "55% YoY, 25k+ customers",
             "commercial_bookings": "$100B+ for first time (up 30%)",
             "key_insight": "Leading AI infrastructure wave with compounding S-curves across silicon, systems, and models",
-            "earnings_highlights": f"Recent earnings call highlights (truncated for brevity): {MICROSOFT_EARNINGS[:1000]}..."
-        }
+            "earnings_highlights": f"Recent earnings call highlights (truncated for brevity): {MICROSOFT_EARNINGS[:1000]}...",
+        },
     )
 
-    print(f"\n📋 Company Context:")
+    print(f"Company Context:")
     print(f"   Name: Microsoft Corporation (MSFT)")
     print(f"   Business Areas: {len(microsoft_context.business_areas)}")
     print(f"   Earnings Context: {len(MICROSOFT_EARNINGS)} characters")
-    print(f"\n   Key Metrics from Earnings:")
+    print(f"Key Metrics from Earnings:")
     for key, value in list(microsoft_context.current_status.items())[:6]:
         print(f"   • {key}: {value}")
 
@@ -92,17 +92,19 @@ async def run_microsoft_research(max_iterations=3):
         from deep_news_agent.agents.ranking_agent import RankingAgent
 
         # Get API keys from environment
-        openai_api_key = os.getenv('OPENAI_API_KEY')
-        tavily_api_key = os.getenv('TAVILY_API_KEY')
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        tavily_api_key = os.getenv("TAVILY_API_KEY")
 
         if not openai_api_key or not tavily_api_key:
-            print("❌ Error: OPENAI_API_KEY and TAVILY_API_KEY must be set in .env")
+            print("Error: OPENAI_API_KEY and TAVILY_API_KEY must be set in .env")
             return
 
         # Initialize agents
-        print(f"\n🤖 Initializing AI agents...")
+        print(f"Initializing AI agents...")
         topic_agent = TopicAgent(openai_api_key=openai_api_key, db_manager=db_manager)
-        search_agent = SearchAgent(tavily_api_key=tavily_api_key, openai_api_key=openai_api_key)
+        search_agent = SearchAgent(
+            tavily_api_key=tavily_api_key, openai_api_key=openai_api_key
+        )
         ranking_agent = RankingAgent(openai_api_key=openai_api_key)
 
         # Create pipeline config
@@ -112,71 +114,76 @@ async def run_microsoft_research(max_iterations=3):
             max_topics_in_memory=100,  # More topics for thorough analysis
             enable_earnings_retrieval=True,  # Use earnings context
             enable_fallback_strategies=True,
-            parallel_processing=True  # Faster execution
+            parallel_processing=True,  # Faster execution
         )
 
         # Initialize orchestrator
-        print(f"🎯 Initializing orchestrator agent...")
+        print(f"Initializing orchestrator agent...")
         orchestrator = OrchestratorAgent(
             topic_agent=topic_agent,
             search_agent=search_agent,
             ranking_agent=ranking_agent,
             pipeline_config=pipeline_config,
-            db_manager=db_manager
+            db_manager=db_manager,
         )
 
         # Run the research pipeline
         print(f"\n{'='*80}")
-        print(f"🚀 STARTING DEEP RESEARCH PIPELINE")
+        print(f"STARTING DEEP RESEARCH PIPELINE")
         print(f"{'='*80}\n")
 
         final_topics = await orchestrator.run_pipeline(microsoft_context)
 
         # Display results
         print(f"\n{'='*80}")
-        print(f"✅ RESEARCH COMPLETE")
+        print(f"RESEARCH COMPLETE")
         print(f"{'='*80}")
-        print(f"\n📊 Total Topics Discovered: {len(final_topics)}\n")
+        print(f"Total Topics Discovered: {len(final_topics)}\n")
 
         if final_topics:
             print(f"🏆 Top 10 Topics by Importance:\n")
             for i, ranked_topic in enumerate(final_topics[:10], 1):
                 topic = ranked_topic.topic
                 print(f"{i}. {topic.name}")
-                print(f"   📈 Final Score: {ranked_topic.final_score:.3f}")
-                print(f"   ⚡ Urgency: {topic.urgency}")
-                print(f"   💡 Business Impact: {topic.business_impact}")
-                print(f"   📝 Description: {topic.description[:150]}...")
-                print(f"   🔗 Sources: {len(topic.sources)} articles")
+                print(f"Final Score: {ranked_topic.final_score:.3f}")
+                print(f"Urgency: {topic.urgency}")
+                print(f"Business Impact: {topic.business_impact}")
+                print(f"Description: {topic.description[:150]}...")
+                print(f"Sources: {len(topic.sources)} articles")
 
                 if topic.subtopics:
-                    print(f"   📂 Subtopics ({len(topic.subtopics)}):")
+                    print(f"Subtopics ({len(topic.subtopics)}):")
                     for subtopic in topic.subtopics[:3]:
-                        if hasattr(subtopic, 'name'):
+                        if hasattr(subtopic, "name"):
                             print(f"      - {subtopic.name}")
                         else:
                             print(f"      - {subtopic}")
                 print()
 
             # Additional insights
-            print(f"\n📈 Topic Categories Breakdown:")
+            print(f"Topic Categories Breakdown:")
             urgency_counts = {}
             for ranked_topic in final_topics:
                 urgency = ranked_topic.topic.urgency
                 urgency_counts[urgency] = urgency_counts.get(urgency, 0) + 1
 
-            for urgency, count in sorted(urgency_counts.items(), key=lambda x: x[1], reverse=True):
+            for urgency, count in sorted(
+                urgency_counts.items(), key=lambda x: x[1], reverse=True
+            ):
                 print(f"   {urgency.upper()}: {count} topics")
 
-            print(f"\n💾 All topics have been saved to Supabase database")
+            print(f"All topics have been saved to Supabase database")
             print(f"   Company ID: Check companies table for 'MSFT'")
-            print(f"   Topics can be queried via: /api/topics-by-interests?tickers=MSFT")
+            print(
+                f"   Topics can be queried via: /api/topics-by-interests?tickers=MSFT"
+            )
 
         return final_topics
 
     except Exception as e:
-        print(f"\n❌ Error during research: {str(e)}")
+        print(f"Error during research: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -184,15 +191,17 @@ async def run_microsoft_research(max_iterations=3):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run deep research on Microsoft using earnings transcript")
+    parser = argparse.ArgumentParser(
+        description="Run deep research on Microsoft using earnings transcript"
+    )
     parser.add_argument(
         "--iterations",
         type=int,
         default=3,
-        help="Number of research iterations (default: 3)"
+        help="Number of research iterations (default: 3)",
     )
 
     args = parser.parse_args()
 
-    print(f"\n🎯 Starting Microsoft deep research with {args.iterations} iterations...\n")
+    print(f"Starting Microsoft deep research with {args.iterations} iterations...\n")
     asyncio.run(run_microsoft_research(max_iterations=args.iterations))

@@ -5,14 +5,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: frontend
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      # Browser needs to connect to localhost, not container name
-      # NEXT_PUBLIC_ variables are exposed to the browser
-      - NEXT_PUBLIC_API_URL=http://3.92.79.88:8000
+      - NODE_ENV=production
     depends_on:
       - backend
     restart: unless-stopped
@@ -23,12 +22,11 @@ services:
       dockerfile: backend/Dockerfile
     container_name: backend
     ports:
-      - "8000:8000"  # Backend always runs on port 8000
+      - "8000:8000"
     environment:
       - PYTHONPATH=/app
       - PORT=8000
-      # Frontend URL for CORS (when accessed from host machine)
-      - FRONTEND_URL=http://3.92.79.88:3000
+      - FRONTEND_URL=${FRONTEND_URL}
     env_file:
       - .env
     restart: unless-stopped

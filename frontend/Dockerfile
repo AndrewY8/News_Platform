@@ -1,24 +1,29 @@
-# Use Node.js 18
-FROM node:18-alpine
-
+# ---------- Builder ----------
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy source code
 COPY . .
 
-# Pre-compile Tailwind CSS to public folder (avoids PostCSS/Next.js conflict in Docker)
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npx tailwindcss -i ./app/globals.css -o ./public/styles.css --minify
 
-ENV NODE_ENV=development
+RUN npm run build
+
+
+# ---------- Runtime ----------
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
 ENV PORT=3000
 
-EXPOSE 3000
+COPY --from=builder /app ./
 
-# Start dev server
-CMD ["npm", "run", "dev"]
+EXPOSE 3000
+CMD ["npm", "run", "start"]
