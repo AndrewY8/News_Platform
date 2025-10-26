@@ -27,6 +27,7 @@ services:
       - PYTHONPATH=/app
       - PORT=8000
       - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
     env_file:
       - .env
     restart: unless-stopped

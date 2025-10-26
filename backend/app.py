@@ -318,7 +318,7 @@ def get_db():
         db.close()
 
 # OAuth Authentication Endpoints
-from auth import oauth, create_access_token, get_current_user, get_current_user_required, FRONTEND_URL
+from auth import oauth, create_access_token, get_current_user, get_current_user_required, FRONTEND_URL, BACKEND_URL
 
 @app.get("/api/auth/google")
 async def google_login(request: Request):
@@ -328,7 +328,9 @@ async def google_login(request: Request):
             status_code=500,
             detail="Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in backend/.env"
         )
-    redirect_uri = request.url_for('google_callback')
+    # Use explicit BACKEND_URL for production compatibility
+    redirect_uri = f"{BACKEND_URL}/api/auth/google/callback"
+    logger.info(f"🔐 Google OAuth redirect URI: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/api/auth/google/callback")
